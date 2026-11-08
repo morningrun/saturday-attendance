@@ -79,8 +79,8 @@
 </div>
 
 <script>
-    // ⚠️ 구글 앱스 스크립트 웹 앱 URL을 입력하세요
-    const API_URL = "https://script.google.com/macros/s/AKfycbwHUYOjlTb5jdtP8_Ts3wJPmZ0UeLEnnVNr_BAi9lkxyiAGwXuYWTJb6j-pmaHr0G0WNA/exec";
+    // ⚠️ 여기에 구글 앱스 스크립트 웹 앱 URL을 넣으세요!
+    const API_URL = "https://script.google.com/macros/s/AKfycbxrvwxMn-CINIOhBblbpKuT8UkOscy7wDb1ky7uFofqHZciXNGoPpcC8xrQPAQhJ5EgtA/exec";
 
     let globalMembers = [];
     let globalLogs = [];
@@ -263,14 +263,12 @@
         globalLogs.forEach(log => {
             const name = log.name;
             const score = Number(log.score);
-            const dateText = log.date || ""; // 예: "2026년 11월 7일 토요일"
+            const logMonth = log.month || ""; 
 
-            // 💡 월별 필터 정밀 검사 로직
             if (selectedMonth !== "전체") {
-                // 날짜 텍스트에서 정확히 " X월" 형태를 찾아냄 (예: "11월" 추출)
-                const match = dateText.match(/(\d{1,2})월/);
-                if (!match || match[1] + "월" !== selectedMonth) {
-                    return; // 선택한 월과 다르면 합산에서 제외
+                const targetMonthNum = selectedMonth.replace("월", "").trim();
+                if (logMonth !== targetMonthNum) {
+                    return; 
                 }
             }
 
@@ -337,7 +335,7 @@
 
         if (!confirm(`[${selectedDateStr.replace(/^\d{4}년\s*/, '')}]\n[${name}]님을 [${label}]으로 기록하시겠습니까?`)) return;
 
-        globalLogs.push({ date: selectedDateStr, name: name, score: score });
+        globalLogs.push({ date: selectedDateStr, month: selectedDateStr.match(/(\d{1,2})\s*월/)[1], name: name, score: score });
         renderCheckinList();
 
         fetch(API_URL, {
