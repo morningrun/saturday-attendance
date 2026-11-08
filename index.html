@@ -47,7 +47,7 @@
         .month-btn.active { background: #0284c7; color: white; border-color: #0284c7; }
 
         .rank-card { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; margin-bottom: 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; }
-        .rank-number { font-weight: bold; color: #3b82f6; width: 35px; font-size: 0.95rem; }
+        .rank-number { font-weight: bold; color: #3b82f6; width: 45px; font-size: 0.95rem; }
         .rank-name { font-weight: bold; flex: 1; font-size: 1rem; color: #1e293b; }
         .rank-detail { font-size: 0.78rem; color: #64748b; margin-right: 8px; }
         .rank-score { font-weight: bold; font-size: 1.1rem; color: #059669; }
@@ -83,45 +83,52 @@
 
 <script>
     // ⚠️ 아래 쌍따옴표 안에 구글 앱스 스크립트 웹 앱 URL을 넣으세요!
-    const API_URL = "https://script.google.com/macros/s/AKfycbx9AqLArW1_6tghmVUPQRpMufWZmZ_XGEIoev9KdPuhKQLMWOHCiJA3xysSFfOukBLekg/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbzFPHHUrF9-QHfZ3VEP4zdDkixjHWRy4_QWCmRuvvuY0MgHb1P3VYeS_GQ_0rLjAQzeqw/exec";
 
     let globalMembers = [];
     let globalLogs = [];
     let selectedDateStr = "";
     let selectedMonth = "전체";
 
-    // 현재 기기의 연도를 자동 인식
     const currentYear = new Date().getFullYear();
     document.getElementById('current-year-text').innerText = currentYear;
 
-    // 현재 날짜 기준 토요일 자동 계산 및 연동
+    // 안전하게 날짜 문자열(YYYY년 M월 D일 요일)을 만드는 함수
+    function formatDateToString(dateObj) {
+        const years = dateObj.getFullYear();
+        const months = dateObj.getMonth() + 1;
+        const days = dateObj.getDate();
+        const weekDays = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+        const weekDay = weekDays[dateObj.getDay()];
+        return `${years}년 ${months}월 ${days}일 ${weekDay}`;
+    }
+
     function initSaturdayButtons() {
         const wrapper = document.getElementById('saturday-buttons');
         wrapper.innerHTML = '';
         
         const saturdays = [];
-        let curr = new Date(); // 오늘 날짜 기준 (2026년 11월 8일 등)
+        let curr = new Date();
         
-        // 만약 오늘이 토요일이 아니면, 직전 토요일을 기준으로 잡거나 이번주 토요일을 잡음
-        // 여기서는 오늘 기준 가장 최근에 지나간(혹은 다가올) 토요일을 산출
+        // 오늘 기준으로 가장 최근 토요일 찾기 (토요일이면 오늘, 아니면 직전 토요일)
         const day = curr.getDay();
-        const diff = (6 - day - 7) % 7; // 직전 토요일 기준 (원하시면 당일 기준(6-day)으로 변경 가능)
+        const diff = day >= 6 ? 0 : -(day + 1);
         curr.setDate(curr.getDate() + diff);
         
         // 최근 12개 토요일 생성
-        for(let i=0; i<12; i++) {
+        for(let i = 0; i < 12; i++) {
             let d = new Date(curr);
             d.setDate(curr.getDate() - (i * 7));
-            let dStr = d.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
-            saturdays.push(dStr);
+            saturdays.push(formatDateToString(d));
         }
 
-        selectedDateStr = saturdays[0]; // 가장 최근 토요일 기본 선택
+        selectedDateStr = saturdays[0];
 
         saturdays.forEach((dStr, idx) => {
             const btn = document.createElement('button');
             btn.className = `date-btn ${idx === 0 ? 'active' : ''}`;
-            const shortName = dStr.replace(/20\d\d년\s*/, '');
+            // 버튼에는 연도를 빼고 월/일/요일만 깔끔하게 표시
+            const shortName = dStr.replace(/^\d{4}년\s*/, '');
             btn.innerText = shortName;
             btn.onclick = () => {
                 document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('active'));
@@ -133,7 +140,6 @@
         });
     }
 
-    // 월별 필터 생성
     function initMonthButtons() {
         const wrapper = document.getElementById('month-buttons');
         wrapper.innerHTML = '';
@@ -257,7 +263,6 @@
             const score = Number(log.score);
             const dateText = log.date || "";
 
-            // 현재 연도 데이터만 자동 집계
             if (!dateText.includes(`${currentYear}년`)) return;
             if (selectedMonth !== "전체" && !dateText.includes(`${selectedMonth}`)) return;
 
@@ -280,14 +285,19 @@
             ...userStats[name]
         })).sort((a, b) => b.score - a.score);
 
+        let currentRank = 1;
         sortedList.forEach((item, index) => {
+            if (index > 0 && item.score < sortedList[index - 1].score) {
+                currentRank = index + 1;
+            }
+
             const card = document.createElement('div');
             card.className = 'rank-card';
             
-            let rankBadge = `${index + 1}위`;
-            if (index === 0) rankBadge = '🥇 1위';
-            else if (index === 1) rankBadge = '🥈 2위';
-            else if (index === 2) rankBadge = '🥉 3위';
+            let rankBadge = `${currentRank}위`;
+            if (currentRank === 1) rankBadge = '🥇 1위';
+            else if (currentRank === 2) rankBadge = '🥈 2위';
+            else if (currentRank === 3) rankBadge = '🥉 3위';
 
             card.innerHTML = `
                 <div class="rank-number">${rankBadge}</div>
@@ -304,10 +314,10 @@
         if (score === 5) label = '지각(+5점)';
         if (score === 99) label = '대회(+10점)';
 
-        if (!confirm(`[${selectedDateStr.replace(/20\d\d년\s*/, '')}]\n[${name}]님을 [${label}]으로 기록하시겠습니까?`)) return;
+        if (!confirm(`[${selectedDateStr.replace(/^\d{4}년\s*/, '')}]\n[${name}]님을 [${label}]으로 기록하시겠습니까?`)) return;
 
         let found = false;
-        for(let i=0; i<globalLogs.length; i++) {
+        for(let i = 0; i < globalLogs.length; i++) {
             if(globalLogs[i].name === name && globalLogs[i].date.trim() === selectedDateStr.trim()) {
                 globalLogs[i].score = score;
                 found = true;
@@ -331,9 +341,9 @@
     }
 
     function cancelCheckIn(name) {
-        if (!confirm(`[${selectedDateStr.replace(/20\d\d년\s*/, '')}]\n[${name}]님의 출석 기록을 취소하시겠습니까?`)) return;
+        if (!confirm(`[${selectedDateStr.replace(/^\d{4}년\s*/, '')}]\n[${name}]님의 출석 기록을 취소하시겠습니까?`)) return;
 
-        for(let i=0; i<globalLogs.length; i++) {
+        for(let i = 0; i < globalLogs.length; i++) {
             if(globalLogs[i].name === name && globalLogs[i].date.trim() === selectedDateStr.trim()) {
                 globalLogs[i].score = 0;
                 break;
