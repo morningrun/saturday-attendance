@@ -10,12 +10,10 @@
         h1 { font-size: 1.2rem; text-align: center; color: #2c3e50; margin-bottom: 5px; }
         .subtitle { text-align: center; font-size: 0.85rem; color: #7f8c8d; margin-bottom: 15px; }
         
-        /* 고정 상단 탭 */
         .tab-group { display: flex; gap: 6px; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; position: sticky; top: 0; background: white; z-index: 10; }
         .tab-btn { flex: 1; padding: 10px 4px; font-size: 0.85rem; border: none; background: #f1f5f9; color: #64748b; font-weight: bold; border-radius: 8px; cursor: pointer; transition: all 0.2s; text-align: center; }
         .tab-btn.active { background: #2c3e50; color: white; }
 
-        /* 매주 토요일 날짜 가로 스크롤 (오른쪽에서 왼쪽으로 밀어보는 형태) */
         .date-scroll-wrapper { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 8px; overflow-x: auto; padding: 5px 2px 12px 2px; scrollbar-width: thin; }
         .date-scroll-wrapper::-webkit-scrollbar { height: 4px; }
         .date-scroll-wrapper::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -23,7 +21,6 @@
         .date-btn { flex: 0 0 auto; padding: 8px 12px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 20px; font-size: 0.8rem; font-weight: bold; color: #475569; cursor: pointer; white-space: nowrap; }
         .date-btn.active { background: #2563eb; color: white; border-color: #2563eb; box-shadow: 0 2px 4px rgba(37,99,235,0.2); }
 
-        /* 모바일 최적화 카드 디자인 */
         .member-card { display: flex; flex-direction: column; padding: 12px; margin-bottom: 10px; background: #ffffff; border: 1px solid #e1e8ed; border-radius: 10px; transition: all 0.2s; gap: 8px; }
         .member-card.checked-10 { background-color: #e8f8f5 !important; border-color: #2ecc71 !important; border-left: 5px solid #2ecc71 !important; }
         .member-card.checked-5  { background-color: #ebf5fb !important; border-color: #3498db !important; border-left: 5px solid #3498db !important; }
@@ -41,7 +38,6 @@
         button.selected-comp { background: #f39c12 !important; color: white !important; border-color: #f39c12 !important; }
         button.btn-cancel { background: #fff5f5; color: #e74c3c; border-color: #fab6b6; }
 
-        /* 월별 누적 필터 */
         .month-filter { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px; }
         .month-btn { padding: 6px 12px; font-size: 0.8rem; border: 1px solid #cbd5e1; border-radius: 6px; background: white; cursor: pointer; font-weight: bold; color: #64748b; white-space: nowrap; }
         .month-btn.active { background: #0284c7; color: white; border-color: #0284c7; }
@@ -62,19 +58,16 @@
     <h1 id="main-title">🏃‍♂️ 토요일 운동모임 출석부</h1>
     <div class="subtitle">매주 출석 체크 및 월별 누적 현황</div>
     
-    <!-- 고정 상단 탭 -->
     <div class="tab-group">
         <button class="tab-btn active" id="tab-checkin-btn" onclick="switchTab('checkin')">📅 주차별 출석체크</button>
         <button class="tab-btn" id="tab-stats-btn" onclick="switchTab('stats')">🏆 <span id="current-year-text">2026</span>년 누적현황</button>
     </div>
 
-    <!-- 탭 1: 주차별 출석체크 -->
     <div id="tab-checkin">
         <div class="date-scroll-wrapper" id="saturday-buttons"></div>
         <div id="member-list" class="loading">회원 명단 불러오는 중...</div>
     </div>
 
-    <!-- 탭 2: 월별 누적 현황 -->
     <div id="tab-stats" class="hidden">
         <div class="month-filter" id="month-buttons"></div>
         <div id="stats-list" class="loading">누적 데이터 계산 중...</div>
@@ -83,7 +76,7 @@
 
 <script>
     // ⚠️ 아래 쌍따옴표 안에 구글 앱스 스크립트 웹 앱 URL을 넣으세요!
-    const API_URL = "https://script.google.com/macros/s/AKfycbzFPHHUrF9-QHfZ3VEP4zdDkixjHWRy4_QWCmRuvvuY0MgHb1P3VYeS_GQ_0rLjAQzeqw/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbx94xlkKFg6SunTV19NB0p9E7off6WUI2_9IxfgyTgWYAD2L1svhFgkG1XmZchVx5fFdQ/exec";
 
     let globalMembers = [];
     let globalLogs = [];
@@ -93,7 +86,6 @@
     const currentYear = new Date().getFullYear();
     document.getElementById('current-year-text').innerText = currentYear;
 
-    // 안전하게 날짜 문자열(YYYY년 M월 D일 요일)을 만드는 함수
     function formatDateToString(dateObj) {
         const years = dateObj.getFullYear();
         const months = dateObj.getMonth() + 1;
@@ -109,13 +101,10 @@
         
         const saturdays = [];
         let curr = new Date();
-        
-        // 오늘 기준으로 가장 최근 토요일 찾기 (토요일이면 오늘, 아니면 직전 토요일)
         const day = curr.getDay();
         const diff = day >= 6 ? 0 : -(day + 1);
         curr.setDate(curr.getDate() + diff);
         
-        // 최근 12개 토요일 생성
         for(let i = 0; i < 12; i++) {
             let d = new Date(curr);
             d.setDate(curr.getDate() - (i * 7));
@@ -127,7 +116,6 @@
         saturdays.forEach((dStr, idx) => {
             const btn = document.createElement('button');
             btn.className = `date-btn ${idx === 0 ? 'active' : ''}`;
-            // 버튼에는 연도를 빼고 월/일/요일만 깔끔하게 표시
             const shortName = dStr.replace(/^\d{4}년\s*/, '');
             btn.innerText = shortName;
             btn.onclick = () => {
@@ -224,7 +212,7 @@
 
             let badgeHtml = '';
             if (isChecked) {
-                if (existingScore === 10) badgeHtml = '<span class="badge" style="background:#2ecc71; color:white;">🟢 참석</span>';
+                if (existingScore === 10) badgeHtml = '<span class="badge" style="background:#2ecc71; color:white;">🟢 출석</span>';
                 else if (existingScore === 5) badgeHtml = '<span class="badge" style="background:#3498db; color:white;">🔵 지각</span>';
                 else if (existingScore === 99) badgeHtml = '<span class="badge" style="background:#f39c12; color:white;">🟠 대회</span>';
             }
@@ -232,7 +220,7 @@
             let cancelBtnHtml = isChecked ? `<button class="btn-cancel" onclick="cancelCheckIn('${name}')">취소</button>` : '';
 
             let buttonsHtml = `
-                <button class="${btn10Class}" onclick="checkIn('${name}', 10)">참석(+10)</button>
+                <button class="${btn10Class}" onclick="checkIn('${name}', 10)">출석(+10)</button>
                 <button class="${btn5Class}" onclick="checkIn('${name}', 5)">지각(+5)</button>
                 <button class="${btnCompClass}" onclick="checkIn('${name}', 99)">대회(+10)</button>
                 ${cancelBtnHtml}
@@ -302,7 +290,7 @@
             card.innerHTML = `
                 <div class="rank-number">${rankBadge}</div>
                 <div class="rank-name">${item.name}</div>
-                <div class="rank-detail">참석${item.att} · 지각${item.tardy} · 대회${item.comp}</div>
+                <div class="rank-detail">출석${item.att} · 지각${item.tardy} · 대회${item.comp}</div>
                 <div class="rank-score">${item.score}점</div>
             `;
             statsDiv.appendChild(card);
@@ -310,7 +298,7 @@
     }
 
     function checkIn(name, score) {
-        let label = '참석(+10점)';
+        let label = '출석(+10점)';
         if (score === 5) label = '지각(+5점)';
         if (score === 99) label = '대회(+10점)';
 
