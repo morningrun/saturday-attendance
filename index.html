@@ -277,14 +277,16 @@
 
             if (score <= 0) return;
 
+            // 💡 [핵심 수정] 선택된 월("10월" 등)과 로그의 날짜 문자열을 유연하게 비교
             if (selectedMonth !== "전체") {
-                const targetMonthNum = parseInt(selectedMonth.replace(/[^0-9]/g, ""), 10);
+                const targetMonthNum = parseInt(selectedMonth.replace(/[^0-9]/g, ""), 10); // 예: 10
                 
+                // 날짜 텍스트에서 월 숫자를 안전하게 추출 (예: "2026년 10월 3일" -> 10)
                 const match = dateText.match(/(\d+)\s*월/);
                 const logMonthNum = match ? parseInt(match[1], 10) : 0;
 
                 if (logMonthNum !== targetMonthNum) {
-                    return; 
+                    return; // 해당 월이 아니면 통계에서 제외
                 }
             }
 
