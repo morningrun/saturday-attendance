@@ -6,7 +6,7 @@
     <title>토요일 운동모임 출석부</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f8f9fa; margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .container { max-width: 650px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         h1 { font-size: 1.4rem; text-align: center; color: #2c3e50; margin-bottom: 5px; }
         .subtitle { text-align: center; font-size: 0.9rem; color: #7f8c8d; margin-bottom: 20px; }
         .date-box { background: #eef2f7; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 20px; }
@@ -14,20 +14,21 @@
         /* 기본 카드 디자인 (체크 안 됨: 흰색 배경) */
         .member-card { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; margin-bottom: 8px; background: #ffffff; border: 1px solid #e1e8ed; border-radius: 8px; transition: 0.2s; }
         
-        /* 참석 완료된 카드 디자인 (초록빛 강조) */
+        /* 상태별 카드 강조 디자인 */
         .member-card.checked-10 { background-color: #e8f8f5; border-color: #2ecc71; border-left: 6px solid #2ecc71; }
-        /* 지각 완료된 카드 디자인 (파란빛 강조) */
-        .member-card.checked-5 { background-color: #ebf5fb; border-color: #3498db; border-left: 6px solid #3498db; }
+        .member-card.checked-5  { background-color: #ebf5fb; border-color: #3498db; border-left: 6px solid #3498db; }
+        .member-card.checked-comp { background-color: #fef5e7; border-color: #f39c12; border-left: 6px solid #f39c12; }
 
         .member-name { font-weight: bold; font-size: 1rem; color: #2c3e50; }
-        .btn-group { display: flex; gap: 8px; }
+        .btn-group { display: flex; gap: 6px; }
 
         /* 기본 버튼 스타일 */
-        button { padding: 8px 14px; font-size: 0.85rem; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: bold; background: #ffffff; color: #64748b; transition: 0.2s; }
+        button { padding: 8px 10px; font-size: 0.8rem; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: bold; background: #ffffff; color: #64748b; transition: 0.2s; }
         
         /* 선택(클릭)되었을 때 버튼 색상 꽉 채우기 */
-        button.selected-10 { background: #2ecc71 !important; color: white !important; border-color: #2ecc71 !important; box-shadow: 0 2px 5px rgba(46, 204, 113, 0.4); }
-        button.selected-5 { background: #3498db !important; color: white !important; border-color: #3498db !important; box-shadow: 0 2px 5px rgba(52, 152, 219, 0.4); }
+        button.selected-10 { background: #2ecc71 !important; color: white !important; border-color: #2ecc71 !important; }
+        button.selected-5  { background: #3498db !important; color: white !important; border-color: #3498db !important; }
+        button.selected-comp { background: #f39c12 !important; color: white !important; border-color: #f39c12 !important; }
 
         button:active { transform: scale(0.95); }
         .loading { text-align: center; color: #888; padding: 20px; }
@@ -37,7 +38,7 @@
 
 <div class="container">
     <h1>🏃‍♂️ 토요일 운동모임 출석부</h1>
-    <div class="subtitle">참석 또는 지각을 선택하세요!</div>
+    <div class="subtitle">참석, 지각, 대회를 선택하세요!</div>
     
     <div class="date-box" id="current-date">오늘 날짜 로딩 중...</div>
     
@@ -48,13 +49,13 @@
     // ⚠️ 아래 쌍따옴표 안에 구글 앱스 스크립트 웹 앱 URL을 넣으세요!
     const API_URL = "https://script.google.com/macros/s/AKfycbwmI6ytYyDgUch36KLi2ypzJbk4vkk24xA3SYZxut2L89VpaV1WTwXi2RqecYloYcqOuQ/exec";
 
-    // 오늘 날짜를 실제 요일에 맞춰 자동으로 생성 (토요일 고정 오류 해결)
     const today = new Date();
     const dateStr = today.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
     document.getElementById('current-date').innerText = dateStr;
 
     function loadData() {
-        fetch(API_URL)
+        // 캐시 방지를 위해 현재 시간을 뒤에 붙여서 항상 최신 데이터를 가져옵니다.
+        fetch(API_URL + "?t=" + new Date().getTime())
             .then(res => res.json())
             .then(data => {
                 const listDiv = document.getElementById('member-list');
@@ -65,7 +66,6 @@
 
                 const todayAttendance = {};
                 logs.forEach(log => {
-                    // 날짜 문자열 앞부분(년, 월, 일)이 일치하면 오늘 기록으로 인정
                     if (log.date && log.date.includes(`${today.getFullYear()}년`)) {
                         todayAttendance[log.name] = Number(log.score);
                     }
@@ -87,19 +87,29 @@
                     if (isChecked) {
                         if (existingScore === 10) cardClass += ' checked-10';
                         else if (existingScore === 5) cardClass += ' checked-5';
+                        else if (existingScore === 99) cardClass += ' checked-comp'; // 대회 코드
                     }
                     card.className = cardClass;
                     
                     let btn10Class = isChecked && existingScore === 10 ? 'selected-10' : '';
                     let btn5Class = isChecked && existingScore === 5 ? 'selected-5' : '';
+                    let btnCompClass = isChecked && existingScore === 99 ? 'selected-comp' : '';
+
+                    let badgeText = '';
+                    if (isChecked) {
+                        if (existingScore === 10) badgeText = '🟢 참석';
+                        else if (existingScore === 5) badgeText = '🔵 지각';
+                        else if (existingScore === 99) badgeText = '🟠 대회';
+                    }
 
                     let buttonsHtml = `
-                        <button class="${btn10Class}" onclick="checkIn('${name}', 10, ${isChecked})">참석 (+10)</button>
-                        <button class="${btn5Class}" onclick="checkIn('${name}', 5, ${isChecked})">지각 (+5)</button>
+                        <button class="${btn10Class}" onclick="checkIn('${name}', 10, ${isChecked})">참석(+10)</button>
+                        <button class="${btn5Class}" onclick="checkIn('${name}', 5, ${isChecked})">지각(+5)</button>
+                        <button class="${btnCompClass}" onclick="checkIn('${name}', 99, ${isChecked})">대회(+10)</button>
                     `;
 
                     card.innerHTML = `
-                        <div class="member-name">${name} ${isChecked ? (existingScore === 10 ? '🟢 참석' : '🔵 지각') : ''}</div>
+                        <div class="member-name">${name} ${badgeText}</div>
                         <div class="btn-group">${buttonsHtml}</div>
                     `;
                     listDiv.appendChild(card);
@@ -111,10 +121,12 @@
     }
 
     function checkIn(name, score, isChecked) {
-        let label = score === 10 ? '참석(+10점)' : '지각(+5점)';
+        let label = '참석(+10점)';
+        if (score === 5) label = '지각(+5점)';
+        if (score === 99) label = '대회(+10점)';
 
         if (isChecked) {
-            if (!confirm(`[${name}]님은 이미 출석이 기록되어 있습니다.\n[${label}]로 수정하시겠습니까?`)) return;
+            if (!confirm(`[${name}]님은 이미 기록이 있습니다.\n[${label}]로 수정하시겠습니까?`)) return;
         } else {
             if (!confirm(`[${name}]님을 [${label}]으로 기록하시겠습니까?`)) return;
         }
@@ -125,12 +137,9 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name: name, score: score, date: dateStr, isUpdate: isChecked })
         }).then(() => {
-            if (isChecked) {
-                alert(`[수정 완료] ${name}님의 상태가 ${label}로 수정되었습니다!`);
-            } else {
-                alert(`[등록 완료] ${name}님의 ${label}이 반영되었습니다!`);
-            }
-            loadData();
+            alert(`[반영 완료] ${name}님의 ${label}이 적용되었습니다!`);
+            // 데이터가 구글 시트에 반영될 시간을 0.5초 정도 준 뒤 화면을 새로고침합니다.
+            setTimeout(loadData, 500);
         }).catch(() => {
             alert("전송 중 오류가 발생했습니다.");
         });
