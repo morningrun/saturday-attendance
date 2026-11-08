@@ -79,8 +79,8 @@
 </div>
 
 <script>
-    // ⚠️ 구글 앱스 스크립트 웹 앱 URL을 넣으세요!
-    const API_URL = "https://script.google.com/macros/s/AKfycbwvQW_en0MMsMF7E2SrysQYhwtu93VFbOrw1-ZcHu6HS2Hb9Y32Cpl27nU5OqbfCIEBZQ/exec";
+    // ⚠️ 구글 앱스 스크립트 웹 앱 URL
+    const API_URL = "https://script.google.com/macros/s/AKfycbwHUYOjlTb5jdtP8_Ts3wJPmZ0UeLEnnVNr_BAi9lkxyiAGwXuYWTJb6j-pmaHr0G0WNA/exec";
 
     let globalMembers = [];
     let globalLogs = [];
@@ -265,7 +265,6 @@
             const score = Number(log.score);
             const dateText = log.date || "";
 
-            if (!dateText.includes(`${currentYear}년`)) return;
             if (selectedMonth !== "전체" && !dateText.includes(`${selectedMonth}`)) return;
 
             if (userStats[name]) {
@@ -312,24 +311,27 @@
     }
 
     function checkIn(name, score) {
+        // 💡 이미 해당 날짜에 점수가 기록되어 있는지 확인하여 중복 방지 및 안내 메시지 띄우기
+        let alreadyRecordedScore = 0;
+        for(let i = 0; i < globalLogs.length; i++) {
+            if(globalLogs[i].name === name && globalLogs[i].date.trim() === selectedDateStr.trim()) {
+                alreadyRecordedScore = Number(globalLogs[i].score);
+                break;
+            }
+        }
+
+        if (alreadyRecordedScore > 0) {
+            alert(`[${name}]님은 이미 이날 출석(또는 기록)이 완료되었습니다!\n변경하시려면 먼저 [취소]를 누른 후 다시 선택해 주세요.`);
+            return;
+        }
+
         let label = '출석(+10점)';
         if (score === 5) label = '지각(+5점)';
         if (score === 99) label = '대회(+10점)';
 
         if (!confirm(`[${selectedDateStr.replace(/^\d{4}년\s*/, '')}]\n[${name}]님을 [${label}]으로 기록하시겠습니까?`)) return;
 
-        let found = false;
-        for(let i = 0; i < globalLogs.length; i++) {
-            if(globalLogs[i].name === name && globalLogs[i].date.trim() === selectedDateStr.trim()) {
-                globalLogs[i].score = score;
-                found = true;
-                break;
-            }
-        }
-        if(!found) {
-            globalLogs.push({ date: selectedDateStr, name: name, score: score });
-        }
-
+        globalLogs.push({ date: selectedDateStr, name: name, score: score });
         renderCheckinList();
 
         fetch(API_URL, {
