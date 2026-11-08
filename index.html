@@ -256,7 +256,7 @@
         });
     }
 
-    function renderStats() {
+   function renderStats() {
         const statsDiv = document.getElementById('stats-list');
         statsDiv.innerHTML = '';
 
@@ -268,12 +268,20 @@
         globalLogs.forEach(log => {
             const name = log.name;
             const score = Number(log.score);
+            const dateText = String(log.date || ""); 
 
             if (score <= 0) return;
 
+            // 💡 [확실한 해결] 선택된 월("11월" 등)과 데이터의 날짜 텍스트를 직접 비교
             if (selectedMonth !== "전체") {
-                const targetMonthNum = parseInt(selectedMonth.replace(/[^0-9]/g, ""), 10);
-                if (log.month !== targetMonthNum) {
+                const targetMonthNum = parseInt(selectedMonth.replace(/[^0-9]/g, ""), 10); // 예: 11
+                
+                // 날짜 문자열(예: "2026년 11월 7일 토요일")에서 월 숫자 추출
+                const match = dateText.match(/(\d+)\s*월/);
+                const logMonthNum = match ? parseInt(match[1], 10) : 0;
+
+                // 만약 월이 일치하지 않으면 통계에서 제외
+                if (logMonthNum !== targetMonthNum) {
                     return; 
                 }
             }
@@ -297,8 +305,16 @@
             ...userStats[name]
         })).sort((a, b) => b.score - a.score);
 
+        if (sortedList.length === 0 || sortedList.every(item => item.score === 0)) {
+            statsDiv.innerHTML = "<div style='text-align:center; color:#888; padding:20px;'>해당 월에 기록된 출석 데이터가 없습니다.</div>";
+            return;
+        }
+
         let currentRank = 1;
         sortedList.forEach((item, index) => {
+            // 점수가 0점인 사람은 월별 랭킹에서 제외하려면 아래 주석을 풀면 됩니다.
+            // if (item.score === 0) return;
+
             if (index > 0 && item.score < sortedList[index - 1].score) {
                 currentRank = index + 1;
             }
@@ -320,7 +336,6 @@
             statsDiv.appendChild(card);
         });
     }
-
     function checkIn(name, score) {
         let alreadyRecordedScore = 0;
         for(let i = 0; i < globalLogs.length; i++) {
