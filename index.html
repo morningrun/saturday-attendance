@@ -10,27 +10,29 @@
         h1 { font-size: 1.2rem; text-align: center; color: #2c3e50; margin-bottom: 5px; }
         .subtitle { text-align: center; font-size: 0.85rem; color: #7f8c8d; margin-bottom: 15px; }
         
-        /* 탭 버튼 스타일 */
-        .tab-group { display: flex; gap: 6px; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; }
-        .tab-btn { flex: 1; padding: 10px; font-size: 0.9rem; border: none; background: #f1f5f9; color: #64748b; font-weight: bold; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+        /* 고정 상단 탭 (왼쪽: 주차별 출석체크, 오른쪽: 누적현황) */
+        .tab-group { display: flex; gap: 6px; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; position: sticky; top: 0; background: white; z-index: 10; }
+        .tab-btn { flex: 1; padding: 10px 4px; font-size: 0.85rem; border: none; background: #f1f5f9; color: #64748b; font-weight: bold; border-radius: 8px; cursor: pointer; transition: all 0.2s; text-align: center; }
         .tab-btn.active { background: #2c3e50; color: white; }
 
-        .date-box { background: #eef2f7; padding: 8px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 0.9rem; margin-bottom: 15px; }
+        /* 매주 토요일 날짜 가로 스크롤 영역 */
+        .date-scroll-wrapper { display: flex; gap: 8px; overflow-x: auto; padding: 5px 2px 12px 2px; scrollbar-width: thin; }
+        .date-scroll-wrapper::-webkit-scrollbar { height: 4px; }
+        .date-scroll-wrapper::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         
+        .date-btn { flex: 0 0 auto; padding: 8px 12px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 20px; font-size: 0.8rem; font-weight: bold; color: #475569; cursor: pointer; white-space: nowrap; }
+        .date-btn.active { background: #2563eb; color: white; border-color: #2563eb; box-shadow: 0 2px 4px rgba(37,99,235,0.2); }
+
         /* 모바일 최적화 카드 디자인 */
         .member-card { display: flex; flex-direction: column; padding: 12px; margin-bottom: 10px; background: #ffffff; border: 1px solid #e1e8ed; border-radius: 10px; transition: all 0.2s; gap: 8px; }
-        
-        /* 상태별 카드 강조 배경색 */
         .member-card.checked-10 { background-color: #e8f8f5 !important; border-color: #2ecc71 !important; border-left: 5px solid #2ecc71 !important; }
         .member-card.checked-5  { background-color: #ebf5fb !important; border-color: #3498db !important; border-left: 5px solid #3498db !important; }
         .member-card.checked-comp { background-color: #fef5e7 !important; border-color: #f39c12 !important; border-left: 5px solid #f39c12 !important; }
 
-        /* 이름 영역 */
         .member-info { display: flex; justify-content: space-between; align-items: center; }
         .member-name { font-weight: bold; font-size: 1.05rem; color: #2c3e50; white-space: nowrap; }
         .badge { font-size: 0.85rem; font-weight: bold; padding: 2px 8px; border-radius: 4px; }
         
-        /* 출석 버튼 그룹 */
         .btn-group { display: flex; gap: 4px; width: 100%; }
         .btn-group button { flex: 1; padding: 10px 2px; font-size: 0.8rem; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: bold; background: #ffffff; color: #64748b; text-align: center; transition: all 0.2s; }
         
@@ -39,11 +41,15 @@
         button.selected-comp { background: #f39c12 !important; color: white !important; border-color: #f39c12 !important; }
         button.btn-cancel { background: #fff5f5; color: #e74c3c; border-color: #fab6b6; }
 
-        /* 누적 현황 리스트 스타일 */
+        /* 월별 누적 필터 */
+        .month-filter { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px; }
+        .month-btn { padding: 6px 12px; font-size: 0.8rem; border: 1px solid #cbd5e1; border-radius: 6px; background: white; cursor: pointer; font-weight: bold; color: #64748b; white-space: nowrap; }
+        .month-btn.active { background: #0284c7; color: white; border-color: #0284c7; }
+
         .rank-card { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; margin-bottom: 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; }
         .rank-number { font-weight: bold; color: #3b82f6; width: 35px; font-size: 0.95rem; }
         .rank-name { font-weight: bold; flex: 1; font-size: 1rem; color: #1e293b; }
-        .rank-detail { font-size: 0.8rem; color: #64748b; margin-right: 10px; }
+        .rank-detail { font-size: 0.78rem; color: #64748b; margin-right: 8px; }
         .rank-score { font-weight: bold; font-size: 1.1rem; color: #059669; }
 
         .hidden { display: none; }
@@ -54,38 +60,95 @@
 
 <div class="container">
     <h1>🏃‍♂️ 토요일 운동모임 출석부</h1>
-    <div class="subtitle">참석, 지각, 대회를 선택하세요</div>
+    <div class="subtitle">매주 출석 체크 및 월별 누적 현황</div>
     
-    <!-- 탭 메뉴 -->
+    <!-- 고정 상단 탭 (왼쪽/오른쪽) -->
     <div class="tab-group">
-        <button class="tab-btn active" id="tab-checkin-btn" onclick="switchTab('checkin')">📋 오늘 출석 체크</button>
-        <button class="tab-btn" id="tab-stats-btn" onclick="switchTab('stats')">🏆 누적 현황 / 순위</button>
+        <button class="tab-btn active" id="tab-checkin-btn" onclick="switchTab('checkin')">📅 주차별 출석체크</button>
+        <button class="tab-btn" id="tab-stats-btn" onclick="switchTab('stats')">🏆 2026년 누적현황</button>
     </div>
 
-    <!-- 탭 1: 출석 체크 화면 -->
+    <!-- 탭 1: 주차별 출석체크 (가로 스크롤) -->
     <div id="tab-checkin">
-        <div class="date-box" id="current-date">오늘 날짜 로딩 중...</div>
+        <div class="date-scroll-wrapper" id="saturday-buttons">
+            <!-- 매주 토요일 날짜 버튼이 가로 스크롤로 생성됨 -->
+        </div>
         <div id="member-list" class="loading">회원 명단 불러오는 중...</div>
     </div>
 
-    <!-- 탭 2: 누적 현황 화면 -->
+    <!-- 탭 2: 2026년 월별 누적 현황 (고정) -->
     <div id="tab-stats" class="hidden">
-        <div class="date-box" style="background:#e0f2fe; color:#0369a1;">📊 전체 회원 누적 점수 순위</div>
+        <div class="month-filter" id="month-buttons">
+            <!-- 월별 필터 버튼 -->
+        </div>
         <div id="stats-list" class="loading">누적 데이터 계산 중...</div>
     </div>
 </div>
 
 <script>
     // ⚠️ 아래 쌍따옴표 안에 구글 앱스 스크립트 웹 앱 URL을 넣으세요!
-    const API_URL = "https://script.google.com/macros/s/AKfycbw5XMdlIOJIxJtzxFUuWAq396hP7pQK9rzutaOyAnBLSHbwzLIPWlKWkt-m_UfaPXwv/exec";
-
-    const today = new Date();
-    const dateStr = today.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
-    document.getElementById('current-date').innerText = dateStr;
+    const API_URL = "https://script.google.com/macros/s/AKfycbxcAIA2xoK7JvvUVi22NDYLuT_0lHT-NJT9kwlUonZHPvbLyv0mNZIGSho10GaaqnHrYA/exec";
 
     let globalMembers = [];
     let globalLogs = [];
-    let globalTodayAttendance = {};
+    let selectedDateStr = "";
+    let selectedMonth = "전체";
+
+    // 2026년 최근 토요일 목록 생성 (가로 스크롤용)
+    function initSaturdayButtons() {
+        const wrapper = document.getElementById('saturday-buttons');
+        wrapper.innerHTML = '';
+        
+        const saturdays = [];
+        let curr = new Date();
+        // 가장 최근/다음 토요일 찾기
+        curr.setDate(curr.getDate() + (6 - curr.getDay()));
+        
+        // 지난 12개 토요일 버튼 생성
+        for(let i=0; i<12; i++) {
+            let d = new Date(curr);
+            d.setDate(curr.getDate() - (i * 7));
+            let dStr = d.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+            saturdays.push(dStr);
+        }
+
+        selectedDateStr = saturdays[0]; // 기본은 이번주 토요일
+
+        saturdays.forEach((dStr, idx) => {
+            const btn = document.createElement('button');
+            btn.className = `date-btn ${idx === 0 ? 'active' : ''}`;
+            // 날짜 표시만 간략하게 (예: 11월 7일)
+            const shortName = dStr.replace(/20\d\d년\s*/, '');
+            btn.innerText = shortName;
+            btn.onclick = () => {
+                document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedDateStr = dStr;
+                renderCheckinList();
+            };
+            wrapper.appendChild(btn);
+        });
+    }
+
+    // 월별 필터 버튼 생성
+    function initMonthButtons() {
+        const wrapper = document.getElementById('month-buttons');
+        wrapper.innerHTML = '';
+        
+        const months = ["전체", "1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"];
+        months.forEach(m => {
+            const btn = document.createElement('button');
+            btn.className = `month-btn ${m === selectedMonth ? 'active' : ''}`;
+            btn.innerText = m;
+            btn.onclick = () => {
+                document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedMonth = m;
+                renderStats();
+            };
+            wrapper.appendChild(btn);
+        });
+    }
 
     function switchTab(tabName) {
         if (tabName === 'checkin') {
@@ -108,14 +171,6 @@
             .then(data => {
                 globalMembers = data.members || [];
                 globalLogs = data.logs || [];
-
-                globalTodayAttendance = {};
-                globalLogs.forEach(log => {
-                    if (log.date && log.date.includes(`${today.getFullYear()}년`)) {
-                        globalTodayAttendance[log.name] = Number(log.score);
-                    }
-                });
-
                 renderCheckinList();
             })
             .catch(err => {
@@ -132,9 +187,17 @@
             return;
         }
 
+        // 선택된 토요일 날짜의 출석 기록 맵핑
+        const dayAttendance = {};
+        globalLogs.forEach(log => {
+            if (log.date && log.date.trim() === selectedDateStr.trim()) {
+                dayAttendance[log.name] = Number(log.score);
+            }
+        });
+
         globalMembers.forEach(member => {
             const name = member.name;
-            const existingScore = globalTodayAttendance[name];
+            const existingScore = dayAttendance[name];
             const isChecked = existingScore !== undefined && existingScore > 0;
 
             const card = document.createElement('div');
@@ -187,10 +250,16 @@
             userStats[m.name] = { score: 0, att: 0, tardy: 0, comp: 0 };
         });
 
-        // 점수 합산 로직 (대회 99점은 화면 합산 시 +10점으로 정산)
         globalLogs.forEach(log => {
             const name = log.name;
             const score = Number(log.score);
+            const dateText = log.date || "";
+
+            // 월별 필터 적용
+            if (selectedMonth !== "전체" && !dateText.includes(`${selectedMonth}`)) {
+                return;
+            }
+
             if (userStats[name]) {
                 if (score === 10) {
                     userStats[name].score += 10;
@@ -205,7 +274,6 @@
             }
         });
 
-        // 점수 높은 순으로 정렬
         const sortedList = Object.keys(userStats).map(name => ({
             name: name,
             ...userStats[name]
@@ -235,19 +303,20 @@
         if (score === 5) label = '지각(+5점)';
         if (score === 99) label = '대회(+10점)';
 
-        const currentScore = globalTodayAttendance[name];
-        const isChecked = currentScore !== undefined && currentScore > 0;
+        if (!confirm(`[${selectedDateStr.replace(/20\d\d년\s*/, '')}]\n[${name}]님을 [${label}]으로 기록하시겠습니까?`)) return;
 
-        if (isChecked) {
-            if (!confirm(`[${name}]님 기록을 [${label}]로 수정하시겠습니까?`)) return;
-        } else {
-            if (!confirm(`[${name}]님을 [${label}]으로 기록하시겠습니까?`)) return;
+        // 즉시 로컬 데이터 갱신
+        let found = false;
+        for(let i=0; i<globalLogs.length; i++) {
+            if(globalLogs[i].name === name && globalLogs[i].date.trim() === selectedDateStr.trim()) {
+                globalLogs[i].score = score;
+                found = true;
+                break;
+            }
         }
-
-        globalTodayAttendance[name] = score;
-        
-        // logs 배열 업데이트
-        globalLogs.push({ date: dateStr, name: name, score: score });
+        if(!found) {
+            globalLogs.push({ date: selectedDateStr, name: name, score: score });
+        }
 
         renderCheckinList();
 
@@ -255,28 +324,36 @@
             method: 'POST',
             mode: 'no-cors',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: name, score: score, date: dateStr, isUpdate: isChecked })
+            body: JSON.stringify({ name: name, score: score, date: selectedDateStr })
         }).catch(() => {
             alert("전송 중 오류가 발생했습니다.");
         });
     }
 
     function cancelCheckIn(name) {
-        if (!confirm(`[${name}]님의 오늘 출석 기록을 취소하시겠습니까?`)) return;
+        if (!confirm(`[${selectedDateStr.replace(/20\d\d년\s*/, '')}]\n[${name}]님의 출석 기록을 취소하시겠습니까?`)) return;
 
-        globalTodayAttendance[name] = 0;
+        for(let i=0; i<globalLogs.length; i++) {
+            if(globalLogs[i].name === name && globalLogs[i].date.trim() === selectedDateStr.trim()) {
+                globalLogs[i].score = 0;
+                break;
+            }
+        }
+
         renderCheckinList();
 
         fetch(API_URL, {
             method: 'POST',
             mode: 'no-cors',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: name, score: 0, date: dateStr, isUpdate: true })
+            body: JSON.stringify({ name: name, score: 0, date: selectedDateStr })
         }).catch(() => {
             alert("전송 중 오류가 발생했습니다.");
         });
     }
 
+    initSaturdayButtons();
+    initMonthButtons();
     loadData();
 </script>
 
