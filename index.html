@@ -10,13 +10,13 @@
         h1 { font-size: 1.2rem; text-align: center; color: #2c3e50; margin-bottom: 5px; }
         .subtitle { text-align: center; font-size: 0.85rem; color: #7f8c8d; margin-bottom: 15px; }
         
-        /* 고정 상단 탭 (왼쪽: 주차별 출석체크, 오른쪽: 누적현황) */
+        /* 고정 상단 탭 */
         .tab-group { display: flex; gap: 6px; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; position: sticky; top: 0; background: white; z-index: 10; }
         .tab-btn { flex: 1; padding: 10px 4px; font-size: 0.85rem; border: none; background: #f1f5f9; color: #64748b; font-weight: bold; border-radius: 8px; cursor: pointer; transition: all 0.2s; text-align: center; }
         .tab-btn.active { background: #2c3e50; color: white; }
 
-        /* 매주 토요일 날짜 가로 스크롤 영역 */
-        .date-scroll-wrapper { display: flex; gap: 8px; overflow-x: auto; padding: 5px 2px 12px 2px; scrollbar-width: thin; }
+        /* 매주 토요일 날짜 가로 스크롤 (오른쪽으로 밀면서 보는 형태) */
+        .date-scroll-wrapper { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 8px; overflow-x: auto; padding: 5px 2px 12px 2px; scrollbar-width: thin; }
         .date-scroll-wrapper::-webkit-scrollbar { height: 4px; }
         .date-scroll-wrapper::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         
@@ -59,28 +59,24 @@
 <body>
 
 <div class="container">
-    <h1>🏃‍♂️ 토요일 운동모임 출석부</h1>
+    <h1 id="main-title">🏃‍♂️ 토요일 운동모임 출석부</h1>
     <div class="subtitle">매주 출석 체크 및 월별 누적 현황</div>
     
-    <!-- 고정 상단 탭 (왼쪽/오른쪽) -->
+    <!-- 고정 상단 탭 -->
     <div class="tab-group">
         <button class="tab-btn active" id="tab-checkin-btn" onclick="switchTab('checkin')">📅 주차별 출석체크</button>
-        <button class="tab-btn" id="tab-stats-btn" onclick="switchTab('stats')">🏆 2026년 누적현황</button>
+        <button class="tab-btn" id="tab-stats-btn" onclick="switchTab('stats')">🏆 <span id="current-year-text">2026</span>년 누적현황</button>
     </div>
 
-    <!-- 탭 1: 주차별 출석체크 (가로 스크롤) -->
+    <!-- 탭 1: 주차별 출석체크 (달력 자동연동 스크롤) -->
     <div id="tab-checkin">
-        <div class="date-scroll-wrapper" id="saturday-buttons">
-            <!-- 매주 토요일 날짜 버튼이 가로 스크롤로 생성됨 -->
-        </div>
+        <div class="date-scroll-wrapper" id="saturday-buttons"></div>
         <div id="member-list" class="loading">회원 명단 불러오는 중...</div>
     </div>
 
-    <!-- 탭 2: 2026년 월별 누적 현황 (고정) -->
+    <!-- 탭 2: 월별 누적 현황 (연도 자동인식) -->
     <div id="tab-stats" class="hidden">
-        <div class="month-filter" id="month-buttons">
-            <!-- 월별 필터 버튼 -->
-        </div>
+        <div class="month-filter" id="month-buttons"></div>
         <div id="stats-list" class="loading">누적 데이터 계산 중...</div>
     </div>
 </div>
@@ -94,17 +90,24 @@
     let selectedDateStr = "";
     let selectedMonth = "전체";
 
-    // 2026년 최근 토요일 목록 생성 (가로 스크롤용)
+    // 현재 기기의 연도를 자동 인식
+    const currentYear = new Date().getFullYear();
+    document.getElementById('current-year-text').innerText = currentYear;
+
+    // 달력 날짜 자동 연동 및 토요일 계산 (최신순 스크롤)
     function initSaturdayButtons() {
         const wrapper = document.getElementById('saturday-buttons');
         wrapper.innerHTML = '';
         
         const saturdays = [];
         let curr = new Date();
-        // 가장 최근/다음 토요일 찾기
-        curr.setDate(curr.getDate() + (6 - curr.getDay()));
         
-        // 지난 12개 토요일 버튼 생성
+        // 오늘 기준으로 가장 가까운 토요일 찾기
+        const day = curr.getDay();
+        const diff = (6 - day + 7) % 7;
+        curr.setDate(curr.getDate() + diff);
+        
+        // 최근 12개 토요일 생성
         for(let i=0; i<12; i++) {
             let d = new Date(curr);
             d.setDate(curr.getDate() - (i * 7));
@@ -117,7 +120,6 @@
         saturdays.forEach((dStr, idx) => {
             const btn = document.createElement('button');
             btn.className = `date-btn ${idx === 0 ? 'active' : ''}`;
-            // 날짜 표시만 간략하게 (예: 11월 7일)
             const shortName = dStr.replace(/20\d\d년\s*/, '');
             btn.innerText = shortName;
             btn.onclick = () => {
@@ -130,7 +132,7 @@
         });
     }
 
-    // 월별 필터 버튼 생성
+    // 월별 필터 생성
     function initMonthButtons() {
         const wrapper = document.getElementById('month-buttons');
         wrapper.innerHTML = '';
@@ -187,7 +189,6 @@
             return;
         }
 
-        // 선택된 토요일 날짜의 출석 기록 맵핑
         const dayAttendance = {};
         globalLogs.forEach(log => {
             if (log.date && log.date.trim() === selectedDateStr.trim()) {
@@ -255,10 +256,9 @@
             const score = Number(log.score);
             const dateText = log.date || "";
 
-            // 월별 필터 적용
-            if (selectedMonth !== "전체" && !dateText.includes(`${selectedMonth}`)) {
-                return;
-            }
+            // 현재 연도(예: 2026년, 2027년) 데이터이면서 선택된 월에 맞는 것만 집계
+            if (!dateText.includes(`${currentYear}년`)) return;
+            if (selectedMonth !== "전체" && !dateText.includes(`${selectedMonth}`)) return;
 
             if (userStats[name]) {
                 if (score === 10) {
@@ -305,7 +305,6 @@
 
         if (!confirm(`[${selectedDateStr.replace(/20\d\d년\s*/, '')}]\n[${name}]님을 [${label}]으로 기록하시겠습니까?`)) return;
 
-        // 즉시 로컬 데이터 갱신
         let found = false;
         for(let i=0; i<globalLogs.length; i++) {
             if(globalLogs[i].name === name && globalLogs[i].date.trim() === selectedDateStr.trim()) {
