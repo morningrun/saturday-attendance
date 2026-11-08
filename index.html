@@ -10,14 +10,25 @@
         h1 { font-size: 1.4rem; text-align: center; color: #2c3e50; margin-bottom: 5px; }
         .subtitle { text-align: center; font-size: 0.9rem; color: #7f8c8d; margin-bottom: 20px; }
         .date-box { background: #eef2f7; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 20px; }
-        .member-card { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; transition: 0.2s; }
-        .member-card.checked { background-color: #f1f8f5; border-left: 4px solid #2ecc71; }
-        .member-name { font-weight: bold; font-size: 1rem; }
+        
+        /* 기본 카드 디자인 (체크 안 됨: 흰색 배경) */
+        .member-card { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; margin-bottom: 8px; background: #ffffff; border: 1px solid #e1e8ed; border-radius: 8px; transition: 0.2s; }
+        
+        /* 출석 완료된 카드 디자인 (초록빛 강조) */
+        .member-card.checked-10 { background-color: #e8f8f5; border-color: #2ecc71; border-left: 6px solid #2ecc71; }
+        /* 지각 완료된 카드 디자인 (파란빛 강조) */
+        .member-card.checked-5 { background-color: #ebf5fb; border-color: #3498db; border-left: 6px solid #3498db; }
+
+        .member-name { font-weight: bold; font-size: 1rem; color: #2c3e50; }
         .btn-group { display: flex; gap: 8px; }
-        button { padding: 8px 14px; font-size: 0.85rem; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; opacity: 0.8; }
-        button.selected { opacity: 1.0; outline: 2px solid #333; transform: scale(1.05); }
-        .btn-10 { background: #2ecc71; color: white; }
-        .btn-5 { background: #3498db; color: white; }
+
+        /* 기본 버튼 스타일 (안 눌렀을 때는 연한 회색/흰색 느낌) */
+        button { padding: 8px 14px; font-size: 0.85rem; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: bold; background: #ffffff; color: #64748b; transition: 0.2s; }
+        
+        /* 선택(클릭)되었을 때 버튼 색상 꽉 채우기 */
+        button.selected-10 { background: #2ecc71 !important; color: white !important; border-color: #2ecc71 !important; box-shadow: 0 2px 5px rgba(46, 204, 113, 0.4); }
+        button.selected-5 { background: #3498db !important; color: white !important; border-color: #3498db !important; box-shadow: 0 2px 5px rgba(52, 152, 219, 0.4); }
+
         button:active { transform: scale(0.95); }
         .loading { text-align: center; color: #888; padding: 20px; }
     </style>
@@ -35,7 +46,7 @@
 
 <script>
     // ⚠️ 아래 쌍따옴표 안에 구글 앱스 스크립트 웹 앱 URL을 넣으세요!
-    const API_URL = "https://script.google.com/macros/s/AKfycbwJVlaMLYmvRp0MywhuXlBho8TrZHG1W1e4HotCjhocf-wqRkD5SnVWO9rkhos-0WwwnA/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbwmI6ytYyDgUch36KLi2ypzJbk4vkk24xA3SYZxut2L89VpaV1WTwXi2RqecYloYcqOuQ/exec";
 
     const today = new Date();
     const dateStr = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일 토요일`;
@@ -69,15 +80,25 @@
                     const isChecked = existingScore !== undefined;
 
                     const card = document.createElement('div');
-                    card.className = `member-card ${isChecked ? 'checked' : ''}`;
                     
+                    // 상태에 따라 카드 배경색 클래스 다르게 부여
+                    let cardClass = 'member-card';
+                    if (isChecked) {
+                        if (existingScore === 10) cardClass += ' checked-10';
+                        else if (existingScore === 5) cardClass += ' checked-5';
+                    }
+                    card.className = cardClass;
+                    
+                    let btn10Class = isChecked && existingScore === 10 ? 'selected-10' : '';
+                    let btn5Class = isChecked && existingScore === 5 ? 'selected-5' : '';
+
                     let buttonsHtml = `
-                        <button class="btn-10 ${isChecked && existingScore === 10 ? 'selected' : ''}" onclick="checkIn('${name}', 10, ${isChecked})">참석 (+10)</button>
-                        <button class="btn-5 ${isChecked && existingScore === 5 ? 'selected' : ''}" onclick="checkIn('${name}', 5, ${isChecked})">지각 (+5)</button>
+                        <button class="${btn10Class}" onclick="checkIn('${name}', 10, ${isChecked})">참석 (+10)</button>
+                        <button class="${btn5Class}" onclick="checkIn('${name}', 5, ${isChecked})">지각 (+5)</button>
                     `;
 
                     card.innerHTML = `
-                        <div class="member-name">${name} ${isChecked ? '✅' : ''}</div>
+                        <div class="member-name">${name} ${isChecked ? (existingScore === 10 ? '🟢 참석' : '🔵 지각') : ''}</div>
                         <div class="btn-group">${buttonsHtml}</div>
                     `;
                     listDiv.appendChild(card);
