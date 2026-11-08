@@ -3,18 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>토요일 운동모임 출석부</title>
+    <title>토달 출석부</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; margin: 0; padding: 10px; color: #333; }
         .container { max-width: 600px; margin: 0 auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        h1 { font-size: 1.2rem; text-align: center; color: #2c3e50; margin-bottom: 5px; }
-        .subtitle { text-align: center; font-size: 0.85rem; color: #7f8c8d; margin-bottom: 15px; }
+        
+        /* 귀엽고 엄청 커진 메인 타이틀 스타일 */
+        .main-title-box { text-align: center; margin: 15px 0 5px 0; }
+        .main-title { font-size: 2.2rem; font-weight: 900; color: #1e293b; letter-spacing: -1px; display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #2563eb, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .subtitle { text-align: center; font-size: 0.85rem; color: #7f8c8d; margin-bottom: 20px; font-weight: 500; }
         
         .tab-group { display: flex; gap: 6px; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; position: sticky; top: 0; background: white; z-index: 10; }
         .tab-btn { flex: 1; padding: 10px 4px; font-size: 0.85rem; border: none; background: #f1f5f9; color: #64748b; font-weight: bold; border-radius: 8px; cursor: pointer; transition: all 0.2s; text-align: center; }
         .tab-btn.active { background: #2c3e50; color: white; }
 
-        /* 날짜 가로 스크롤 (자연스럽고 부드러운 기본 정렬) */
         .date-scroll-wrapper { display: flex; gap: 8px; overflow-x: auto; padding: 5px 2px 12px 2px; scrollbar-width: thin; -webkit-overflow-scrolling: touch; }
         .date-scroll-wrapper::-webkit-scrollbar { height: 4px; }
         .date-scroll-wrapper::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -56,8 +59,11 @@
 <body>
 
 <div class="container">
-    <h1 id="main-title">🏃‍♂️ 토요일 운동모임 출석부</h1>
-    <div class="subtitle">매주 출석 체크 및 월별 누적 현황</div>
+    <!-- 엄청 크고 귀여워진 타이틀 영역 -->
+    <div class="main-title-box">
+        <div class="main-title">🏃‍♂️ 토달 출석부 ✨</div>
+    </div>
+    <div class="subtitle">매주 토요일 운동모임 출석 & 누적 현황</div>
     
     <div class="tab-group">
         <button class="tab-btn active" id="tab-checkin-btn" onclick="switchTab('checkin')">📅 주차별 출석체크</button>
@@ -106,14 +112,12 @@
         const diff = day >= 6 ? 0 : -(day + 1);
         curr.setDate(curr.getDate() + diff);
         
-        // 최근 12개 토요일 생성 (과거부터 최근 순으로 정렬되어 스크롤이 자연스럽게 됨)
         for(let i = 11; i >= 0; i--) {
             let d = new Date(curr);
             d.setDate(curr.getDate() - (i * 7));
             saturdays.push(formatDateToString(d));
         }
 
-        // 가장 최근 토요일을 기본 선택
         selectedDateStr = saturdays[saturdays.length - 1];
 
         saturdays.forEach((dStr, idx) => {
@@ -132,7 +136,6 @@
             wrapper.appendChild(btn);
         });
 
-        // 스크롤을 맨 오른쪽(가장 최근 날짜)으로 자동 이동
         setTimeout(() => {
             wrapper.scrollLeft = wrapper.scrollWidth;
         }, 100);
