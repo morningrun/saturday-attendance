@@ -12,9 +12,9 @@
         .date-box { background: #eef2f7; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 20px; }
         
         /* 기본 카드 디자인 */
-        .member-card { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; margin-bottom: 8px; background: #ffffff; border: 1px solid #e1e8ed; border-radius: 8px; transition: 0.2s; }
+        .member-card { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; margin-bottom: 8px; background: #ffffff; border: 1px solid #e1e8ed; border-radius: 8px; transition: all 0.2s; }
         
-        /* 상태별 카드 강조 배경색 */
+        /* 상태별 카드 강조 배경색 (!important로 강제 적용) */
         .member-card.checked-10 { background-color: #e8f8f5 !important; border-color: #2ecc71 !important; border-left: 6px solid #2ecc71 !important; }
         .member-card.checked-5  { background-color: #ebf5fb !important; border-color: #3498db !important; border-left: 6px solid #3498db !important; }
         .member-card.checked-comp { background-color: #fef5e7 !important; border-color: #f39c12 !important; border-left: 6px solid #f39c12 !important; }
@@ -23,7 +23,7 @@
         .btn-group { display: flex; gap: 6px; }
 
         /* 기본 버튼 스타일 */
-        button { padding: 8px 10px; font-size: 0.8rem; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: bold; background: #ffffff; color: #64748b; transition: 0.2s; }
+        button { padding: 8px 10px; font-size: 0.8rem; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: bold; background: #ffffff; color: #64748b; transition: all 0.2s; }
         
         /* 선택(클릭)되었을 때 버튼 색상 꽉 채우기 */
         button.selected-10 { background: #2ecc71 !important; color: white !important; border-color: #2ecc71 !important; }
@@ -53,78 +53,85 @@
     const dateStr = today.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
     document.getElementById('current-date').innerText = dateStr;
 
+    let globalMembers = [];
+    let globalAttendance = {};
+
     function loadData() {
-        // 캐시 방지용 타임스탬프 추가
         fetch(API_URL + "?t=" + new Date().getTime())
             .then(res => res.json())
             .then(data => {
-                const listDiv = document.getElementById('member-list');
-                listDiv.innerHTML = '';
-                
-                const members = data.members || [];
+                globalMembers = data.members || [];
                 const logs = data.logs || [];
 
-                const todayAttendance = {};
+                globalAttendance = {};
                 logs.forEach(log => {
-                    // 오늘 날짜와 일치하는 기록만 가져옴
                     if (log.date && log.date.includes(`${today.getFullYear()}년`)) {
-                        todayAttendance[log.name] = Number(log.score);
+                        globalAttendance[log.name] = Number(log.score);
                     }
                 });
 
-                if(members.length === 0) {
-                    listDiv.innerHTML = "Members 시트에 회원 명단을 입력해 주세요.";
-                    return;
-                }
-
-                members.forEach(member => {
-                    const name = member.name;
-                    const existingScore = todayAttendance[name];
-                    const isChecked = existingScore !== undefined;
-
-                    const card = document.createElement('div');
-                    
-                    let cardClass = 'member-card';
-                    if (isChecked) {
-                        if (existingScore === 10) cardClass += ' checked-10';
-                        else if (existingScore === 5) cardClass += ' checked-5';
-                        else if (existingScore === 99) cardClass += ' checked-comp';
-                    }
-                    card.className = cardClass;
-                    
-                    let btn10Class = isChecked && existingScore === 10 ? 'selected-10' : '';
-                    let btn5Class = isChecked && existingScore === 5 ? 'selected-5' : '';
-                    let btnCompClass = isChecked && existingScore === 99 ? 'selected-comp' : '';
-
-                    let badgeText = '';
-                    if (isChecked) {
-                        if (existingScore === 10) badgeText = '🟢 참석';
-                        else if (existingScore === 5) badgeText = '🔵 지각';
-                        else if (existingScore === 99) badgeText = '🟠 대회';
-                    }
-
-                    let buttonsHtml = `
-                        <button class="${btn10Class}" onclick="checkIn('${name}', 10, ${isChecked})">참석(+10)</button>
-                        <button class="${btn5Class}" onclick="checkIn('${name}', 5, ${isChecked})">지각(+5)</button>
-                        <button class="${btnCompClass}" onclick="checkIn('${name}', 99, ${isChecked})">대회(+10)</button>
-                    `;
-
-                    card.innerHTML = `
-                        <div class="member-name">${name} ${badgeText}</div>
-                        <div class="btn-group">${buttonsHtml}</div>
-                    `;
-                    listDiv.appendChild(card);
-                });
+                renderList();
             })
             .catch(err => {
                 document.getElementById('member-list').innerHTML = "데이터를 불러오는 데 실패했습니다. 구글 URL을 확인해 주세요.";
             });
     }
 
-    function checkIn(name, score, isChecked) {
+    function renderList() {
+        const listDiv = document.getElementById('member-list');
+        listDiv.innerHTML = '';
+        
+        if(globalMembers.length === 0) {
+            listDiv.innerHTML = "Members 시트에 회원 명단을 입력해 주세요.";
+            return;
+        }
+
+        globalMembers.forEach(member => {
+            const name = member.name;
+            const existingScore = globalAttendance[name];
+            const isChecked = existingScore !== undefined;
+
+            const card = document.createElement('div');
+            
+            let cardClass = 'member-card';
+            if (isChecked) {
+                if (existingScore === 10) cardClass += ' checked-10';
+                else if (existingScore === 5) cardClass += ' checked-5';
+                else if (existingScore === 99) cardClass += ' checked-comp';
+            }
+            card.className = cardClass;
+            
+            let btn10Class = isChecked && existingScore === 10 ? 'selected-10' : '';
+            let btn5Class = isChecked && existingScore === 5 ? 'selected-5' : '';
+            let btnCompClass = isChecked && existingScore === 99 ? 'selected-comp' : '';
+
+            let badgeText = '';
+            if (isChecked) {
+                if (existingScore === 10) badgeText = '🟢 참석';
+                else if (existingScore === 5) badgeText = '🔵 지각';
+                else if (existingScore === 99) badgeText = '🟠 대회';
+            }
+
+            let buttonsHtml = `
+                <button class="${btn10Class}" onclick="checkIn('${name}', 10)">참석(+10)</button>
+                <button class="${btn5Class}" onclick="checkIn('${name}', 5)">지각(+5)</button>
+                <button class="${btnCompClass}" onclick="checkIn('${name}', 99)">대회(+10)</button>
+            `;
+
+            card.innerHTML = `
+                <div class="member-name">${name} ${badgeText}</div>
+                <div class="btn-group">${buttonsHtml}</div>
+            `;
+            listDiv.appendChild(card);
+        });
+    }
+
+    function checkIn(name, score) {
         let label = '참석(+10점)';
         if (score === 5) label = '지각(+5점)';
         if (score === 99) label = '대회(+10점)';
+
+        const isChecked = globalAttendance[name] !== undefined;
 
         if (isChecked) {
             if (!confirm(`[${name}]님은 이미 기록이 있습니다.\n[${label}]로 수정하시겠습니까?`)) return;
@@ -132,17 +139,18 @@
             if (!confirm(`[${name}]님을 [${label}]으로 기록하시겠습니까?`)) return;
         }
 
+        // 1. 화면 색상 및 상태를 '즉시' 업데이트 (사용자 경험 우선)
+        globalAttendance[name] = score;
+        renderList();
+
+        // 2. 구글 시트에 비동기로 백그라운드 전송
         fetch(API_URL, {
             method: 'POST',
             mode: 'no-cors',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name: name, score: score, date: dateStr, isUpdate: isChecked })
-        }).then(() => {
-            alert(`[반영 완료] ${name}님의 ${label}이 적용되었습니다!`);
-            // 서버 반영 시간을 고려해 0.6초 뒤 데이터 새로고침
-            setTimeout(loadData, 600);
         }).catch(() => {
-            alert("전송 중 오류가 발생했습니다.");
+            alert("전송 중 오류가 발생했습니다. 구글 시트를 확인해 주세요.");
         });
     }
 
