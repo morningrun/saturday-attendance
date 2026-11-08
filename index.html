@@ -16,12 +16,18 @@
         .tab-btn { flex: 1; padding: 10px 4px; font-size: 0.95rem; border: none; background: #f1f5f9; color: #64748b; font-weight: bold; border-radius: 8px; cursor: pointer; transition: all 0.2s; text-align: center; }
         .tab-btn.active { background: #2c3e50; color: white; }
 
-        .date-scroll-wrapper { display: flex; gap: 8px; overflow-x: auto; padding: 5px 2px 12px 2px; scrollbar-width: thin; -webkit-overflow-scrolling: touch; }
-        .date-scroll-wrapper::-webkit-scrollbar { height: 4px; }
-        .date-scroll-wrapper::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        /* 월별 탭 (1~12월 + 전체) */
+        .month-filter { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; -webkit-overflow-scrolling: touch; }
+        .month-btn { padding: 8px 14px; font-size: 0.9rem; border: 1px solid #cbd5e1; border-radius: 8px; background: white; cursor: pointer; font-weight: bold; color: #64748b; white-space: nowrap; }
+        .month-btn.active { background: #0284c7; color: white; border-color: #0284c7; }
+
+        /* 세로형 토요일 날짜 리스트 박스 */
+        .saturday-list-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; margin-bottom: 15px; }
+        .saturday-list-title { font-size: 0.9rem; font-weight: bold; color: #475569; margin-bottom: 8px; }
+        .saturday-vertical-group { display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto; }
         
-        .date-btn { flex: 0 0 auto; padding: 8px 12px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 20px; font-size: 0.85rem; font-weight: bold; color: #475569; cursor: pointer; white-space: nowrap; }
-        .date-btn.active { background: #2563eb; color: white; border-color: #2563eb; box-shadow: 0 2px 4px rgba(37,99,235,0.2); }
+        .saturday-item-btn { padding: 10px 14px; background: white; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; font-weight: bold; color: #334155; cursor: pointer; text-align: left; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; }
+        .saturday-item-btn.active { background: #2563eb; color: white; border-color: #2563eb; box-shadow: 0 2px 4px rgba(37,99,235,0.2); }
 
         .member-card { display: flex; flex-direction: column; padding: 12px; margin-bottom: 10px; background: #ffffff; border: 1px solid #e1e8ed; border-radius: 10px; transition: all 0.2s; gap: 8px; }
         .member-card.checked-10 { background-color: #e8f8f5 !important; border-color: #2ecc71 !important; border-left: 5px solid #2ecc71 !important; }
@@ -39,10 +45,6 @@
         button.selected-5  { background: #3498db !important; color: white !important; border-color: #3498db !important; }
         button.selected-comp { background: #f39c12 !important; color: white !important; border-color: #f39c12 !important; }
         button.btn-cancel { background: #fff5f5; color: #e74c3c; border-color: #fab6b6; }
-
-        .month-filter { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px; -webkit-overflow-scrolling: touch; }
-        .month-btn { padding: 6px 12px; font-size: 0.8rem; border: 1px solid #cbd5e1; border-radius: 6px; background: white; cursor: pointer; font-weight: bold; color: #64748b; white-space: nowrap; }
-        .month-btn.active { background: #0284c7; color: white; border-color: #0284c7; }
 
         .rank-card { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; margin-bottom: 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; }
         .rank-number { font-weight: bold; color: #3b82f6; width: 45px; font-size: 0.95rem; }
@@ -63,28 +65,39 @@
     <div class="subtitle">매주 토요일 운동모임 출석 & 누적 현황</div>
     
     <div class="tab-group">
-        <button class="tab-btn active" id="tab-checkin-btn" onclick="switchTab('checkin')">📅 주차별 출석체크</button>
+        <button class="tab-btn active" id="tab-checkin-btn" onclick="switchTab('checkin')">📅 출석체크</button>
         <button class="tab-btn" id="tab-stats-btn" onclick="switchTab('stats')">🏆 <span id="current-year-text">2026</span>년 누적현황</button>
     </div>
 
+    <!-- 출석체크 탭 -->
     <div id="tab-checkin">
-        <div class="date-scroll-wrapper" id="saturday-buttons"></div>
+        <!-- 월 선택 필터 -->
+        <div class="month-filter" id="checkin-month-buttons"></div>
+        
+        <!-- 선택된 월의 토요일 세로 목록 박스 -->
+        <div class="saturday-list-box">
+            <div class="saturday-list-title" id="saturday-list-header">📅 토요일 날짜 선택</div>
+            <div class="saturday-vertical-group" id="saturday-vertical-wrapper"></div>
+        </div>
+
         <div id="member-list" class="loading">회원 명단 불러오는 중...</div>
     </div>
 
+    <!-- 누적현황 탭 -->
     <div id="tab-stats" class="hidden">
-        <div class="month-filter" id="month-buttons"></div>
+        <div class="month-filter" id="stats-month-buttons"></div>
         <div id="stats-list" class="loading">누적 데이터 계산 중...</div>
     </div>
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbyt_IXIshVpERV_J-AbMBmFwvgetr9Xlu4Tih1cg7bFLTp0t49v277udpehM_HJO8kVoA/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbxgI-Gvji5ZWi9YOS9Z322KfeTRuvcyfF8Pbn92CJJGK9IdJFYay4znJWSXJv6w387YFA/exec";
 
     let globalMembers = [];
     let globalLogs = [];
     let selectedDateStr = "";
-    let selectedMonth = "전체";
+    let checkinSelectedMonth = String(new Date().getMonth() + 1) + "월"; // 기본 현재 월
+    let statsSelectedMonth = "전체";
 
     const currentYear = new Date().getFullYear();
     document.getElementById('current-year-text').innerText = currentYear;
@@ -97,56 +110,102 @@
         return `${years}년 ${months}월 ${days}일 ${weekDays[dateObj.getDay()]}`;
     }
 
-    function initSaturdayButtons() {
-        const wrapper = document.getElementById('saturday-buttons');
-        wrapper.innerHTML = '';
+    // 올해(2026년 등)의 모든 토요일 목록을 미리 생성
+    function getAllSaturdaysOfCurrentYear() {
         const saturdays = [];
-        let curr = new Date();
-        const day = curr.getDay();
-        const diff = day >= 6 ? 0 : -(day + 1);
-        curr.setDate(curr.getDate() + diff);
+        let d = new Date(currentYear, 0, 1);
+        // 첫 번째 토요일 찾기
+        while (d.getDay() !== 6) {
+            d.setDate(d.getDate() + 1);
+        }
+        while (d.getFullYear() === currentYear) {
+            saturdays.push(formatDateToString(new Date(d)));
+            d.setDate(d.getDate() + 7);
+        }
+        return saturdays;
+    }
+
+    const allSaturdays = getAllSaturdaysOfCurrentYear();
+
+    function initCheckinMonthButtons() {
+        const wrapper = document.getElementById('checkin-month-buttons');
+        wrapper.innerHTML = '';
+        const months = ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"];
         
-        for(let i = 11; i >= 0; i--) {
-            let d = new Date(curr);
-            d.setDate(curr.getDate() - (i * 7));
-            saturdays.push(formatDateToString(d));
+        months.forEach(m => {
+            const btn = document.createElement('button');
+            btn.className = `month-btn ${m === checkinSelectedMonth ? 'active' : ''}`;
+            btn.innerText = m;
+            btn.onclick = () => {
+                document.querySelectorAll('#checkin-month-buttons .month-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                checkinSelectedMonth = m;
+                renderSaturdayVerticalList();
+            };
+            wrapper.appendChild(btn);
+        });
+    }
+
+    function initStatsMonthButtons() {
+        const wrapper = document.getElementById('stats-month-buttons');
+        wrapper.innerHTML = '';
+        const months = ["전체", "1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"];
+        
+        months.forEach(m => {
+            const btn = document.createElement('button');
+            btn.className = `month-btn ${m === statsSelectedMonth ? 'active' : ''}`;
+            btn.innerText = m;
+            btn.onclick = () => {
+                document.querySelectorAll('#stats-month-buttons .month-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                statsSelectedMonth = m; 
+                renderStats();     
+            };
+            wrapper.appendChild(btn);
+        });
+    }
+
+    // 선택된 월에 해당하는 토요일들만 세로로 렌더링
+    function renderSaturdayVerticalList() {
+        const wrapper = document.getElementById('saturday-vertical-wrapper');
+        const header = document.getElementById('saturday-list-header');
+        wrapper.innerHTML = '';
+
+        header.innerText = `📅 ${checkinSelectedMonth} 토요일 목록`;
+
+        // 해당 월에 포함되는 토요일만 필터링
+        const filteredSaturdays = allSaturdays.filter(dStr => {
+            const mMatch = dStr.match(/(\d+)월/);
+            return mMatch && (mMatch[1] + "월") === checkinSelectedMonth;
+        });
+
+        if (filteredSaturdays.length === 0) {
+            wrapper.innerHTML = "<div style='padding:10px; color:#888; font-size:0.9rem;'>해당 월에 토요일이 없습니다.</div>";
+            document.getElementById('member-list.innerHTML') = "";
+            return;
         }
 
-        selectedDateStr = saturdays[saturdays.length - 1];
+        // 기본값 설정 (만약 현재 선택된 날짜가 이 월에 없으면 해당 월의 첫 번째 토요일 선택)
+        if (!filteredSaturdays.includes(selectedDateStr)) {
+            selectedDateStr = filteredSaturdays[filteredSaturdays.length - 1]; // 기본적으로 가장 최근 토요일 선택
+        }
 
-        saturdays.forEach((dStr, idx) => {
+        filteredSaturdays.forEach(dStr => {
             const btn = document.createElement('button');
-            const isLatest = (idx === saturdays.length - 1);
-            btn.className = `date-btn ${isLatest ? 'active' : ''}`;
-            btn.innerText = dStr.replace(/^\d{4}년\s*/, '');
-            
+            const isSelected = (dStr === selectedDateStr);
+            btn.className = `saturday-item-btn ${isSelected ? 'active' : ''}`;
+            btn.innerText = dStr.replace(/^\d{4}년\s*/, ''); // 연도 생략하고 월/일/요일만 깔끔하게 표시
+
             btn.onclick = () => {
-                document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.saturday-item-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 selectedDateStr = dStr;
                 renderCheckinList();
             };
             wrapper.appendChild(btn);
         });
-        setTimeout(() => { wrapper.scrollLeft = wrapper.scrollWidth; }, 100);
-    }
 
-    function initMonthButtons() {
-        const wrapper = document.getElementById('month-buttons');
-        wrapper.innerHTML = '';
-        const months = ["전체", "1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"];
-        months.forEach(m => {
-            const btn = document.createElement('button');
-            btn.className = `month-btn ${m === selectedMonth ? 'active' : ''}`;
-            btn.innerText = m;
-            btn.onclick = () => {
-                document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                selectedMonth = m; 
-                renderStats();     
-            };
-            wrapper.appendChild(btn);
-        });
+        renderCheckinList();
     }
 
     function switchTab(tabName) {
@@ -169,8 +228,8 @@
             .then(res => res.json())
             .then(data => {
                 globalMembers = data.members || [];
-                globalLogs = data.logs || []; // 💡 데이터 손실 방지를 위해 전체 로그 보관
-                renderCheckinList();
+                globalLogs = data.logs || []; 
+                renderSaturdayVerticalList();
                 if (!document.getElementById('tab-stats').classList.contains('hidden')) {
                     renderStats();
                 }
@@ -235,7 +294,6 @@
         statsDiv.innerHTML = '';
         if (globalMembers.length === 0) return;
 
-        // 1~12월 상세 구조 초기화
         const userMonthlyData = {};
         globalMembers.forEach(m => {
             userMonthlyData[m.name] = {
@@ -246,7 +304,6 @@
             };
         });
 
-        // 로그 데이터를 월별 구조에 안전하게 적재
         globalLogs.forEach(log => {
             const name = log.name;
             const score = Number(log.score);
@@ -270,8 +327,7 @@
             const name = member.name;
             let targetScore = 0, targetAtt = 0, targetTardy = 0, targetComp = 0;
 
-            if (selectedMonth === "전체") {
-                // 전체 = 1~12월 월별 합산
+            if (statsSelectedMonth === "전체") {
                 for (let m = 1; m <= 12; m++) {
                     targetScore += userMonthlyData[name].score[m];
                     targetAtt   += userMonthlyData[name].att[m];
@@ -279,12 +335,11 @@
                     targetComp  += userMonthlyData[name].comp[m];
                 }
             } else {
-                // 특정 월 선택 시 해당 월 데이터만 정확히 추출
-                const mNum = parseInt(selectedMonth.replace(/[^0-9]/g, ""), 10);
+                const mNum = parseInt(statsSelectedMonth.replace(/[^0-9]/g, ""), 10);
                 targetScore = userMonthlyData[name].score[mNum];
                 targetAtt   = userMonthlyData[name].att[mNum];
                 targetTardy = userMonthlyData[name].tardy[mNum];
-                targetComp  = userMonthlyData[name].comp[mNum]; // 💡 오타 수정완료
+                targetComp  = userMonthlyData[name].comp[mNum];
             }
 
             displayList.push({ name, score: targetScore, att: targetAtt, tardy: targetTardy, comp: targetComp });
@@ -342,8 +397,8 @@
         }).catch(err => console.error(err));
     }
 
-    initSaturdayButtons();
-    initMonthButtons();
+    initCheckinMonthButtons();
+    initStatsMonthButtons();
     loadData();
 </script>
 
