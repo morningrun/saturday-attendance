@@ -79,8 +79,7 @@
 </div>
 
 <script>
-    // ⚠️ 새로 발급받은 구글 웹 앱 URL을 여기에 넣어주세요!
-    const API_URL = "https://script.google.com/macros/s/AKfycbzN9rLAvCXjDtzulEDhPjRI1F_ZWWa1lzTvAgAxHI3I5J5WsHjJnEvzrTXPuRBGRMEWeQ/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbz0a_u6ZEOsUXazTfKSvaEka--hBQIwE9cmwfZBXWkZnag83SEC-qqTZd05_sy7D3ijRg/exec";
 
     let globalMembers = [];
     let globalLogs = [];
@@ -95,14 +94,12 @@
         const months = dateObj.getMonth() + 1;
         const days = dateObj.getDate();
         const weekDays = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
-        const weekDay = weekDays[dateObj.getDay()];
-        return `${years}년 ${months}월 ${days}일 ${weekDay}`;
+        return `${years}년 ${months}월 ${days}일 ${weekDays[dateObj.getDay()]}`;
     }
 
     function initSaturdayButtons() {
         const wrapper = document.getElementById('saturday-buttons');
         wrapper.innerHTML = '';
-        
         const saturdays = [];
         let curr = new Date();
         const day = curr.getDay();
@@ -121,8 +118,7 @@
             const btn = document.createElement('button');
             const isLatest = (idx === saturdays.length - 1);
             btn.className = `date-btn ${isLatest ? 'active' : ''}`;
-            const shortName = dStr.replace(/^\d{4}년\s*/, '');
-            btn.innerText = shortName;
+            btn.innerText = dStr.replace(/^\d{4}년\s*/, '');
             
             btn.onclick = () => {
                 document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('active'));
@@ -132,16 +128,12 @@
             };
             wrapper.appendChild(btn);
         });
-
-        setTimeout(() => {
-            wrapper.scrollLeft = wrapper.scrollWidth;
-        }, 100);
+        setTimeout(() => { wrapper.scrollLeft = wrapper.scrollWidth; }, 100);
     }
 
     function initMonthButtons() {
         const wrapper = document.getElementById('month-buttons');
         wrapper.innerHTML = '';
-        
         const months = ["전체", "1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"];
         months.forEach(m => {
             const btn = document.createElement('button');
@@ -174,14 +166,10 @@
 
     function loadData() {
         fetch(API_URL + "?t=" + new Date().getTime(), { redirect: "follow" })
-            .then(res => {
-                if (!res.ok) throw new Error("네트워크 응답 실패");
-                return res.json();
-            })
+            .then(res => res.json())
             .then(data => {
                 globalMembers = data.members || [];
                 globalLogs = (data.logs || []).filter(log => Number(log.score) > 0);
-                
                 renderCheckinList();
                 if (!document.getElementById('tab-stats').classList.contains('hidden')) {
                     renderStats();
@@ -189,19 +177,14 @@
             })
             .catch(err => {
                 console.error(err);
-                document.getElementById('member-list').innerHTML = 
-                    "<div style='color:#e74c3c; font-weight:bold;'>데이터 연결 대기 중...<br><span style='font-size:0.8rem; color:#555;'>URL 또는 권한 배포를 다시 확인해 주세요.</span><br><button onclick='loadData()' style='margin-top:10px; padding:6px 12px;'>새로고침 시도</button></div>";
+                document.getElementById('member-list').innerHTML = "<div style='color:#e74c3c; font-weight:bold;'>데이터 연결 대기 중... URL을 확인해 주세요.</div>";
             });
     }
 
     function renderCheckinList() {
         const listDiv = document.getElementById('member-list');
         listDiv.innerHTML = '';
-        
-        if(globalMembers.length === 0) {
-            listDiv.innerHTML = "Members 시트에 회원 명단이 없거나 불러오지 못했습니다.";
-            return;
-        }
+        if(globalMembers.length === 0) return;
 
         const dayAttendance = {};
         globalLogs.forEach(log => {
@@ -212,119 +195,113 @@
 
         globalMembers.forEach(member => {
             const name = member.name;
-            const existingScore = dayAttendance[name];
-            const isChecked = existingScore !== undefined && existingScore > 0;
+            const score = dayAttendance[name] || 0;
+            const isChecked = score > 0;
 
             const card = document.createElement('div');
-            
             let cardClass = 'member-card';
             if (isChecked) {
-                if (existingScore === 10) cardClass += ' checked-10';
-                else if (existingScore === 5) cardClass += ' checked-5';
-                else if (existingScore === 99) cardClass += ' checked-comp';
+                if (score === 10) cardClass += ' checked-10';
+                else if (score === 5) cardClass += ' checked-5';
+                else if (score === 99) cardClass += ' checked-comp';
             }
             card.className = cardClass;
             
-            let btn10Class = isChecked && existingScore === 10 ? 'selected-10' : '';
-            let btn5Class = isChecked && existingScore === 5 ? 'selected-5' : '';
-            let btnCompClass = isChecked && existingScore === 99 ? 'selected-comp' : '';
-
             let badgeHtml = '';
             if (isChecked) {
-                if (existingScore === 10) badgeHtml = '<span class="badge" style="background:#2ecc71; color:white;">🟢 출석</span>';
-                else if (existingScore === 5) badgeHtml = '<span class="badge" style="background:#3498db; color:white;">🔵 지각</span>';
-                else if (existingScore === 99) badgeHtml = '<span class="badge" style="background:#f39c12; color:white;">🟠 대회</span>';
+                if (score === 10) badgeHtml = '<span class="badge" style="background:#2ecc71; color:white;">🟢 출석</span>';
+                else if (score === 5) badgeHtml = '<span class="badge" style="background:#3498db; color:white;">🔵 지각</span>';
+                else if (score === 99) badgeHtml = '<span class="badge" style="background:#f39c12; color:white;">🟠 대회</span>';
             }
-
-            let cancelBtnHtml = isChecked ? `<button class="btn-cancel" onclick="cancelCheckIn('${name}')">취소</button>` : '';
-
-            let buttonsHtml = `
-                <button class="${btn10Class}" onclick="checkIn('${name}', 10)">출석(+10)</button>
-                <button class="${btn5Class}" onclick="checkIn('${name}', 5)">지각(+5)</button>
-                <button class="${btnCompClass}" onclick="checkIn('${name}', 99)">대회(+10)</button>
-                ${cancelBtnHtml}
-            `;
 
             card.innerHTML = `
                 <div class="member-info">
                     <div class="member-name">${name}</div>
                     <div>${badgeHtml}</div>
                 </div>
-                <div class="btn-group">${buttonsHtml}</div>
+                <div class="btn-group">
+                    <button class="${isChecked && score === 10 ? 'selected-10' : ''}" onclick="checkIn('${name}', 10)">출석(+10)</button>
+                    <button class="${isChecked && score === 5 ? 'selected-5' : ''}" onclick="checkIn('${name}', 5)">지각(+5)</button>
+                    <button class="${isChecked && score === 99 ? 'selected-comp' : ''}" onclick="checkIn('${name}', 99)">대회(+10)</button>
+                    ${isChecked ? `<button class="btn-cancel" onclick="cancelCheckIn('${name}')">취소</button>` : ''}
+                </div>
             `;
             listDiv.appendChild(card);
         });
     }
 
+    // 💡 핵심 논리: 1~12월 데이터를 각각 집계한 뒤, '전체'는 월별 점수를 모두 합산!
     function renderStats() {
         const statsDiv = document.getElementById('stats-list');
         statsDiv.innerHTML = '';
+        if (globalMembers.length === 0) return;
 
-        if (globalMembers.length === 0) {
-            statsDiv.innerHTML = "<div style='text-align:center; color:#888; padding:20px;'>회원 명단이 없습니다.</div>";
-            return;
-        }
-
-        const userStats = {};
+        // 회원별 월별 상세 구조 초기화 (1월~12월)
+        const userMonthlyData = {};
         globalMembers.forEach(m => {
-            userStats[m.name] = { score: 0, att: 0, tardy: 0, comp: 0 };
+            userMonthlyData[m.name] = {
+                score: {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
+                att:   {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
+                tardy: {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
+                comp:  {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0}
+            };
         });
 
+        // 로그를 순회하며 월별 칸에 정확히 적재
         globalLogs.forEach(log => {
             const name = log.name;
             const score = Number(log.score);
+            const m = Number(log.month);
+            if (score <= 0 || !userMonthlyData[name] || m < 1 || m > 12) return;
 
-            if (score <= 0) return;
-
-            // 서버에서 전달된 정확한 월 숫자(log.month)와 비교
-            if (selectedMonth !== "전체") {
-                const targetMonthNum = parseInt(selectedMonth.replace(/[^0-9]/g, ""), 10);
-                if (log.month !== targetMonthNum) {
-                    return; 
-                }
-            }
-
-            if (userStats[name]) {
-                if (score === 10) {
-                    userStats[name].score += 10;
-                    userStats[name].att += 1;
-                } else if (score === 5) {
-                    userStats[name].score += 5;
-                    userStats[name].tardy += 1;
-                } else if (score === 99) {
-                    userStats[name].score += 10;
-                    userStats[name].comp += 1;
-                }
+            if (score === 10) {
+                userMonthlyData[name].score[m] += 10;
+                userMonthlyData[name].att[m] += 1;
+            } else if (score === 5) {
+                userMonthlyData[name].score[m] += 5;
+                userMonthlyData[name].tardy[m] += 1;
+            } else if (score === 99) {
+                userMonthlyData[name].score[m] += 10;
+                userMonthlyData[name].comp[m] += 1;
             }
         });
 
-        const sortedList = Object.keys(userStats).map(name => ({
-            name: name,
-            ...userStats[name]
-        })).sort((a, b) => {
-            if (b.score !== a.score) {
-                return b.score - a.score;
+        // 화면에 뿌릴 최종 리스트 계산
+        const displayList = [];
+        globalMembers.forEach(member => {
+            const name = member.name;
+            let targetScore = 0, targetAtt = 0, targetTardy = 0, targetComp = 0;
+
+            if (selectedMonth === "전체") {
+                // 💡 전체 = 1월부터 12월까지의 월별 현황을 모두 더한 합계!
+                for (let m = 1; m <= 12; m++) {
+                    targetScore += userMonthlyData[name].score[m];
+                    targetAtt   += userMonthlyData[name].att[m];
+                    targetTardy += userMonthlyData[name].tardy[m];
+                    targetComp  += userMonthlyData[name].comp[m];
+                }
+            } else {
+                // 특정 월 선택 시 해당 월의 데이터만 추출
+                const mNum = parseInt(selectedMonth.replace(/[^0-9]/g, ""), 10);
+                targetScore = userMonthlyData[name].score[mNum];
+                targetAtt   = userMonthlyData[name].att[mNum];
+                targetTardy = userMonthlyData[name].tardy[mNum];
+                targetComp  += userMonthlyData[name].comp[mNum];
             }
-            return a.name.localeCompare(b.name);
+
+            displayList.push({ name, score: targetScore, att: targetAtt, tardy: targetTardy, comp: targetComp });
         });
+
+        // 점수 내림차순, 이름 오름차순 정렬
+        displayList.sort((a, b) => (b.score !== a.score) ? b.score - a.score : a.name.localeCompare(b.name));
 
         let currentRank = 1;
-        sortedList.forEach((item, index) => {
-            if (index > 0 && item.score < sortedList[index - 1].score) {
-                currentRank = index + 1;
-            }
+        displayList.forEach((item, index) => {
+            if (index > 0 && item.score < displayList[index - 1].score) currentRank = index + 1;
 
             const card = document.createElement('div');
             card.className = 'rank-card';
-            
-            let rankBadge = `${currentRank}위`;
-            if (item.score === 0) {
-                rankBadge = '-';
-            } else {
-                if (currentRank === 1) rankBadge = '🥇 1위';
-                else if (currentRank === 2) rankBadge = '🥈 2위';
-                else if (currentRank === 3) rankBadge = '🥉 3위';
-            }
+            let rankBadge = (item.score === 0) ? '-' : (currentRank === 1 ? '🥇 1위' : (currentRank === 2 ? '🥈 2위' : (currentRank === 3 ? '🥉 3위' : `${currentRank}위`)));
 
             card.innerHTML = `
                 <div class="rank-number">${rankBadge}</div>
@@ -337,61 +314,35 @@
     }
 
     function checkIn(name, score) {
-        let alreadyRecordedScore = 0;
-        for(let i = 0; i < globalLogs.length; i++) {
-            if(globalLogs[i].name === name && globalLogs[i].date.trim() === selectedDateStr.trim()) {
-                alreadyRecordedScore = Number(globalLogs[i].score);
-                break;
-            }
-        }
-
-        if (alreadyRecordedScore > 0) {
-            alert(`[${name}]님은 이미 이날 출석(또는 기록)이 완료되었습니다!\n변경하시려면 먼저 [취소]를 누른 후 다시 선택해 주세요.`);
+        let already = globalLogs.find(l => l.name === name && l.date.trim() === selectedDateStr.trim() && l.score > 0);
+        if (already) {
+            alert(`[${name}]님은 이미 이날 출석이 완료되었습니다. 변경하려면 [취소] 후 다시 선택해 주세요.`);
             return;
         }
+        let label = (score === 5) ? '지각(+5점)' : '출석(+10점)';
+        if(!confirm(`[${selectedDateStr.replace(/^\d{4}년\s*/, '')}] [${name}]님을 [${label}]으로 기록하시겠습니까?`)) return;
 
-        let label = '출석(+10점)';
-        if (score === 5) label = '지각(+5점)';
-        if (score === 99) label = '대회(+10점)';
+        globalLogs = globalLogs.filter(l => !(l.name === name && l.date.trim() === selectedDateStr.trim()));
+        let mMatch = selectedDateStr.match(/(\d+)월/);
+        globalLogs.push({ date: selectedDateStr, name, month: mMatch ? parseInt(mMatch[1], 10) : 0, score });
 
-        if (!confirm(`[${selectedDateStr.replace(/^\d{4}년\s*/, '')}]\n[${name}]님을 [${label}]으로 기록하시겠습니까?`)) return;
-
-        globalLogs = globalLogs.filter(log => !(log.name === name && log.date.trim() === selectedDateStr.trim()));
-        
-        var monthMatch = selectedDateStr.match(/(\d+)월/);
-        var extractedMonth = monthMatch ? parseInt(monthMatch[1], 10) : 0;
-
-        globalLogs.push({ date: selectedDateStr, name: name, month: extractedMonth, score: score });
-        
         renderCheckinList();
-
         fetch(API_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: name, score: score, date: selectedDateStr })
-        }).catch(err => {
-            console.error("전송 에러:", err);
-            alert("서버 전송 중 오류가 발생했습니다.");
-        });
+            method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, score, date: selectedDateStr })
+        }).catch(err => console.error(err));
     }
 
     function cancelCheckIn(name) {
-        if (!confirm(`[${selectedDateStr.replace(/^\d{4}년\s*/, '')}]\n[${name}]님의 출석 기록을 취소하시겠습니까?`)) return;
+        if(!confirm(`[${selectedDateStr.replace(/^\d{4}년\s*/, '')}] [${name}]님의 출석을 취소하시겠습니까?`)) return;
 
-        globalLogs = globalLogs.filter(log => !(log.name === name && log.date.trim() === selectedDateStr.trim()));
-
+        globalLogs = globalLogs.filter(l => !(l.name === name && l.date.trim() === selectedDateStr.trim()));
         renderCheckinList();
 
         fetch(API_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: name, score: 0, date: selectedDateStr })
-        }).catch(err => {
-            console.error("취소 전송 에러:", err);
-            alert("서버 전송 중 오류가 발생했습니다.");
-        });
+            method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, score: 0, date: selectedDateStr })
+        }).catch(err => console.error(err));
     }
 
     initSaturdayButtons();
