@@ -1,27 +1,4 @@
-function doGet(e) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Members");
-  if (!sheet) {
-    sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet("Members");
-    sheet.appendRow(["이름"]);
-  }
-  var rows = sheet.getDataRange().getValues();
-  var data = [];
-  for (var i = 1; i < rows.length; i++) {
-    if(rows[i][0]) {
-      data.push({ name: rows[i][0] });
-    }
-  }
-  return ContentService.createTextOutput(JSON.stringify(data))
-                       .setMimeType(ContentService.MimeType.JSON);
-}
-
-function doPost(e) {
-  var data = JSON.parse(e.postData.contents);
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Log") || SpreadsheetApp.getActiveSpreadsheet().insertSheet("Log");
-  sheet.appendRow([new Date(), data.date, data.name, data.score]);
-  return ContentService.createTextOutput("Success");
-}
-      <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
