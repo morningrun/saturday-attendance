@@ -169,7 +169,7 @@
             .then(res => res.json())
             .then(data => {
                 globalMembers = data.members || [];
-                globalLogs = (data.logs || []).filter(log => Number(log.score) > 0);
+                globalLogs = data.logs || []; // 💡 데이터 손실 방지를 위해 전체 로그 보관
                 renderCheckinList();
                 if (!document.getElementById('tab-stats').classList.contains('hidden')) {
                     renderStats();
@@ -188,7 +188,7 @@
 
         const dayAttendance = {};
         globalLogs.forEach(log => {
-            if (log.date && log.date.trim() === selectedDateStr.trim()) {
+            if (log.date && log.date.trim() === selectedDateStr.trim() && Number(log.score) > 0) {
                 dayAttendance[log.name] = Number(log.score);
             }
         });
@@ -230,13 +230,12 @@
         });
     }
 
-    // 💡 핵심 논리: 1~12월 데이터를 각각 집계한 뒤, '전체'는 월별 점수를 모두 합산!
     function renderStats() {
         const statsDiv = document.getElementById('stats-list');
         statsDiv.innerHTML = '';
         if (globalMembers.length === 0) return;
 
-        // 회원별 월별 상세 구조 초기화 (1월~12월)
+        // 1~12월 상세 구조 초기화
         const userMonthlyData = {};
         globalMembers.forEach(m => {
             userMonthlyData[m.name] = {
@@ -247,7 +246,7 @@
             };
         });
 
-        // 로그를 순회하며 월별 칸에 정확히 적재
+        // 로그 데이터를 월별 구조에 안전하게 적재
         globalLogs.forEach(log => {
             const name = log.name;
             const score = Number(log.score);
@@ -266,14 +265,13 @@
             }
         });
 
-        // 화면에 뿌릴 최종 리스트 계산
         const displayList = [];
         globalMembers.forEach(member => {
             const name = member.name;
             let targetScore = 0, targetAtt = 0, targetTardy = 0, targetComp = 0;
 
             if (selectedMonth === "전체") {
-                // 💡 전체 = 1월부터 12월까지의 월별 현황을 모두 더한 합계!
+                // 전체 = 1~12월 월별 합산
                 for (let m = 1; m <= 12; m++) {
                     targetScore += userMonthlyData[name].score[m];
                     targetAtt   += userMonthlyData[name].att[m];
@@ -281,18 +279,17 @@
                     targetComp  += userMonthlyData[name].comp[m];
                 }
             } else {
-                // 특정 월 선택 시 해당 월의 데이터만 추출
+                // 특정 월 선택 시 해당 월 데이터만 정확히 추출
                 const mNum = parseInt(selectedMonth.replace(/[^0-9]/g, ""), 10);
                 targetScore = userMonthlyData[name].score[mNum];
                 targetAtt   = userMonthlyData[name].att[mNum];
                 targetTardy = userMonthlyData[name].tardy[mNum];
-                targetComp  += userMonthlyData[name].comp[mNum];
+                targetComp  = userMonthlyData[name].comp[mNum]; // 💡 오타 수정완료
             }
 
             displayList.push({ name, score: targetScore, att: targetAtt, tardy: targetTardy, comp: targetComp });
         });
 
-        // 점수 내림차순, 이름 오름차순 정렬
         displayList.sort((a, b) => (b.score !== a.score) ? b.score - a.score : a.name.localeCompare(b.name));
 
         let currentRank = 1;
@@ -314,7 +311,7 @@
     }
 
     function checkIn(name, score) {
-        let already = globalLogs.find(l => l.name === name && l.date.trim() === selectedDateStr.trim() && l.score > 0);
+        let already = globalLogs.find(l => l.name === name && l.date.trim() === selectedDateStr.trim() && Number(l.score) > 0);
         if (already) {
             alert(`[${name}]님은 이미 이날 출석이 완료되었습니다. 변경하려면 [취소] 후 다시 선택해 주세요.`);
             return;
