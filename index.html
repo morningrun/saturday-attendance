@@ -79,7 +79,7 @@
 </div>
 
 <script>
-    // ⚠️ 구글 앱스 스크립트 웹 앱 URL
+    // ⚠️ 구글 앱스 스크립트 웹 앱 URL을 입력하세요
     const API_URL = "https://script.google.com/macros/s/AKfycbwHUYOjlTb5jdtP8_Ts3wJPmZ0UeLEnnVNr_BAi9lkxyiAGwXuYWTJb6j-pmaHr0G0WNA/exec";
 
     let globalMembers = [];
@@ -263,9 +263,16 @@
         globalLogs.forEach(log => {
             const name = log.name;
             const score = Number(log.score);
-            const dateText = log.date || "";
+            const dateText = log.date || ""; // 예: "2026년 11월 7일 토요일"
 
-            if (selectedMonth !== "전체" && !dateText.includes(`${selectedMonth}`)) return;
+            // 💡 월별 필터 정밀 검사 로직
+            if (selectedMonth !== "전체") {
+                // 날짜 텍스트에서 정확히 " X월" 형태를 찾아냄 (예: "11월" 추출)
+                const match = dateText.match(/(\d{1,2})월/);
+                if (!match || match[1] + "월" !== selectedMonth) {
+                    return; // 선택한 월과 다르면 합산에서 제외
+                }
+            }
 
             if (userStats[name]) {
                 if (score === 10) {
@@ -311,7 +318,6 @@
     }
 
     function checkIn(name, score) {
-        // 💡 이미 해당 날짜에 점수가 기록되어 있는지 확인하여 중복 방지 및 안내 메시지 띄우기
         let alreadyRecordedScore = 0;
         for(let i = 0; i < globalLogs.length; i++) {
             if(globalLogs[i].name === name && globalLogs[i].date.trim() === selectedDateStr.trim()) {
