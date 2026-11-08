@@ -80,7 +80,7 @@
 
 <script>
     // ⚠️ 구글 앱스 스크립트 웹 앱 URL을 여기에 넣어주세요!
-    const API_URL = "https://script.google.com/macros/s/AKfycbwwZ47WxNQmX38_bK6r45Cm4vXTNHvqq0IZQdYxCuplL8cDTuNgSVqaFu3G_2ntX0d7zg/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbyeZESi3LIY7btwuk1wvt_Gr8aInfq0zv1VhN1TQJVhpOY7e97s7cKSHEDLD1Nw_ATzfA/exec";
 
     let globalMembers = [];
     let globalLogs = [];
@@ -256,9 +256,14 @@
         });
     }
 
-   function renderStats() {
+    function renderStats() {
         const statsDiv = document.getElementById('stats-list');
         statsDiv.innerHTML = '';
+
+        if (globalMembers.length === 0) {
+            statsDiv.innerHTML = "<div style='text-align:center; color:#888; padding:20px;'>회원 명단이 없습니다.</div>";
+            return;
+        }
 
         const userStats = {};
         globalMembers.forEach(m => {
@@ -272,15 +277,12 @@
 
             if (score <= 0) return;
 
-            // 💡 [확실한 해결] 선택된 월("11월" 등)과 데이터의 날짜 텍스트를 직접 비교
             if (selectedMonth !== "전체") {
-                const targetMonthNum = parseInt(selectedMonth.replace(/[^0-9]/g, ""), 10); // 예: 11
+                const targetMonthNum = parseInt(selectedMonth.replace(/[^0-9]/g, ""), 10);
                 
-                // 날짜 문자열(예: "2026년 11월 7일 토요일")에서 월 숫자 추출
                 const match = dateText.match(/(\d+)\s*월/);
                 const logMonthNum = match ? parseInt(match[1], 10) : 0;
 
-                // 만약 월이 일치하지 않으면 통계에서 제외
                 if (logMonthNum !== targetMonthNum) {
                     return; 
                 }
@@ -303,18 +305,15 @@
         const sortedList = Object.keys(userStats).map(name => ({
             name: name,
             ...userStats[name]
-        })).sort((a, b) => b.score - a.score);
-
-        if (sortedList.length === 0 || sortedList.every(item => item.score === 0)) {
-            statsDiv.innerHTML = "<div style='text-align:center; color:#888; padding:20px;'>해당 월에 기록된 출석 데이터가 없습니다.</div>";
-            return;
-        }
+        })).sort((a, b) => {
+            if (b.score !== a.score) {
+                return b.score - a.score;
+            }
+            return a.name.localeCompare(b.name);
+        });
 
         let currentRank = 1;
         sortedList.forEach((item, index) => {
-            // 점수가 0점인 사람은 월별 랭킹에서 제외하려면 아래 주석을 풀면 됩니다.
-            // if (item.score === 0) return;
-
             if (index > 0 && item.score < sortedList[index - 1].score) {
                 currentRank = index + 1;
             }
@@ -323,9 +322,13 @@
             card.className = 'rank-card';
             
             let rankBadge = `${currentRank}위`;
-            if (currentRank === 1) rankBadge = '🥇 1위';
-            else if (currentRank === 2) rankBadge = '🥈 2위';
-            else if (currentRank === 3) rankBadge = '🥉 3위';
+            if (item.score === 0) {
+                rankBadge = '-';
+            } else {
+                if (currentRank === 1) rankBadge = '🥇 1위';
+                else if (currentRank === 2) rankBadge = '🥈 2위';
+                else if (currentRank === 3) rankBadge = '🥉 3위';
+            }
 
             card.innerHTML = `
                 <div class="rank-number">${rankBadge}</div>
@@ -336,6 +339,7 @@
             statsDiv.appendChild(card);
         });
     }
+
     function checkIn(name, score) {
         let alreadyRecordedScore = 0;
         for(let i = 0; i < globalLogs.length; i++) {
