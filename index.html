@@ -1,4 +1,27 @@
-<!DOCTYPE html>
+function doGet(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Members");
+  if (!sheet) {
+    sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet("Members");
+    sheet.appendRow(["이름"]);
+  }
+  var rows = sheet.getDataRange().getValues();
+  var data = [];
+  for (var i = 1; i < rows.length; i++) {
+    if(rows[i][0]) {
+      data.push({ name: rows[i][0] });
+    }
+  }
+  return ContentService.createTextOutput(JSON.stringify(data))
+                       .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  var data = JSON.parse(e.postData.contents);
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Log") || SpreadsheetApp.getActiveSpreadsheet().insertSheet("Log");
+  sheet.appendRow([new Date(), data.date, data.name, data.score]);
+  return ContentService.createTextOutput("Success");
+}
+      <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -14,11 +37,11 @@
         .member-name { font-weight: bold; font-size: 1rem; }
         .btn-group { display: flex; gap: 4px; }
         button { padding: 6px 8px; font-size: 0.75rem; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .btn-10 { background: #2ecc71; color: white; } /* 정시참석 +10 */
-        .btn-5 { background: #3498db; color: white; }  /* 지각 +5 */
-        .btn-0 { background: #95a5a6; color: white; }  /* 사전불참 0 */
-        .btn-minus5 { background: #e67e22; color: white; } /* 당일취소 -5 */
-        .btn-minus10 { background: #e74c3c; color: white; } /* 무단불참 -10 */
+        .btn-10 { background: #2ecc71; color: white; }
+        .btn-5 { background: #3498db; color: white; }
+        .btn-0 { background: #95a5a6; color: white; }
+        .btn-minus5 { background: #e67e22; color: white; }
+        .btn-minus10 { background: #e74c3c; color: white; }
         button:active { transform: scale(0.95); }
         .loading { text-align: center; color: #888; padding: 20px; }
     </style>
@@ -35,15 +58,13 @@
 </div>
 
 <script>
-    // ⚠️ 아래 쌍따옴표 안에 구글 앱스 스크립트 웹 앱 URL을 붙여넣으세요!
-    const API_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL";
+    // ⚠️ 아래 쌍따옴표 안에 구글 앱스 스크립트 웹 앱 URL을 넣으세요!
+    const API_URL = "여기에_복사한_구글_웹앱_URL을_붙여넣으세요";
 
-    // 오늘 날짜 표시
     const today = new Date();
     const dateStr = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일 토요일`;
     document.getElementById('current-date').innerText = dateStr;
 
-    // 회원 명단 및 출석 체크 함수 (구글 시트 연동)
     function loadMembers() {
         fetch(API_URL)
             .then(res => res.json())
@@ -51,6 +72,11 @@
                 const listDiv = document.getElementById('member-list');
                 listDiv.innerHTML = '';
                 
+                if(data.length === 0) {
+                    listDiv.innerHTML = "Members 시트에 회원 명단을 입력해 주세요.";
+                    return;
+                }
+
                 data.forEach(member => {
                     const card = document.createElement('div');
                     card.className = 'member-card';
@@ -68,7 +94,7 @@
                 });
             })
             .catch(err => {
-                document.getElementById('member-list').innerHTML = "데이터를 불러오는 데 실패했습니다. URL을 확인해 주세요.";
+                document.getElementById('member-list').innerHTML = "데이터를 불러오는 데 실패했습니다. 구글 URL을 확인해 주세요.";
             });
     }
 
@@ -92,24 +118,3 @@
 
 </body>
 </html>
-// --- 아래 코드를 기존 코드 맨 밑에 붙여넣으세요 ---
-
-function doGet(e) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Members");
-  var rows = sheet.getDataRange().getValues();
-  var data = [];
-  for (var i = 1; i < rows.length; i++) {
-    if(rows[i][0]) {
-      data.push({ name: rows[i][0] });
-    }
-  }
-  return ContentService.createTextOutput(JSON.stringify(data))
-                       .setMimeType(ContentService.MimeType.JSON);
-}
-
-function doPost(e) {
-  var data = JSON.parse(e.postData.contents);
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Log") || SpreadsheetApp.getActiveSpreadsheet().insertSheet("Log");
-  sheet.appendRow([new Date(), data.date, data.name, data.score]);
-  return ContentService.createTextOutput("Success");
-}
