@@ -80,7 +80,7 @@
 
 <script>
     // ⚠️ 구글 앱스 스크립트 웹 앱 URL을 넣으세요!
-    const API_URL = "https://script.google.com/macros/s/AKfycbzv1HerTneUZ24rQFfibTx4H5v-dWBU27lHUH4lh3pDLy_EuGpMa4VjP1dN18oT83-8Pg/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbwjK-vBI-_n1GMWObpyxtWs8l-gzzW6IXHkyImabZTYLwsp8uEwwgJVPlR2Nw_XnQlYBQ/exec";
 
     let globalMembers = [];
     let globalLogs = [];
@@ -145,13 +145,14 @@
         const months = ["전체", "1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"];
         months.forEach(m => {
             const btn = document.createElement('button');
+            // 💡 현재 선택된 월 상태를 클래스에 확실하게 반영
             btn.className = `month-btn ${m === selectedMonth ? 'active' : ''}`;
             btn.innerText = m;
             btn.onclick = () => {
                 document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                selectedMonth = m;
-                renderStats();
+                selectedMonth = m; // 선택한 월 명확히 고정
+                renderStats();     // 즉시 통계 다시 계산
             };
             wrapper.appendChild(btn);
         });
@@ -168,7 +169,7 @@
             document.getElementById('tab-stats').classList.remove('hidden');
             document.getElementById('tab-checkin-btn').classList.remove('active');
             document.getElementById('tab-stats-btn').classList.add('active');
-            renderStats();
+            renderStats(); // 탭 열 때 현재 selectedMonth 상태 그대로 통계 계산
         }
     }
 
@@ -182,6 +183,10 @@
                 globalMembers = data.members || [];
                 globalLogs = data.logs || [];
                 renderCheckinList();
+                // 데이터 로드 직후 현재 선택된 탭이 누적현황이면 통계도 갱신
+                if (!document.getElementById('tab-stats').classList.contains('hidden')) {
+                    renderStats();
+                }
             })
             .catch(err => {
                 document.getElementById('member-list').innerHTML = 
@@ -265,11 +270,11 @@
             const score = Number(log.score);
             const dateText = String(log.date || ""); 
 
-            // 💡 [핵심 수정] "전체"가 아닐 때만 필터링: 선택한 월("10월", "11월" 등)이 날짜 문자열에 포함되어 있는지 철저하게 검사
+            // 💡 [결정적 해결] 선택된 월("10월", "11월" 등)이 정확히 날짜 문자열 안에 포함되는지 검사
             if (selectedMonth !== "전체") {
-                // 예: selectedMonth가 "11월"이면 dateText에 "11월"이 들어있는지 확인
+                // 예: selectedMonth가 "11월"인데 dateText에 "11월"이 없으면 무조건 제외
                 if (!dateText.includes(selectedMonth)) {
-                    return; // 포함되어 있지 않으면 과감하게 제외 (연산 오류 원천 차단)
+                    return; 
                 }
             }
 
@@ -367,7 +372,7 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name: name, score: 0, date: selectedDateStr })
         }).catch(() => {
-            alert("전송 중 오류가 발생했습니다.");
+            alert("전송 중 오류가 서비스 오류 발생했습니다.");
         });
     }
 
