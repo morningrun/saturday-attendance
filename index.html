@@ -14,7 +14,8 @@
         .tab-btn { flex: 1; padding: 10px 4px; font-size: 0.85rem; border: none; background: #f1f5f9; color: #64748b; font-weight: bold; border-radius: 8px; cursor: pointer; transition: all 0.2s; text-align: center; }
         .tab-btn.active { background: #2c3e50; color: white; }
 
-        .date-scroll-wrapper { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 8px; overflow-x: auto; padding: 5px 2px 12px 2px; scrollbar-width: thin; }
+        /* 날짜 가로 스크롤 (자연스럽고 부드러운 기본 정렬) */
+        .date-scroll-wrapper { display: flex; gap: 8px; overflow-x: auto; padding: 5px 2px 12px 2px; scrollbar-width: thin; -webkit-overflow-scrolling: touch; }
         .date-scroll-wrapper::-webkit-scrollbar { height: 4px; }
         .date-scroll-wrapper::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         
@@ -38,7 +39,7 @@
         button.selected-comp { background: #f39c12 !important; color: white !important; border-color: #f39c12 !important; }
         button.btn-cancel { background: #fff5f5; color: #e74c3c; border-color: #fab6b6; }
 
-        .month-filter { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px; }
+        .month-filter { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px; -webkit-overflow-scrolling: touch; }
         .month-btn { padding: 6px 12px; font-size: 0.8rem; border: 1px solid #cbd5e1; border-radius: 6px; background: white; cursor: pointer; font-weight: bold; color: #64748b; white-space: nowrap; }
         .month-btn.active { background: #0284c7; color: white; border-color: #0284c7; }
 
@@ -105,19 +106,23 @@
         const diff = day >= 6 ? 0 : -(day + 1);
         curr.setDate(curr.getDate() + diff);
         
-        for(let i = 0; i < 12; i++) {
+        // 최근 12개 토요일 생성 (과거부터 최근 순으로 정렬되어 스크롤이 자연스럽게 됨)
+        for(let i = 11; i >= 0; i--) {
             let d = new Date(curr);
             d.setDate(curr.getDate() - (i * 7));
             saturdays.push(formatDateToString(d));
         }
 
-        selectedDateStr = saturdays[0];
+        // 가장 최근 토요일을 기본 선택
+        selectedDateStr = saturdays[saturdays.length - 1];
 
         saturdays.forEach((dStr, idx) => {
             const btn = document.createElement('button');
-            btn.className = `date-btn ${idx === 0 ? 'active' : ''}`;
+            const isLatest = (idx === saturdays.length - 1);
+            btn.className = `date-btn ${isLatest ? 'active' : ''}`;
             const shortName = dStr.replace(/^\d{4}년\s*/, '');
             btn.innerText = shortName;
+            
             btn.onclick = () => {
                 document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
@@ -126,6 +131,11 @@
             };
             wrapper.appendChild(btn);
         });
+
+        // 스크롤을 맨 오른쪽(가장 최근 날짜)으로 자동 이동
+        setTimeout(() => {
+            wrapper.scrollLeft = wrapper.scrollWidth;
+        }, 100);
     }
 
     function initMonthButtons() {
