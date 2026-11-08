@@ -270,6 +270,7 @@
             userStats[m.name] = { score: 0, att: 0, tardy: 0, comp: 0 };
         });
 
+        // 💡 [핵심 수정] 월별 탭을 눌렀을 때 해당 월의 로그만 골라서 집계에 반영
         globalLogs.forEach(log => {
             const name = log.name;
             const score = Number(log.score);
@@ -277,16 +278,14 @@
 
             if (score <= 0) return;
 
-            // 💡 [핵심 수정] 선택된 월("10월" 등)과 로그의 날짜 문자열을 유연하게 비교
             if (selectedMonth !== "전체") {
-                const targetMonthNum = parseInt(selectedMonth.replace(/[^0-9]/g, ""), 10); // 예: 10
+                const targetMonthNum = parseInt(selectedMonth.replace(/[^0-9]/g, ""), 10); // 예: 11
                 
-                // 날짜 텍스트에서 월 숫자를 안전하게 추출 (예: "2026년 10월 3일" -> 10)
                 const match = dateText.match(/(\d+)\s*월/);
                 const logMonthNum = match ? parseInt(match[1], 10) : 0;
 
                 if (logMonthNum !== targetMonthNum) {
-                    return; // 해당 월이 아니면 통계에서 제외
+                    return; // 선택한 월과 다르면 이번 집계에서 제외
                 }
             }
 
@@ -304,6 +303,7 @@
             }
         });
 
+        // 회원 전체 명단을 점수 높은 순으로 정렬 (점수가 같으면 가나다순)
         const sortedList = Object.keys(userStats).map(name => ({
             name: name,
             ...userStats[name]
@@ -325,7 +325,7 @@
             
             let rankBadge = `${currentRank}위`;
             if (item.score === 0) {
-                rankBadge = '-';
+                rankBadge = '-'; // 0점인 사람은 순위 대신 '-' 표시 후 명단 유지
             } else {
                 if (currentRank === 1) rankBadge = '🥇 1위';
                 else if (currentRank === 2) rankBadge = '🥈 2위';
