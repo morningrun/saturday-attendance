@@ -1,83 +1,3 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>토달 출석부</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; margin: 0; padding: 10px; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        
-        .main-title-box { text-align: center; margin: 10px 0 5px 0; }
-        .main-title { font-size: 1.8rem; font-weight: 800; color: #1e293b; }
-        .subtitle { text-align: center; font-size: 0.85rem; color: #7f8c8d; margin-bottom: 15px; }
-        
-        .tab-group { display: flex; gap: 6px; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; position: sticky; top: 0; background: white; z-index: 10; }
-        .tab-btn { flex: 1; padding: 10px 4px; font-size: 0.95rem; border: none; background: #f1f5f9; color: #64748b; font-weight: bold; border-radius: 8px; cursor: pointer; transition: all 0.2s; text-align: center; }
-        .tab-btn.active { background: #2c3e50; color: white; }
-
-        .date-scroll-wrapper { display: flex; gap: 8px; overflow-x: auto; padding: 5px 2px 12px 2px; scrollbar-width: thin; -webkit-overflow-scrolling: touch; }
-        .date-scroll-wrapper::-webkit-scrollbar { height: 4px; }
-        .date-scroll-wrapper::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        
-        .date-btn { flex: 0 0 auto; padding: 8px 12px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 20px; font-size: 0.85rem; font-weight: bold; color: #475569; cursor: pointer; white-space: nowrap; }
-        .date-btn.active { background: #2563eb; color: white; border-color: #2563eb; box-shadow: 0 2px 4px rgba(37,99,235,0.2); }
-
-        .member-card { display: flex; flex-direction: column; padding: 12px; margin-bottom: 10px; background: #ffffff; border: 1px solid #e1e8ed; border-radius: 10px; transition: all 0.2s; gap: 8px; }
-        .member-card.checked-10 { background-color: #e8f8f5 !important; border-color: #2ecc71 !important; border-left: 5px solid #2ecc71 !important; }
-        .member-card.checked-5  { background-color: #ebf5fb !important; border-color: #3498db !important; border-left: 5px solid #3498db !important; }
-        .member-card.checked-comp { background-color: #fef5e7 !important; border-color: #f39c12 !important; border-left: 5px solid #f39c12 !important; }
-
-        .member-info { display: flex; justify-content: space-between; align-items: center; }
-        .member-name { font-weight: bold; font-size: 1.05rem; color: #2c3e50; white-space: nowrap; }
-        .badge { font-size: 0.85rem; font-weight: bold; padding: 2px 8px; border-radius: 4px; }
-        
-        .btn-group { display: flex; gap: 4px; width: 100%; }
-        .btn-group button { flex: 1; padding: 10px 2px; font-size: 0.85rem; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: bold; background: #ffffff; color: #64748b; text-align: center; transition: all 0.2s; }
-        
-        button.selected-10 { background: #2ecc71 !important; color: white !important; border-color: #2ecc71 !important; }
-        button.selected-5  { background: #3498db !important; color: white !important; border-color: #3498db !important; }
-        button.selected-comp { background: #f39c12 !important; color: white !important; border-color: #f39c12 !important; }
-        button.btn-cancel { background: #fff5f5; color: #e74c3c; border-color: #fab6b6; }
-
-        .month-filter { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px; -webkit-overflow-scrolling: touch; }
-        .month-btn { padding: 6px 12px; font-size: 0.8rem; border: 1px solid #cbd5e1; border-radius: 6px; background: white; cursor: pointer; font-weight: bold; color: #64748b; white-space: nowrap; }
-        .month-btn.active { background: #0284c7; color: white; border-color: #0284c7; }
-
-        .rank-card { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; margin-bottom: 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; }
-        .rank-number { font-weight: bold; color: #3b82f6; width: 45px; font-size: 0.95rem; }
-        .rank-name { font-weight: bold; flex: 1; font-size: 1rem; color: #1e293b; }
-        .rank-detail { font-size: 0.78rem; color: #64748b; margin-right: 8px; }
-        .rank-score { font-weight: bold; font-size: 1.1rem; color: #059669; }
-
-        .hidden { display: none; }
-        .loading { text-align: center; color: #888; padding: 20px; }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <div class="main-title-box">
-        <div class="main-title">🏃‍♂️ 토달 출석부 👟</div>
-    </div>
-    <div class="subtitle">매주 토요일 운동모임 출석 & 누적 현황</div>
-    
-    <div class="tab-group">
-        <button class="tab-btn active" id="tab-checkin-btn" onclick="switchTab('checkin')">📅 주차별 출석체크</button>
-        <button class="tab-btn" id="tab-stats-btn" onclick="switchTab('stats')">🏆 <span id="current-year-text">2026</span>년 누적현황</button>
-    </div>
-
-    <div id="tab-checkin">
-        <div class="date-scroll-wrapper" id="saturday-buttons"></div>
-        <div id="member-list" class="loading">회원 명단 불러오는 중...</div>
-    </div>
-
-    <div id="tab-stats" class="hidden">
-        <div class="month-filter" id="month-buttons"></div>
-        <div id="stats-list" class="loading">누적 데이터 계산 중...</div>
-    </div>
-</div>
-
 <script>
     // ⚠️ 구글 앱스 스크립트 웹 앱 URL을 넣으세요!
     const API_URL = "https://script.google.com/macros/s/AKfycbwjK-vBI-_n1GMWObpyxtWs8l-gzzW6IXHkyImabZTYLwsp8uEwwgJVPlR2Nw_XnQlYBQ/exec";
@@ -145,14 +65,13 @@
         const months = ["전체", "1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"];
         months.forEach(m => {
             const btn = document.createElement('button');
-            // 💡 현재 선택된 월 상태를 클래스에 확실하게 반영
             btn.className = `month-btn ${m === selectedMonth ? 'active' : ''}`;
             btn.innerText = m;
             btn.onclick = () => {
                 document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                selectedMonth = m; // 선택한 월 명확히 고정
-                renderStats();     // 즉시 통계 다시 계산
+                selectedMonth = m; 
+                renderStats();     
             };
             wrapper.appendChild(btn);
         });
@@ -169,7 +88,7 @@
             document.getElementById('tab-stats').classList.remove('hidden');
             document.getElementById('tab-checkin-btn').classList.remove('active');
             document.getElementById('tab-stats-btn').classList.add('active');
-            renderStats(); // 탭 열 때 현재 selectedMonth 상태 그대로 통계 계산
+            renderStats(); 
         }
     }
 
@@ -181,9 +100,10 @@
             })
             .then(data => {
                 globalMembers = data.members || [];
-                globalLogs = data.logs || [];
+                // 서버에서 가져온 데이터 중 점수가 0이 아닌 유효한 로그만 필터링하여 저장
+                globalLogs = (data.logs || []).filter(log => Number(log.score) > 0);
+                
                 renderCheckinList();
-                // 데이터 로드 직후 현재 선택된 탭이 누적현황이면 통계도 갱신
                 if (!document.getElementById('tab-stats').classList.contains('hidden')) {
                     renderStats();
                 }
@@ -270,9 +190,11 @@
             const score = Number(log.score);
             const dateText = String(log.date || ""); 
 
-            // 💡 [결정적 해결] 선택된 월("10월", "11월" 등)이 정확히 날짜 문자열 안에 포함되는지 검사
+            // 점수가 0 이하인 데이터는 통계에서 무조건 제외
+            if (score <= 0) return;
+
+            // 선택된 월 필터링
             if (selectedMonth !== "전체") {
-                // 예: selectedMonth가 "11월"인데 dateText에 "11월"이 없으면 무조건 제외
                 if (!dateText.includes(selectedMonth)) {
                     return; 
                 }
@@ -341,7 +263,10 @@
 
         if (!confirm(`[${selectedDateStr.replace(/^\d{4}년\s*/, '')}]\n[${name}]님을 [${label}]으로 기록하시겠습니까?`)) return;
 
+        // 기존에 혹시 남아있던 동일 날짜/이름 로그 제거 후 새로운 로그 추가
+        globalLogs = globalLogs.filter(log => !(log.name === name && log.date.trim() === selectedDateStr.trim()));
         globalLogs.push({ date: selectedDateStr, name: name, score: score });
+        
         renderCheckinList();
 
         fetch(API_URL, {
@@ -357,22 +282,19 @@
     function cancelCheckIn(name) {
         if (!confirm(`[${selectedDateStr.replace(/^\d{4}년\s*/, '')}]\n[${name}]님의 출석 기록을 취소하시겠습니까?`)) return;
 
-        for(let i = 0; i < globalLogs.length; i++) {
-            if(globalLogs[i].name === name && globalLogs[i].date.trim() === selectedDateStr.trim()) {
-                globalLogs[i].score = 0;
-                break;
-            }
-        }
+        // 💡 수정됨: score를 0으로 바꾸는 대신 globalLogs 배열에서 해당 항목을 완전히 제거
+        globalLogs = globalLogs.filter(log => !(log.name === name && log.date.trim() === selectedDateStr.trim()));
 
         renderCheckinList();
 
+        // 서버에도 취소(score: 0) 신호 전송
         fetch(API_URL, {
             method: 'POST',
             mode: 'no-cors',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name: name, score: 0, date: selectedDateStr })
         }).catch(() => {
-            alert("전송 중 오류가 서비스 오류 발생했습니다.");
+            alert("전송 중 오류가 발생했습니다.");
         });
     }
 
@@ -380,6 +302,3 @@
     initMonthButtons();
     loadData();
 </script>
-
-</body>
-</html>
