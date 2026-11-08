@@ -11,13 +11,13 @@
         .subtitle { text-align: center; font-size: 0.9rem; color: #7f8c8d; margin-bottom: 20px; }
         .date-box { background: #eef2f7; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 20px; }
         
-        /* 기본 카드 디자인 (체크 안 됨: 흰색 배경) */
+        /* 기본 카드 디자인 */
         .member-card { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; margin-bottom: 8px; background: #ffffff; border: 1px solid #e1e8ed; border-radius: 8px; transition: 0.2s; }
         
-        /* 상태별 카드 강조 디자인 */
-        .member-card.checked-10 { background-color: #e8f8f5; border-color: #2ecc71; border-left: 6px solid #2ecc71; }
-        .member-card.checked-5  { background-color: #ebf5fb; border-color: #3498db; border-left: 6px solid #3498db; }
-        .member-card.checked-comp { background-color: #fef5e7; border-color: #f39c12; border-left: 6px solid #f39c12; }
+        /* 상태별 카드 강조 배경색 */
+        .member-card.checked-10 { background-color: #e8f8f5 !important; border-color: #2ecc71 !important; border-left: 6px solid #2ecc71 !important; }
+        .member-card.checked-5  { background-color: #ebf5fb !important; border-color: #3498db !important; border-left: 6px solid #3498db !important; }
+        .member-card.checked-comp { background-color: #fef5e7 !important; border-color: #f39c12 !important; border-left: 6px solid #f39c12 !important; }
 
         .member-name { font-weight: bold; font-size: 1rem; color: #2c3e50; }
         .btn-group { display: flex; gap: 6px; }
@@ -47,14 +47,14 @@
 
 <script>
     // ⚠️ 아래 쌍따옴표 안에 구글 앱스 스크립트 웹 앱 URL을 넣으세요!
-    const API_URL = "https://script.google.com/macros/s/AKfycby1C-OjDV9Zdq2dqR0BZw5r72cZh87uUC-NpkQYA8nkpHlV9H4YtmsWbeSMmjepRUXCCA/exec";
+    const API_URL = "여기에_복사한_구글_웹앱_URL을_붙여넣으세요";
 
     const today = new Date();
     const dateStr = today.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
     document.getElementById('current-date').innerText = dateStr;
 
     function loadData() {
-        // 캐시 방지를 위해 현재 시간을 뒤에 붙여서 항상 최신 데이터를 가져옵니다.
+        // 캐시 방지용 타임스탬프 추가
         fetch(API_URL + "?t=" + new Date().getTime())
             .then(res => res.json())
             .then(data => {
@@ -66,6 +66,7 @@
 
                 const todayAttendance = {};
                 logs.forEach(log => {
+                    // 오늘 날짜와 일치하는 기록만 가져옴
                     if (log.date && log.date.includes(`${today.getFullYear()}년`)) {
                         todayAttendance[log.name] = Number(log.score);
                     }
@@ -87,7 +88,7 @@
                     if (isChecked) {
                         if (existingScore === 10) cardClass += ' checked-10';
                         else if (existingScore === 5) cardClass += ' checked-5';
-                        else if (existingScore === 99) cardClass += ' checked-comp'; // 대회 코드
+                        else if (existingScore === 99) cardClass += ' checked-comp';
                     }
                     card.className = cardClass;
                     
@@ -138,8 +139,8 @@
             body: JSON.stringify({ name: name, score: score, date: dateStr, isUpdate: isChecked })
         }).then(() => {
             alert(`[반영 완료] ${name}님의 ${label}이 적용되었습니다!`);
-            // 데이터가 구글 시트에 반영될 시간을 0.5초 정도 준 뒤 화면을 새로고침합니다.
-            setTimeout(loadData, 500);
+            // 서버 반영 시간을 고려해 0.6초 뒤 데이터 새로고침
+            setTimeout(loadData, 600);
         }).catch(() => {
             alert("전송 중 오류가 발생했습니다.");
         });
