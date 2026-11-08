@@ -15,7 +15,7 @@
         .tab-btn { flex: 1; padding: 10px 4px; font-size: 0.85rem; border: none; background: #f1f5f9; color: #64748b; font-weight: bold; border-radius: 8px; cursor: pointer; transition: all 0.2s; text-align: center; }
         .tab-btn.active { background: #2c3e50; color: white; }
 
-        /* 매주 토요일 날짜 가로 스크롤 (오른쪽으로 밀면서 보는 형태) */
+        /* 매주 토요일 날짜 가로 스크롤 (오른쪽에서 왼쪽으로 밀어보는 형태) */
         .date-scroll-wrapper { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 8px; overflow-x: auto; padding: 5px 2px 12px 2px; scrollbar-width: thin; }
         .date-scroll-wrapper::-webkit-scrollbar { height: 4px; }
         .date-scroll-wrapper::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -68,13 +68,13 @@
         <button class="tab-btn" id="tab-stats-btn" onclick="switchTab('stats')">🏆 <span id="current-year-text">2026</span>년 누적현황</button>
     </div>
 
-    <!-- 탭 1: 주차별 출석체크 (달력 자동연동 스크롤) -->
+    <!-- 탭 1: 주차별 출석체크 -->
     <div id="tab-checkin">
         <div class="date-scroll-wrapper" id="saturday-buttons"></div>
         <div id="member-list" class="loading">회원 명단 불러오는 중...</div>
     </div>
 
-    <!-- 탭 2: 월별 누적 현황 (연도 자동인식) -->
+    <!-- 탭 2: 월별 누적 현황 -->
     <div id="tab-stats" class="hidden">
         <div class="month-filter" id="month-buttons"></div>
         <div id="stats-list" class="loading">누적 데이터 계산 중...</div>
@@ -83,7 +83,7 @@
 
 <script>
     // ⚠️ 아래 쌍따옴표 안에 구글 앱스 스크립트 웹 앱 URL을 넣으세요!
-    const API_URL = "https://script.google.com/macros/s/AKfycbxcAIA2xoK7JvvUVi22NDYLuT_0lHT-NJT9kwlUonZHPvbLyv0mNZIGSho10GaaqnHrYA/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbz-k8v0NZDTCXFy5HhhczLzZPU9EuYP6RRgNrRapmw_OSuHZVW3g4HwRDfhD49nxoJ4-Q/exec";
 
     let globalMembers = [];
     let globalLogs = [];
@@ -94,17 +94,18 @@
     const currentYear = new Date().getFullYear();
     document.getElementById('current-year-text').innerText = currentYear;
 
-    // 달력 날짜 자동 연동 및 토요일 계산 (최신순 스크롤)
+    // 현재 날짜 기준 토요일 자동 계산 및 연동
     function initSaturdayButtons() {
         const wrapper = document.getElementById('saturday-buttons');
         wrapper.innerHTML = '';
         
         const saturdays = [];
-        let curr = new Date();
+        let curr = new Date(); // 오늘 날짜 기준 (2026년 11월 8일 등)
         
-        // 오늘 기준으로 가장 가까운 토요일 찾기
+        // 만약 오늘이 토요일이 아니면, 직전 토요일을 기준으로 잡거나 이번주 토요일을 잡음
+        // 여기서는 오늘 기준 가장 최근에 지나간(혹은 다가올) 토요일을 산출
         const day = curr.getDay();
-        const diff = (6 - day + 7) % 7;
+        const diff = (6 - day - 7) % 7; // 직전 토요일 기준 (원하시면 당일 기준(6-day)으로 변경 가능)
         curr.setDate(curr.getDate() + diff);
         
         // 최근 12개 토요일 생성
@@ -115,7 +116,7 @@
             saturdays.push(dStr);
         }
 
-        selectedDateStr = saturdays[0]; // 기본은 이번주 토요일
+        selectedDateStr = saturdays[0]; // 가장 최근 토요일 기본 선택
 
         saturdays.forEach((dStr, idx) => {
             const btn = document.createElement('button');
@@ -256,7 +257,7 @@
             const score = Number(log.score);
             const dateText = log.date || "";
 
-            // 현재 연도(예: 2026년, 2027년) 데이터이면서 선택된 월에 맞는 것만 집계
+            // 현재 연도 데이터만 자동 집계
             if (!dateText.includes(`${currentYear}년`)) return;
             if (selectedMonth !== "전체" && !dateText.includes(`${selectedMonth}`)) return;
 
