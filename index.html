@@ -79,8 +79,8 @@
 </div>
 
 <script>
-    // ⚠️ 구글 앱스 스크립트 웹 앱 URL을 여기에 넣어주세요!
-    const API_URL = "https://script.google.com/macros/s/AKfycbzvDoWVFJqTbk_EO4QKCQXEJxJ1QSNPlM_IL6DUz_awW8X1OhAtCFiM7UJTyey6K8GXpQ/exec";
+    // ⚠️ 새로 발급받은 구글 웹 앱 URL을 여기에 넣어주세요!
+    const API_URL = "https://script.google.com/macros/s/AKfycbwyVu0vISuh_Gae3WNz0uOmT3EZHs3kT5xOzwjI1G3D_7F3I0yFH2Dk6baQZ95OdmRYzA/exec";
 
     let globalMembers = [];
     let globalLogs = [];
@@ -173,7 +173,8 @@
     }
 
     function loadData() {
-        fetch(API_URL + "?t=" + new Date().getTime())
+        // 구글 앱스 스크립트 리다이렉트 및 CORS 문제를 해결하기 위한 fetch 호출
+        fetch(API_URL + "?t=" + new Date().getTime(), { redirect: "follow" })
             .then(res => {
                 if (!res.ok) throw new Error("네트워크 응답 실패");
                 return res.json();
@@ -188,8 +189,9 @@
                 }
             })
             .catch(err => {
+                console.error(err);
                 document.getElementById('member-list').innerHTML = 
-                    "<div style='color:#e74c3c; font-weight:bold;'>데이터 연결 대기 중...<br><button onclick='loadData()' style='margin-top:10px; padding:6px 12px;'>새로고침 시도</button></div>";
+                    "<div style='color:#e74c3c; font-weight:bold;'>데이터 연결 대기 중...<br><span style='font-size:0.8rem; color:#555;'>URL 또는 권한 배포를 다시 확인해 주세요.</span><br><button onclick='loadData()' style='margin-top:10px; padding:6px 12px;'>새로고침 시도</button></div>";
             });
     }
 
@@ -198,7 +200,7 @@
         listDiv.innerHTML = '';
         
         if(globalMembers.length === 0) {
-            listDiv.innerHTML = "Members 시트에 회원 명단을 입력해 주세요.";
+            listDiv.innerHTML = "Members 시트에 회원 명단이 없거나 불러오지 못했습니다.";
             return;
         }
 
