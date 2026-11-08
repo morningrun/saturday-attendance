@@ -10,10 +10,12 @@
         h1 { font-size: 1.4rem; text-align: center; color: #2c3e50; margin-bottom: 5px; }
         .subtitle { text-align: center; font-size: 0.9rem; color: #7f8c8d; margin-bottom: 20px; }
         .date-box { background: #eef2f7; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 20px; }
-        .member-card { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; }
+        .member-card { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; transition: 0.2s; }
+        .member-card.checked { background-color: #f1f8f5; border-left: 4px solid #2ecc71; }
         .member-name { font-weight: bold; font-size: 1rem; }
         .btn-group { display: flex; gap: 4px; }
-        button { padding: 6px 8px; font-size: 0.75rem; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button { padding: 6px 8px; font-size: 0.75rem; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; opacity: 0.8; }
+        button.selected { opacity: 1.0; outline: 2px solid #333; transform: scale(1.05); }
         .btn-10 { background: #2ecc71; color: white; }
         .btn-5 { background: #3498db; color: white; }
         .btn-0 { background: #95a5a6; color: white; }
@@ -36,36 +38,54 @@
 
 <script>
     // ⚠️ 아래 쌍따옴표 안에 구글 앱스 스크립트 웹 앱 URL을 넣으세요!
-    const API_URL = "https://script.google.com/macros/s/AKfycbxLRO18gBoU85RUjfmnYHHAp9Lq1lm-yIx7g8El4NGNfpxPfrsPFDbR_SKwyFmCX-YOMA/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbzAbtVjU8vVznciB1nyNV8kFet7ULyYWb2wT-zWN3QF_HODJc3vpG25tTrzMJSt9jhAyA/exec";
 
     const today = new Date();
     const dateStr = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일 토요일`;
     document.getElementById('current-date').innerText = dateStr;
 
-    function loadMembers() {
+    function loadData() {
         fetch(API_URL)
             .then(res => res.json())
             .then(data => {
                 const listDiv = document.getElementById('member-list');
                 listDiv.innerHTML = '';
                 
-                if(data.length === 0) {
+                const members = data.members || [];
+                const logs = data.logs || [];
+
+                // 오늘 날짜에 이미 기록된 출석부 매핑 (이름 -> 점수)
+                const todayAttendance = {};
+                logs.forEach(log => {
+                    if (log.date === dateStr) {
+                        todayAttendance[log.name] = Number(log.score);
+                    }
+                });
+
+                if(members.length === 0) {
                     listDiv.innerHTML = "Members 시트에 회원 명단을 입력해 주세요.";
                     return;
                 }
 
-                data.forEach(member => {
+                members.forEach(member => {
+                    const name = member.name;
+                    const existingScore = todayAttendance[name]; // 이미 체크했으면 점수 들어있음
+                    const isChecked = existingScore !== undefined;
+
                     const card = document.createElement('div');
-                    card.className = 'member-card';
+                    card.className = `member-card ${isChecked ? 'checked' : ''}`;
+                    
+                    let buttonsHtml = `
+                        <button class="btn-10 ${isChecked && existingScore === 10 ? 'selected' : ''}" onclick="checkIn('${name}', 10, ${isChecked})">정시(+10)</button>
+                        <button class="btn-5 ${isChecked && existingScore === 5 ? 'selected' : ''}" onclick="checkIn('${name}', 5, ${isChecked})">지각(+5)</button>
+                        <button class="btn-0 ${isChecked && existingScore === 0 ? 'selected' : ''}" onclick="checkIn('${name}', 0, ${isChecked})">불참(0)</button>
+                        <button class="btn-minus5 ${isChecked && existingScore === -5 ? 'selected' : ''}" onclick="checkIn('${name}', -5, ${isChecked})">당취(-5)</button>
+                        <button class="btn-minus10 ${isChecked && existingScore === -10 ? 'selected' : ''}" onclick="checkIn('${name}', -10, ${isChecked})">무단(-10)</button>
+                    `;
+
                     card.innerHTML = `
-                        <div class="member-name">${member.name}</div>
-                        <div class="btn-group">
-                            <button class="btn-10" onclick="checkIn('${member.name}', 10)">정시(+10)</button>
-                            <button class="btn-5" onclick="checkIn('${member.name}', 5)">지각(+5)</button>
-                            <button class="btn-0" onclick="checkIn('${member.name}', 0)">불참(0)</button>
-                            <button class="btn-minus5" onclick="checkIn('${member.name}', -5)">당취(-5)</button>
-                            <button class="btn-minus10" onclick="checkIn('${member.name}', -10)">무단(-10)</button>
-                        </div>
+                        <div class="member-name">${name} ${isChecked ? '✅' : ''}</div>
+                        <div class="btn-group">${buttonsHtml}</div>
                     `;
                     listDiv.appendChild(card);
                 });
@@ -75,22 +95,33 @@
             });
     }
 
-    function checkIn(name, score) {
-        if(!confirm(`[${name}]님의 출석 상태를 '${score > 0 ? '+' + score : score}점'으로 기록하시겠습니까?`)) return;
+    function checkIn(name, score, isChecked) {
+        let scoreText = score > 0 ? '+' + score : score;
+
+        if (isChecked) {
+            if (!confirm(`[${name}]님은 이미 오늘 출석이 기록되어 있습니다.\n상태를 [${scoreText}점]으로 수정하시겠습니까?`)) return;
+        } else {
+            if (!confirm(`[${name}]님의 출석 상태를 [${scoreText}점]으로 기록하시겠습니까?`)) return;
+        }
 
         fetch(API_URL, {
             method: 'POST',
             mode: 'no-cors',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: name, score: score, date: dateStr })
+            body: JSON.stringify({ name: name, score: score, date: dateStr, isUpdate: isChecked })
         }).then(() => {
-            alert(`${name}님의 출석이 정상 반영되었습니다!`);
+            if (isChecked) {
+                alert(`[수정 완료] ${name}님의 출석 상태가 ${scoreText}점으로 수정되었습니다!`);
+            } else {
+                alert(`[등록 완료] ${name}님의 출석이 정상 반영되었습니다!`);
+            }
+            loadData(); // 화면 새로고침
         }).catch(() => {
             alert("전송 중 오류가 발생했습니다.");
         });
     }
 
-    loadMembers();
+    loadData();
 </script>
 
 </body>
