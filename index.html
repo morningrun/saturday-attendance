@@ -49,9 +49,10 @@
         .saturday-list-title { font-size: 0.92rem; font-weight: 700; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
         .saturday-vertical-group { display: flex; flex-direction: column; gap: 6px; max-height: 210px; overflow-y: auto; padding-right: 4px; }
         
+        /* 💡 토요일 날짜 선택 버튼 스타일 */
         .saturday-item-btn { padding: 11px 14px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 9px; font-size: 0.92rem; font-weight: 600; color: var(--primary); cursor: pointer; text-align: left; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; }
         .saturday-item-btn.active { background: #eff6ff; color: var(--accent); border-color: var(--accent); box-shadow: 0 2px 6px rgba(37,99,235,0.15); font-weight: 700; }
-        /* 💡 미래 날짜 잠금 스타일 */
+        /* 💡 다가오는 미래 토요일 회색 잠금 스타일 */
         .saturday-item-btn.disabled { background: #f1f5f9; color: #94a3b8; border-color: var(--border); cursor: not-allowed; opacity: 0.7; }
 
         .member-card { display: flex; flex-direction: column; padding: 14px; margin-bottom: 12px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; transition: all 0.2s; gap: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
@@ -282,11 +283,12 @@
             const isSelected = (dStr === selectedDateStr);
 
             if (isFuture) {
-                // 💡 미래 날짜 잠금 및 클릭 시 경고 팝업 안내 복원
+                // 💡 미래 토요일 날짜 회색 잠금 및 클릭 방지
                 btn.className = 'saturday-item-btn disabled';
                 btn.innerHTML = `<span>🔒 ${dStr.replace(/^\d{4}년\s*/, '')} (예정)</span>`;
                 btn.onclick = () => alert("아직 다가오지 않은 미래 날짜는 체크할 수 없습니다!");
             } else {
+                // 💡 지난 토요일 및 오늘 토요일은 선택 가능
                 btn.className = `saturday-item-btn ${isSelected ? 'active' : ''}`;
                 btn.innerText = dStr.replace(/^\d{4}년\s*/, '');
                 btn.onclick = () => {
@@ -601,7 +603,6 @@
                 if (data.monthly[mNum]) {
                     targetScore = data.monthly[mNum].score;
                     targetAtt = data.monthly[mNum].att;
-                    targetTardy = data.monthly[mNum].monthly ? 0 : data.monthly[mNum].tardy; // 안전 방어
                     targetTardy = data.monthly[mNum].tardy;
                     targetComp = data.monthly[mNum].comp;
                 }
