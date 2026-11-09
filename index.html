@@ -49,10 +49,8 @@
         .saturday-list-title { font-size: 0.92rem; font-weight: 700; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
         .saturday-vertical-group { display: flex; flex-direction: column; gap: 6px; max-height: 210px; overflow-y: auto; padding-right: 4px; }
         
-        /* 💡 토요일 날짜 선택 버튼 스타일 */
         .saturday-item-btn { padding: 11px 14px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 9px; font-size: 0.92rem; font-weight: 600; color: var(--primary); cursor: pointer; text-align: left; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; }
         .saturday-item-btn.active { background: #eff6ff; color: var(--accent); border-color: var(--accent); box-shadow: 0 2px 6px rgba(37,99,235,0.15); font-weight: 700; }
-        /* 💡 다가오는 미래 토요일 회색 잠금 스타일 */
         .saturday-item-btn.disabled { background: #f1f5f9; color: #94a3b8; border-color: var(--border); cursor: not-allowed; opacity: 0.7; }
 
         .member-card { display: flex; flex-direction: column; padding: 14px; margin-bottom: 12px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; transition: all 0.2s; gap: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
@@ -147,7 +145,7 @@
 </div>
 
 <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzSrari-DsIWet1UNzzH3GLMm1HnlS9O-Y3VpY26UveVpOwk_B2r1cbA3lj2iQO9I_E-g/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbylh9Lj67zWfVrxAebvCj6tjz_9LGDyDXWr2ve9u-8-P4daPn8d554PJNubc1_ZB8sCXA/exec";
 
     const DEFAULT_MEMBERS = [
         { name: "곽병우" }, { name: "김경기" }, { name: "김미향" }, { name: "김은성" }, 
@@ -160,8 +158,8 @@
         { name: "조성국" }, { name: "최순규" }, { name: "최잔디" }, { name: "황연성" }
     ];
 
-    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v12')) || [...DEFAULT_MEMBERS];
-    let globalLogs = JSON.parse(localStorage.getItem('todal_logs_v12')) || [];
+    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v13')) || [...DEFAULT_MEMBERS];
+    let globalLogs = JSON.parse(localStorage.getItem('todal_logs_v13')) || [];
     let adminPassword = "1234";
 
     let selectedDateStr = localStorage.getItem('todal_selected_date') || "";
@@ -308,7 +306,7 @@
             document.getElementById('tab-stats').classList.add('hidden');
             document.getElementById('tab-checkin-btn').classList.add('active');
             document.getElementById('tab-stats-btn').classList.remove('active');
-            renderSaturdayVerticalList(); // 💡 탭 전환 시 날짜 리스트도 확실하게 렌더링
+            renderSaturdayVerticalList();
         } else {
             document.getElementById('tab-checkin').classList.add('hidden');
             document.getElementById('tab-stats').classList.remove('hidden');
@@ -327,8 +325,8 @@
 
     function saveLocally() {
         sortMembers();
-        localStorage.setItem('todal_members_v12', JSON.stringify(globalMembers));
-        localStorage.setItem('todal_logs_v12', JSON.stringify(globalLogs));
+        localStorage.setItem('todal_members_v13', JSON.stringify(globalMembers));
+        localStorage.setItem('todal_logs_v13', JSON.stringify(globalLogs));
     }
 
     async function loadDataFromSheet() {
@@ -342,8 +340,9 @@
                 if (resData.members && Array.isArray(resData.members) && resData.members.length > 0) {
                     globalMembers = resData.members;
                 }
-                if (resData.logs && Array.isArray(resData.logs) && resData.logs.length > 0) {
-                    globalLogs = resData.logs;
+                if (resData.logs && Array.isArray(resData.logs)) {
+                    // 💡 불러올 때 빈 날짜나 찌꺼기 로그는 아예 제외하고 필터링
+                    globalLogs = resData.logs.filter(l => l.name && l.date && l.date !== "" && l.date !== "undefined" && Number(l.score) > 0);
                 }
                 saveLocally();
             }
@@ -355,6 +354,8 @@
 
     async function saveDataToSheet() {
         sortMembers();
+        // 💡 저장할 때도 빈 날짜나 비정상 데이터는 싹 걸러내고 저장
+        globalLogs = globalLogs.filter(l => l.name && l.date && l.date !== "" && l.date !== "undefined" && Number(l.score) > 0);
         saveLocally();
         try {
             await fetch(GOOGLE_SCRIPT_URL, {
@@ -516,6 +517,11 @@
         const cleanName = String(name).trim();
         const targetDate = selectedDateStr;
 
+        if (!targetDate || targetDate === "" || targetDate === "undefined") {
+            alert("날짜가 올바르지 않습니다. 다시 선택해주세요.");
+            return;
+        }
+
         if (score === 0) {
             if (!confirm(`[${targetDate.replace(/^\d{4}년\s*/, '')}] [${cleanName}]님의 출석 기록을 취소하시겠습니까?`)) return;
         } else {
@@ -523,6 +529,7 @@
             if (!confirm(`[${targetDate.replace(/^\d{4}년\s*/, '')}] [${cleanName}]님을 [${label}]으로 기록하시겠습니까?`)) return;
         }
 
+        // 기존 해당 날짜/이름 로그 제거
         globalLogs = globalLogs.filter(log => !(String(log.name).trim() === cleanName && String(log.date).trim() === targetDate));
         
         if (score > 0) {
@@ -535,7 +542,7 @@
             });
         }
 
-        renderSaturdayVerticalList();
+        renderCheckinList();
         renderStats();
         await saveDataToSheet();
     }
@@ -552,7 +559,7 @@
 
         const uniqueLogs = {};
         globalLogs.forEach(log => {
-            if (Number(log.score) > 0) {
+            if (log.name && log.date && log.date !== "" && log.date !== "undefined" && Number(log.score) > 0) {
                 const key = String(log.date).trim() + "_" + String(log.name).trim();
                 uniqueLogs[key] = log;
             }
@@ -579,7 +586,7 @@
             else if (score === 99) statsMap[name].comp += 1;
 
             if (m >= 1 && m <= 12) {
-                if (!statsMap[name].monthly[m]) statsMap[name].monthly[m] = { score: 0, att: 0, tardy: 0, comp: 0 };
+                if (!statsMap[name].monthly[m]) statsMap[name].monthly[m]  = { score: 0, att: 0, tardy: 0, comp: 0 };
                 statsMap[name].monthly[m].score += points;
                 if (score === 10) statsMap[name].monthly[m].att += 1;
                 else if (score === 5) statsMap[name].monthly[m].tardy += 1;
@@ -639,7 +646,7 @@
         initCheckinMonthButtons();
         initStatsMonthButtons();
         sortMembers();
-        renderSaturdayVerticalList(); // 💡 초기 실행 시 토요일 리스트 생성 보장
+        renderSaturdayVerticalList();
         renderStats();
         
         await loadDataFromSheet();
