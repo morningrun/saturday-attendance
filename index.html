@@ -145,7 +145,7 @@
 </div>
 
 <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbylh9Lj67zWfVrxAebvCj6tjz_9LGDyDXWr2ve9u-8-P4daPn8d554PJNubc1_ZB8sCXA/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwZPhNLvPNwomHKRgW68nqD268BBPGuIVQUFIdYMVgCLqe9AzlTvo-o0o6WEM9YY-4x0Q/exec";
 
     const DEFAULT_MEMBERS = [
         { name: "곽병우" }, { name: "김경기" }, { name: "김미향" }, { name: "김은성" }, 
@@ -158,8 +158,8 @@
         { name: "조성국" }, { name: "최순규" }, { name: "최잔디" }, { name: "황연성" }
     ];
 
-    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v13')) || [...DEFAULT_MEMBERS];
-    let globalLogs = JSON.parse(localStorage.getItem('todal_logs_v13')) || [];
+    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v14')) || [...DEFAULT_MEMBERS];
+    let globalLogs = JSON.parse(localStorage.getItem('todal_logs_v14')) || [];
     let adminPassword = "1234";
 
     let selectedDateStr = localStorage.getItem('todal_selected_date') || "";
@@ -325,8 +325,8 @@
 
     function saveLocally() {
         sortMembers();
-        localStorage.setItem('todal_members_v13', JSON.stringify(globalMembers));
-        localStorage.setItem('todal_logs_v13', JSON.stringify(globalLogs));
+        localStorage.setItem('todal_members_v14', JSON.stringify(globalMembers));
+        localStorage.setItem('todal_logs_v14', JSON.stringify(globalLogs));
     }
 
     async function loadDataFromSheet() {
@@ -341,8 +341,15 @@
                     globalMembers = resData.members;
                 }
                 if (resData.logs && Array.isArray(resData.logs)) {
-                    // 💡 불러올 때 빈 날짜나 찌꺼기 로그는 아예 제외하고 필터링
-                    globalLogs = resData.logs.filter(l => l.name && l.date && l.date !== "" && l.date !== "undefined" && Number(l.score) > 0);
+                    // 💡 중복 로그 방지: 이름+날짜 기준으로 유일한 로그만 남김
+                    const uniqueMap = new Map();
+                    resData.logs.forEach(l => {
+                        if (l.name && l.date && Number(l.score) > 0) {
+                            const key = String(l.date).trim() + "_" + String(l.name).trim();
+                            uniqueMap.set(key, l); // 나중에 들어온 값(또는 정상 값)으로 덮어씀
+                        }
+                    });
+                    globalLogs = Array.from(uniqueMap.values());
                 }
                 saveLocally();
             }
@@ -354,9 +361,16 @@
 
     async function saveDataToSheet() {
         sortMembers();
-        // 💡 저장할 때도 빈 날짜나 비정상 데이터는 싹 걸러내고 저장
-        globalLogs = globalLogs.filter(l => l.name && l.date && l.date !== "" && l.date !== "undefined" && Number(l.score) > 0);
+        const uniqueMap = new Map();
+        globalLogs.forEach(l => {
+            if (l.name && l.date && Number(l.score) > 0) {
+                const key = String(l.date).trim() + "_" + String(l.name).trim();
+                uniqueMap.set(key, l);
+            }
+        });
+        globalLogs = Array.from(uniqueMap.values());
         saveLocally();
+
         try {
             await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
@@ -529,7 +543,7 @@
             if (!confirm(`[${targetDate.replace(/^\d{4}년\s*/, '')}] [${cleanName}]님을 [${label}]으로 기록하시겠습니까?`)) return;
         }
 
-        // 기존 해당 날짜/이름 로그 제거
+        // 해당 날짜/이름 로그 제거 후 새로 추가
         globalLogs = globalLogs.filter(log => !(String(log.name).trim() === cleanName && String(log.date).trim() === targetDate));
         
         if (score > 0) {
@@ -557,15 +571,16 @@
             statsMap[String(m.name).trim()] = { score: 0, att: 0, tardy: 0, comp: 0, monthly: {} };
         });
 
-        const uniqueLogs = {};
+        // 💡 중복 방지 Map 적용하여 집계
+        const uniqueLogs = new Map();
         globalLogs.forEach(log => {
-            if (log.name && log.date && log.date !== "" && log.date !== "undefined" && Number(log.score) > 0) {
+            if (log.name && log.date && Number(log.score) > 0) {
                 const key = String(log.date).trim() + "_" + String(log.name).trim();
-                uniqueLogs[key] = log;
+                uniqueLogs.set(key, log);
             }
         });
 
-        Object.values(uniqueLogs).forEach(log => {
+        uniqueLogs.forEach(log => {
             const name = String(log.name).trim();
             const score = Number(log.score);
             let m = Number(log.month) || 0;
@@ -586,7 +601,7 @@
             else if (score === 99) statsMap[name].comp += 1;
 
             if (m >= 1 && m <= 12) {
-                if (!statsMap[name].monthly[m]) statsMap[name].monthly[m]  = { score: 0, att: 0, tardy: 0, comp: 0 };
+                if (!statsMap[name].monthly[m]) statsMap[name].monthly[m] = { score: 0, att: 0, tardy: 0, comp: 0 };
                 statsMap[name].monthly[m].score += points;
                 if (score === 10) statsMap[name].monthly[m].att += 1;
                 else if (score === 5) statsMap[name].monthly[m].tardy += 1;
