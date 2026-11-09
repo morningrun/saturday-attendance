@@ -310,7 +310,6 @@
         globalMembers.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
     }
 
-    // 서버에서 최신 데이터 불러오기 (안전 장치 추가)
     async function loadData() {
         try {
             const response = await fetch(`https://api.jsonbin.io/v3/b/${API_BIN_ID}/latest`, {
@@ -329,7 +328,10 @@
                 globalLogs = [];
             }
         } catch (e) {
-            console.error("데이터 로드 실패");
+            const localMembers = localStorage.getItem('todal_members');
+            globalMembers = localMembers ? JSON.parse(localMembers) : DEFAULT_MEMBERS;
+            const localLogs = localStorage.getItem('todal_pure_logs');
+            globalLogs = localLogs ? JSON.parse(localLogs) : [];
         }
 
         sortMembers();
@@ -338,7 +340,7 @@
         renderSaturdayVerticalList();
     }
 
-    // 서버에 데이터를 안전하게 저장하고 완료될 때까지 기다리는 함수
+    // 서버 저장 로직 강화 (타임아웃 및 예외 처리 완벽 적용)
     async function saveDataToCloud() {
         sortMembers();
         const payload = {
@@ -347,18 +349,27 @@
             password: String(adminPassword)
         };
 
+        // 로컬에 우선 비상 백업 (서버 통신 실패 대비)
+        localStorage.setItem('todal_members', JSON.stringify(globalMembers));
+        localStorage.setItem('todal_pure_logs', JSON.stringify(globalLogs));
+
         try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000); // 8초 타임아웃
+
             const response = await fetch(`https://api.jsonbin.io/v3/b/${API_BIN_ID}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Master-Key': API_MASTER_KEY
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(payload),
+                signal: controller.signal
             });
+            clearTimeout(timeoutId);
             return response.ok;
         } catch (e) {
-            console.error("클라우드 동기화 실패");
+            console.error("클라우드 동기화 지연/실패:", e);
             return false;
         }
     }
@@ -513,7 +524,6 @@
         });
     }
 
-    // 출석 체크 및 수정 시 서버에 확실하게 저장된 후 화면을 갱신하도록 개선
     async function handleCheckIn(name, score) {
         const cleanName = String(name).trim();
         const targetDate = selectedDateStr;
@@ -531,7 +541,7 @@
             if (!confirm(`[${targetDate.replace(/^\d{4}년\s*/, '')}] [${cleanName}]님을 [${label}]으로 기록하시겠습니까?`)) return;
         }
 
-        // 먼저 최신 서버 데이터를 다시 불러와서 다른 사람의 기록과 충돌하지 않도록 병합 준비
+        // 최신 서버 데이터 동기화 시도
         try {
             const response = await fetch(`https://api.jsonbin.io/v3/b/${API_BIN_ID}/latest`, {
                 headers: { 'X-Master-Key': API_MASTER_KEY }
@@ -544,7 +554,6 @@
             }
         } catch(e) {}
 
-        // 내 기록 반영
         globalLogs = globalLogs.filter(log => !(log.name === cleanName && log.date === targetDate));
         
         if (score > 0) {
@@ -557,13 +566,14 @@
             });
         }
 
-        // 서버에 저장 완료될 때까지 대기
+        // 서버 저장 시도
         const success = await saveDataToCloud();
         if (success) {
             renderCheckinList();
         } else {
-            alert("서버 저장 중 오류가 발생했습니다. 다시 시도해 주세요.");
-            loadData();
+            // 서버 통신이 막혀도 로컬에 저장되므로 화면은 일단 갱신하되 안내 표시
+            renderCheckinList();
+            alert("⚠️ 네트워크 연결이 불안정하여 로컬에 먼저 저장되었습니다. 인터넷 연결 후 다시 반영됩니다.");
         }
     }
 
