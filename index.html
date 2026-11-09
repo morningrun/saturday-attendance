@@ -320,17 +320,17 @@
                 const data = resData.record;
                 globalMembers = (data.members && data.members.length > 0) ? data.members : DEFAULT_MEMBERS;
                 globalLogs = data.logs || [];
-                // 서버에 저장된 비밀번호를 확실하게 불러오기 (없으면 기본값 1234)
-                adminPassword = (data.password !== undefined && data.password !== null && String(data.password).trim() !== "") ? String(data.password) : "1234";
+                // 서버에 저장된 비번이 있으면 가져오고, 없으면 기본값 유지
+                if (data.password !== undefined && data.password !== null && String(data.password).trim() !== "") {
+                    adminPassword = String(data.password);
+                }
             } else {
                 globalMembers = DEFAULT_MEMBERS;
                 globalLogs = [];
-                adminPassword = "1234";
             }
         } catch (e) {
             globalMembers = DEFAULT_MEMBERS;
             globalLogs = [];
-            adminPassword = "1234";
         }
 
         sortMembers();
@@ -339,6 +339,7 @@
         renderSaturdayVerticalList();
     }
 
+    // 서버에 저장할 때 현재 설정된 adminPassword를 절대 누락시키지 않고 함께 동기화
     async function saveDataToCloud() {
         sortMembers();
         const payload = {
@@ -386,9 +387,9 @@
         }
         if (confirm(`관리자 비밀번호를 [${newPwd}]로 변경하시겠습니까?`)) {
             adminPassword = newPwd;
-            await saveDataToCloud(); // 서버에 즉시 반영
+            await saveDataToCloud(); // 즉시 서버에 새 비번 고정 저장
             input.value = '';
-            alert("비밀번호가 서버에 완벽하게 반영되었습니다! 이제 변경된 번호로 사용하세요.");
+            alert("비밀번호가 서버에 완벽하게 고정되었습니다!");
         }
     }
 
