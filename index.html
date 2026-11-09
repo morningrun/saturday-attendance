@@ -106,7 +106,7 @@
             <div class="saturday-vertical-group" id="saturday-vertical-wrapper"></div>
         </div>
 
-        <div id="member-list" class="loading">데이터 불러오는 중...</div>
+        <div id="member-list" class="loading">출석부 불러오는 중...</div>
     </div>
 
     <!-- 누적현황 탭 -->
@@ -143,9 +143,6 @@
 </div>
 
 <script>
-    const API_BIN_ID = "672f2e5ead19ca34f8c1b29a";
-    const API_MASTER_KEY = "$2a$10$wK1W0J6c7XlQ1v2K8b5v0u8J2X8f3v0z5v3u8J2X8f3v0z5v3u8J2";
-
     const DEFAULT_MEMBERS = [
         { name: "곽병우" }, { name: "김경기" }, { name: "김미향" }, { name: "김은성" }, 
         { name: "김정구" }, { name: "김정균" }, { name: "김진철" }, { name: "김태수" }, 
@@ -157,9 +154,11 @@
         { name: "조성국" }, { name: "최순규" }, { name: "최잔디" }, { name: "황연성" }
     ];
 
-    let globalMembers = [...DEFAULT_MEMBERS];
-    let globalLogs = [];
-    let adminPassword = "1234";
+    // 브라우저 로컬 저장소에서 데이터 불러오기 (리셋 방지)
+    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v2')) || DEFAULT_MEMBERS;
+    let globalLogs = JSON.parse(localStorage.getItem('todal_logs_v2')) || [];
+    let adminPassword = localStorage.getItem('todal_pwd_v2') || "1234";
+
     let selectedDateStr = localStorage.getItem('todal_selected_date') || "";
     let checkinSelectedMonth = localStorage.getItem('todal_selected_month') || (String(new Date().getMonth() + 1) + "월");
     let statsSelectedMonth = "전체";
@@ -296,13 +295,13 @@
             document.getElementById('tab-stats').classList.add('hidden');
             document.getElementById('tab-checkin-btn').classList.add('active');
             document.getElementById('tab-stats-btn').classList.remove('active');
-            loadData(); 
+            renderCheckinList();
         } else {
             document.getElementById('tab-checkin').classList.add('hidden');
             document.getElementById('tab-stats').classList.remove('hidden');
             document.getElementById('tab-checkin-btn').classList.remove('active');
             document.getElementById('tab-stats-btn').classList.add('active');
-            loadData().then(() => renderStats()); 
+            renderStats(); 
         }
     }
 
@@ -310,50 +309,11 @@
         globalMembers.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
     }
 
-    // 💡 핵심: 서버 데이터를 불러올 때 빈 데이터로 리셋되는 현상을 방어하는 안전 로직
-    async function loadData() {
-        try {
-            const response = await fetch(`https://api.jsonbin.io/v3/b/${API_BIN_ID}/latest`, {
-                headers: { 'X-Master-Key': API_MASTER_KEY }
-            });
-            if (response.ok) {
-                const resData = await response.json();
-                const data = resData.record;
-                
-                // 서버에 회원이 있으면 반영, 없으면 기본 명단 유지
-                if (data.members && Array.isArray(data.members) && data.members.length > 0) {
-                    globalMembers = data.members;
-                }
-                
-                // 출석 로그 안전 반영
-                if (data.logs && Array.isArray(data.logs)) {
-                    globalLogs = data.logs;
-                }
-                
-                // 비밀번호 반영
-                if (data.password !== undefined && data.password !== null && data.password !== "") {
-                    adminPassword = data.password;
-                }
-            }
-        } catch (e) {
-            console.error("서버 로드 에러 (로컬 캐시 백업 활용):", e);
-            const localMembers = localStorage.getItem('todal_members');
-            if (localMembers) globalMembers = JSON.parse(localMembers);
-            const localLogs = localStorage.getItem('todal_pure_logs');
-            if (localLogs) globalLogs = JSON.parse(localLogs);
-        }
-
-        sortMembers();
-        initCheckinMonthButtons();
-        initStatsMonthButtons();
-        renderSaturdayVerticalList();
-    }
-
-    // 💡 핵심: 서버에 저장할 때 포맷이 깨지거나 빈 데이터가 들어가지 않도록 완벽하게 보장하는 저장 함수
-    async function saveDataToCloud() {
+    // 💡 브라우저 저장소에 안전하게 영구 저장
+    function saveDataLocally() {
         sortMembers();
         
-        // 중복 로그 원천 차단 정제
+        // 중복 로그 정제
         const uniqueMap = {};
         globalLogs.forEach(log => {
             if (log.date && log.name && Number(log.score) > 0) {
@@ -362,31 +322,9 @@
         });
         globalLogs = Object.values(uniqueMap);
 
-        const payload = {
-            members: globalMembers,
-            logs: globalLogs,
-            password: adminPassword
-        };
-
-        // 로컬 브라우저에도 철저히 백업
-        localStorage.setItem('todal_members', JSON.stringify(globalMembers));
-        localStorage.setItem('todal_pure_logs', JSON.stringify(globalLogs));
-
-        try {
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${API_BIN_ID}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Master-Key': API_MASTER_KEY
-                },
-                body: JSON.stringify(payload)
-            });
-            if (!res.ok) {
-                console.error("서버 저장 응답 실패:", res.status);
-            }
-        } catch (e) {
-            console.error("클라우드 저장 네트워크 에러:", e);
-        }
+        localStorage.setItem('todal_members_v2', JSON.stringify(globalMembers));
+        localStorage.setItem('todal_logs_v2', JSON.stringify(globalLogs));
+        localStorage.setItem('todal_pwd_v2', adminPassword);
     }
 
     function toggleAdminMode() {
@@ -405,15 +343,15 @@
         }
     }
 
-    async function changePassword() {
+    function changePassword() {
         const input = document.getElementById('new-admin-pwd');
         const newPwd = input.value.trim();
         if (!newPwd) { alert("변경할 새 비밀번호를 입력해주세요."); return; }
         if (confirm(`관리자 비밀번호를 [${newPwd}]로 변경하시겠습니까?`)) {
             adminPassword = newPwd;
-            await saveDataToCloud();
+            saveDataLocally();
             input.value = '';
-            alert("비밀번호가 서버에 성공적으로 반영되었습니다!");
+            alert("비밀번호가 안전하게 변경되었습니다!");
         }
     }
 
@@ -431,7 +369,7 @@
         });
     }
 
-    async function addMember() {
+    function addMember() {
         const input = document.getElementById('new-member-name');
         const name = input.value.trim();
         if (!name) { alert("회원 이름을 입력해주세요."); return; }
@@ -439,7 +377,7 @@
         
         globalMembers.push({ name: name });
         sortMembers();
-        await saveDataToCloud();
+        saveDataLocally();
         
         input.value = '';
         renderAdminMemberList();
@@ -447,13 +385,13 @@
         alert(`[${name}] 회원이 추가되었습니다.`);
     }
 
-    async function removeMember(index) {
+    function removeMember(index) {
         const targetName = globalMembers[index].name;
         if (!confirm(`[${targetName}] 회원을 정말 삭제하시겠습니까?`)) return;
         
         globalMembers.splice(index, 1);
         sortMembers();
-        await saveDataToCloud();
+        saveDataLocally();
         
         renderAdminMemberList();
         renderCheckinList();
@@ -536,22 +474,9 @@
         });
     }
 
-    async function handleCheckIn(name, score) {
+    function handleCheckIn(name, score) {
         const cleanName = String(name).trim();
         const targetDate = selectedDateStr;
-
-        // 1. 동작 직전 서버 최신 상태를 불러와서 동기화 충돌 방지
-        try {
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${API_BIN_ID}/latest`, {
-                headers: { 'X-Master-Key': API_MASTER_KEY }
-            });
-            if (res.ok) {
-                const resData = await res.json();
-                if (resData.record && resData.record.logs && Array.isArray(resData.record.logs)) {
-                    globalLogs = resData.record.logs;
-                }
-            }
-        } catch(e) {}
 
         const alreadyExists = globalLogs.some(log => log.name === cleanName && log.date === targetDate && Number(log.score) > 0);
         
@@ -580,7 +505,7 @@
             });
         }
 
-        await saveDataToCloud();
+        saveDataLocally();
         renderCheckinList();
     }
 
@@ -669,11 +594,11 @@
         });
     }
 
-    // 초기 화면 즉시 출력 후 클라우드 데이터 동기화
+    // 초기 실행
+    sortMembers();
     initCheckinMonthButtons();
     initStatsMonthButtons();
     renderSaturdayVerticalList();
-    loadData();
 </script>
 
 </body>
