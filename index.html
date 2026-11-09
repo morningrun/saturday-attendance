@@ -87,7 +87,7 @@
 
 <div class="container">
     <div class="main-title-box">
-        <div class="main-title">🏃‍♂️ 토달 출석부 👟</div>
+        <div class="main-title">🏃‍♂️ 토달 출석부</div>
     </div>
     <div class="subtitle">매주 토요일 운동모임 출석 & 누적 현황</div>
     
@@ -384,7 +384,7 @@
         if (globalMembers.some(m => m.name === name)) { alert("이미 존재하는 회원 이름입니다."); return; }
         
         globalMembers.push({ name: name });
-        sortMembers(); // 가나다순 정렬 적용
+        sortMembers();
         localStorage.setItem('todal_members', JSON.stringify(globalMembers));
         input.value = '';
         renderAdminMemberList();
