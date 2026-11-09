@@ -37,17 +37,14 @@
         .main-title { font-size: 1.6rem; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
         .subtitle { text-align: center; font-size: 0.8rem; color: var(--text-sub); margin-bottom: 14px; font-weight: 500; }
         
-        /* 모바일 친화적 탭 */
         .tab-group { display: flex; gap: 6px; margin-bottom: 14px; background: #e2e8f0; padding: 3px; border-radius: 10px; position: sticky; top: 6px; z-index: 10; backdrop-filter: blur(8px); }
         .tab-btn { flex: 1; padding: 10px 4px; font-size: 0.9rem; border: none; background: transparent; color: var(--text-sub); font-weight: 700; border-radius: 8px; cursor: pointer; transition: all 0.2s; text-align: center; }
         .tab-btn.active { background: var(--card-bg); color: var(--accent); box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
 
-        /* 월 선택 버튼 */
         .month-filter { display: flex; flex-wrap: wrap; gap: 5px; padding-bottom: 4px; margin-bottom: 14px; justify-content: center; }
         .month-btn { padding: 7px 11px; font-size: 0.82rem; border: 1px solid var(--border); border-radius: 7px; background: var(--card-bg); cursor: pointer; font-weight: 600; color: var(--text-sub); }
         .month-btn.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 2px 5px rgba(37,99,235,0.2); }
 
-        /* 날짜 선택 박스 */
         .saturday-list-box { background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 10px; margin-bottom: 14px; }
         .saturday-list-title { font-size: 0.88rem; font-weight: 700; color: var(--primary); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
         .saturday-vertical-group { display: flex; flex-direction: column; gap: 5px; max-height: 180px; overflow-y: auto; }
@@ -56,7 +53,6 @@
         .saturday-item-btn.active { background: #eff6ff; color: var(--accent); border-color: var(--accent); font-weight: 700; box-shadow: 0 1px 4px rgba(37,99,235,0.1); }
         .saturday-item-btn.disabled { background: #f1f5f9; color: #94a3b8; border-color: var(--border); cursor: not-allowed; opacity: 0.7; }
 
-        /* 📱 회원 카드 모바일 최적화 (컴팩트 & 깔끔) */
         .member-card { display: flex; flex-direction: column; padding: 10px 12px; margin-bottom: 8px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
         .member-card.checked-10 { background-color: #f0fdf4 !important; border-color: #bbf7d0 !important; border-left: 4px solid var(--success) !important; }
         .member-card.checked-5  { background-color: #f0f9ff !important; border-color: #bae6fd !important; border-left: 4px solid var(--info) !important; }
@@ -67,7 +63,6 @@
         .member-index { font-size: 0.78rem; color: #94a3b8; font-weight: 500; }
         .badge { font-size: 0.78rem; font-weight: 700; padding: 2px 8px; border-radius: 5px; }
         
-        /* 📱 버튼 크기 키우고 터치하기 편하게 정렬 */
         .btn-group { display: flex; gap: 5px; width: 100%; }
         .btn-group button { flex: 1; padding: 9px 2px; font-size: 0.8rem; border: 1px solid var(--border); border-radius: 7px; cursor: pointer; font-weight: 600; background: #f8fafc; color: var(--text-sub); text-align: center; }
         
@@ -76,7 +71,6 @@
         button.selected-comp { background: var(--warning) !important; color: white !important; border-color: var(--warning) !important; font-weight: 700; }
         button.btn-modify { background: #fef2f2 !important; color: var(--danger) !important; border-color: #fecaca !important; font-weight: 700; }
 
-        /* 누적현황 랭킹 카드 */
         .rank-card { display: flex; justify-content: space-between; align-items: center; padding: 11px 14px; margin-bottom: 8px; background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; }
         .rank-number { font-weight: 800; color: var(--accent); width: 44px; font-size: 0.92rem; }
         .rank-name { font-weight: 700; flex: 1; font-size: 0.98rem; color: var(--primary); }
@@ -161,8 +155,8 @@
         { name: "조성국" }, { name: "최순규" }, { name: "최잔디" }, { name: "황연성" }
     ];
 
-    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v15')) || [...DEFAULT_MEMBERS];
-    let globalLogs = JSON.parse(localStorage.getItem('todal_logs_v15')) || [];
+    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v16')) || [...DEFAULT_MEMBERS];
+    let globalLogs = JSON.parse(localStorage.getItem('todal_logs_v16')) || [];
     let adminPassword = "1234";
 
     let selectedDateStr = localStorage.getItem('todal_selected_date') || "";
@@ -196,33 +190,50 @@
     function initCheckinMonthButtons() {
         const wrapper = document.getElementById('checkin-month-buttons');
         wrapper.innerHTML = '';
+        const currentMonthNum = new Date().getMonth() + 1; // 현재 월 (11)
+
         ["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"].forEach(m => {
+            const mNum = parseInt(m.replace("월", ""), 10);
             const btn = document.createElement('button');
-            btn.className = `month-btn ${m === checkinSelectedMonth ? 'active' : ''}`;
-            btn.innerText = m;
-            btn.onclick = () => {
-                document.querySelectorAll('#checkin-month-buttons .month-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                checkinSelectedMonth = m;
-                localStorage.setItem('todal_selected_month', m);
-                
-                const filtered = allSaturdays.filter(dStr => {
-                    const mMatch = dStr.match(/(\d+)월/);
-                    return mMatch && (mMatch[1] + "월") === m;
-                });
-                if (filtered.length > 0) {
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    const validFiltered = filtered.filter(dStr => {
-                        const tDate = new Date(dStr.replace(/년|월/g, '-').replace(/일.*/, '').trim());
-                        tDate.setHours(0, 0, 0, 0);
-                        return tDate <= today;
+            
+            // 💡 미래 월(예: 12월)은 월 선택 버튼 자체를 비활성화(회색 잠금) 처리
+            if (mNum > currentMonthNum) {
+                btn.className = 'month-btn disabled';
+                btn.style.background = '#f1f5f9';
+                btn.style.color = '#94a3b8';
+                btn.style.borderColor = '#cbd5e1';
+                btn.style.cursor = 'not-allowed';
+                btn.innerText = m + " 🔒";
+                btn.onclick = () => alert("아직 다가오지 않은 미래 월은 조회 및 체크할 수 없습니다!");
+            } else {
+                btn.className = `month-btn ${m === checkinSelectedMonth ? 'active' : ''}`;
+                btn.innerText = m;
+                btn.onclick = () => {
+                    document.querySelectorAll('#checkin-month-buttons .month-btn').forEach(b => {
+                        if(!b.classList.contains('disabled')) b.classList.remove('active');
                     });
-                    selectedDateStr = validFiltered.length > 0 ? validFiltered[validFiltered.length - 1] : filtered[0];
-                    localStorage.setItem('todal_selected_date', selectedDateStr);
-                }
-                renderSaturdayVerticalList();
-            };
+                    btn.classList.add('active');
+                    checkinSelectedMonth = m;
+                    localStorage.setItem('todal_selected_month', m);
+                    
+                    const filtered = allSaturdays.filter(dStr => {
+                        const mMatch = dStr.match(/(\d+)월/);
+                        return mMatch && (mMatch[1] + "월") === m;
+                    });
+                    if (filtered.length > 0) {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const validFiltered = filtered.filter(dStr => {
+                            const tDate = new Date(dStr.replace(/년|월/g, '-').replace(/일.*/, '').trim());
+                            tDate.setHours(0, 0, 0, 0);
+                            return tDate <= today;
+                        });
+                        selectedDateStr = validFiltered.length > 0 ? validFiltered[validFiltered.length - 1] : filtered[0];
+                        localStorage.setItem('todal_selected_date', selectedDateStr);
+                    }
+                    renderSaturdayVerticalList();
+                };
+            }
             wrapper.appendChild(btn);
         });
     }
@@ -328,8 +339,8 @@
 
     function saveLocally() {
         sortMembers();
-        localStorage.setItem('todal_members_v15', JSON.stringify(globalMembers));
-        localStorage.setItem('todal_logs_v15', JSON.stringify(globalLogs));
+        localStorage.setItem('todal_members_v16', JSON.stringify(globalMembers));
+        localStorage.setItem('todal_logs_v16', JSON.stringify(globalLogs));
     }
 
     async function loadDataFromSheet() {
