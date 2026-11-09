@@ -141,8 +141,8 @@
         { name: "조성국" }, { name: "최순규" }, { name: "최잔디" }, { name: "황연성" }
     ];
 
-    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v8')) || [...DEFAULT_MEMBERS];
-    let globalLogs = JSON.parse(localStorage.getItem('todal_logs_v8')) || [];
+    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v9')) || [...DEFAULT_MEMBERS];
+    let globalLogs = JSON.parse(localStorage.getItem('todal_logs_v9')) || [];
     let adminPassword = "1234";
 
     let selectedDateStr = localStorage.getItem('todal_selected_date') || "";
@@ -300,8 +300,8 @@
 
     function saveLocally() {
         sortMembers();
-        localStorage.setItem('todal_members_v8', JSON.stringify(globalMembers));
-        localStorage.setItem('todal_logs_v8', JSON.stringify(globalLogs));
+        localStorage.setItem('todal_members_v9', JSON.stringify(globalMembers));
+        localStorage.setItem('todal_logs_v9', JSON.stringify(globalLogs));
     }
 
     async function loadDataFromSheet() {
@@ -384,6 +384,7 @@
         renderAdminMemberList();
         renderCheckinList();
         await saveDataToSheet();
+        input.value = '';
         alert(`[${name}] 회원이 추가되었습니다.`);
     }
 
@@ -460,6 +461,7 @@
                     button.style.opacity = '0.4';
                     button.style.cursor = 'not-allowed';
                 }
+                // 💡 클릭 시 무조건 확인 팝업 안내창이 뜨도록 안전 장치 적용
                 button.addEventListener('click', () => handleCheckIn(name, buttonScore));
                 buttonGroup.appendChild(button);
             };
@@ -486,6 +488,14 @@
         const cleanName = String(name).trim();
         const targetDate = selectedDateStr;
 
+        // 💡 클릭 시 무조건 팝업 안내창(Confirm)이 먼저 뜨도록 보장
+        if (score === 0) {
+            if (!confirm(`[${targetDate.replace(/^\d{4}년\s*/, '')}] [${cleanName}]님의 출석 기록을 취소하시겠습니까?`)) return;
+        } else {
+            const label = score === 5 ? '지각(+5점)' : score === 99 ? '대회(+10점)' : '출석(+10점)';
+            if (!confirm(`[${targetDate.replace(/^\d{4}년\s*/, '')}] [${cleanName}]님을 [${label}]으로 기록하시겠습니까?`)) return;
+        }
+
         globalLogs = globalLogs.filter(log => !(String(log.name).trim() === cleanName && String(log.date).trim() === targetDate));
         
         if (score > 0) {
@@ -503,7 +513,7 @@
         await saveDataToSheet();
     }
 
-    // 💡 누적현황 집계 로직을 더욱 유연하게 보완
+    // 💡 누적현황 랭킹 및 집계 로직 완벽 보완
     function renderStats() {
         const statsDiv = document.getElementById('stats-list');
         if (!statsDiv) return;
