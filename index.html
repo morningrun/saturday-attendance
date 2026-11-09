@@ -66,9 +66,6 @@
         .admin-member-row { display: flex; justify-content: space-between; align-items: center; background: #334155; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; font-size: 0.9rem; }
         .admin-member-row button { background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
         
-        .password-box { background: #334155; padding: 10px; border-radius: 6px; margin-bottom: 12px; }
-        .password-box label { font-size: 0.85rem; color: #cbd5e1; display: block; margin-bottom: 4px; }
-
         .footer-setting-box { text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid #e2e8f0; }
         .admin-gear-btn-small { background: #f1f5f9; border: 1px solid #cbd5e1; font-size: 0.75rem; cursor: pointer; padding: 4px 10px; color: #64748b; border-radius: 4px; font-weight: bold; }
 
@@ -116,7 +113,6 @@
     <!-- 관리자 회원 관리 패널 -->
     <div id="admin-panel" class="admin-panel hidden">
         <h3>🔒 관리자 설정 및 회원 관리</h3>
-        
         <h3 style="margin-top:5px;">👥 회원 추가/삭제</h3>
         <div class="admin-input-group">
             <input type="text" id="new-member-name" placeholder="추가할 회원 이름 입력">
@@ -132,8 +128,8 @@
 </div>
 
 <script>
-    // 💡 여기에 위에서 복사한 구글 앱스 스크립트 [웹 앱 URL]을 넣으세요!
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyFW6ojeM67AV3CjGJv5vuUKidWPeC32vKQmc1i2rpplknZK901sXgISITYPJOCnc8bYw/exec";
+    // 💡 형님의 구글 앱스 스크립트 웹 앱 URL을 여기에 정확히 넣어주세요!
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxQAzwg8lpmy-ET8wwjOEC9uOQQIS1urUzL8aADNzG_bAgL3eaTZJv-2slGlDGwz0wI9w/exec";
 
     const DEFAULT_MEMBERS = [
         { name: "곽병우" }, { name: "김경기" }, { name: "김미향" }, { name: "김은성" }, 
@@ -286,13 +282,13 @@
             document.getElementById('tab-stats').classList.add('hidden');
             document.getElementById('tab-checkin-btn').classList.add('active');
             document.getElementById('tab-stats-btn').classList.remove('active');
-            loadDataFromSheet().then(() => renderCheckinList());
+            renderCheckinList();
         } else {
             document.getElementById('tab-checkin').classList.add('hidden');
             document.getElementById('tab-stats').classList.remove('hidden');
             document.getElementById('tab-checkin-btn').classList.remove('active');
             document.getElementById('tab-stats-btn').classList.add('active');
-            loadDataFromSheet().then(() => renderStats()); 
+            renderStats(); 
         }
     }
 
@@ -300,7 +296,6 @@
         globalMembers.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
     }
 
-    // 구글 시트에서 데이터 불러오기
     async function loadDataFromSheet() {
         try {
             const res = await fetch(GOOGLE_SCRIPT_URL, {
@@ -317,12 +312,11 @@
                 }
             }
         } catch (e) {
-            console.error("구글 시트 로드 실패, 기본 명단 유지");
+            console.error("구글 시트 로드 실패");
         }
         sortMembers();
     }
 
-    // 구글 시트에 데이터 저장하기
     async function saveDataToSheet() {
         sortMembers();
         try {
@@ -377,12 +371,10 @@
         
         globalMembers.push({ name: name });
         sortMembers();
-        await saveDataToSheet();
-        
-        input.value = '';
         renderAdminMemberList();
         renderCheckinList();
-        alert(`[${name}] 회원이 추가되었습니다. (구글 시트 실시간 동기화 완료!)`);
+        await saveDataToSheet();
+        alert(`[${name}] 회원이 추가되었습니다.`);
     }
 
     async function removeMember(index) {
@@ -391,10 +383,9 @@
         
         globalMembers.splice(index, 1);
         sortMembers();
-        await saveDataToSheet();
-        
         renderAdminMemberList();
         renderCheckinList();
+        await saveDataToSheet();
         alert(`[${targetName}] 회원이 삭제되었습니다.`);
     }
 
@@ -474,18 +465,15 @@
         });
     }
 
+    // 💡 핵심: 클릭 즉시 화면을 먼저 갱신하고, 서버 저장은 백그라운드에서 조용히 처리
     async function handleCheckIn(name, score) {
         const cleanName = String(name).trim();
         const targetDate = selectedDateStr;
-
-        // 클릭 직전 최신 데이터를 시트에서 다시 끌어와서 충돌 방지
-        await loadDataFromSheet();
 
         const alreadyExists = globalLogs.some(log => log.name === cleanName && log.date === targetDate && Number(log.score) > 0);
         
         if (score > 0 && alreadyExists) {
             alert(`[${cleanName}]님은 이미 해당 날짜에 출석 체크가 완료되었습니다.`);
-            renderCheckinList();
             return;
         }
 
@@ -496,6 +484,7 @@
             if (!confirm(`[${targetDate.replace(/^\d{4}년\s*/, '')}] [${cleanName}]님을 [${label}]으로 기록하시겠습니까?`)) return;
         }
 
+        // 기존 해당 날짜/이름 기록 제거
         globalLogs = globalLogs.filter(log => !(log.name === cleanName && log.date === targetDate));
         
         if (score > 0) {
@@ -508,8 +497,11 @@
             });
         }
 
-        await saveDataToSheet();
+        // 1. 화면을 즉시 다시 그려서 색상과 상태를 바로 반영!
         renderCheckinList();
+
+        // 2. 구글 시트 저장은 뒤(백그라운드)에서 조용히 실행
+        await saveDataToSheet();
     }
 
     function renderStats() {
@@ -597,7 +589,7 @@
         });
     }
 
-    // 초기 실행
+    // 초기 실행: 최초 접속 시 시트에서 데이터 로드 후 화면 렌더링
     async function initApp() {
         initCheckinMonthButtons();
         initStatsMonthButtons();
