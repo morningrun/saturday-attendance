@@ -33,9 +33,8 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg-color); margin: 0; padding: 8px; color: var(--text-main); -webkit-tap-highlight-color: transparent; }
         .container { max-width: 600px; margin: 0 auto; background: var(--card-bg); padding: 12px; border-radius: 14px; box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08); }
         
-        .main-title-box { text-align: center; margin: 4px 0 2px 0; }
-        .main-title { font-size: 1.5rem; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
-        .subtitle { text-align: center; font-size: 0.78rem; color: var(--text-sub); margin-bottom: 12px; font-weight: 600; }
+        .main-title-box { text-align: center; margin: 8px 0 12px 0; }
+        .main-title { font-size: 1.6rem; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
         
         .tab-group { display: flex; gap: 6px; margin-bottom: 12px; background: #cbd5e1; padding: 3px; border-radius: 10px; position: sticky; top: 6px; z-index: 10; backdrop-filter: blur(8px); }
         .tab-btn { flex: 1; padding: 9px 4px; font-size: 0.9rem; border: none; background: transparent; color: var(--text-sub); font-weight: 700; border-radius: 8px; cursor: pointer; transition: all 0.2s; text-align: center; }
@@ -71,7 +70,6 @@
         button.selected-comp { background: var(--warning) !important; color: white !important; border-color: var(--warning) !important; font-weight: 800; }
         button.btn-modify { background: #fee2e2 !important; color: var(--danger) !important; border-color: #fca5a5 !important; font-weight: 800; }
 
-        /* 💡 누적현황 랭킹 카드: 점수 이탈 완전 방지용 밀착형 정렬 (글자 크기 및 여백 최적화) */
         .rank-card { display: flex; align-items: center; justify-content: space-between; padding: 10px 10px; margin-bottom: 7px; background: #f8fafc; border: 1.5px solid var(--border); border-radius: 10px; gap: 4px; }
         .rank-number { font-weight: 800; color: var(--accent); width: 38px; font-size: 0.82rem; white-space: nowrap; flex-shrink: 0; }
         .rank-name { font-weight: 800; width: 52px; font-size: 0.9rem; color: var(--primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
@@ -100,10 +98,9 @@
     <div class="main-title-box">
         <div class="main-title">🏃‍♂️ 토달 출석부</div>
     </div>
-    <div class="subtitle">구글 시트 연동 · 실시간 공용 출석부</div>
     
     <div class="tab-group">
-        <button class="tab-btn active" id="tab-checkin-btn" onclick="switchTab('checkin')">📅 출석체크</button>
+        <button class="tab-btn active" id="tab-checkin-btn" onclick="switchTab('checkin')">📅 <span id="tab-month-label">11월</span> 출석체크</button>
         <button class="tab-btn" id="tab-stats-btn" onclick="switchTab('stats')">🏆 <span id="current-year-text">2026</span>년 누적현황</button>
     </div>
 
@@ -156,8 +153,8 @@
         { name: "조성국" }, { name: "최순규" }, { name: "최잔디" }, { name: "황연성" }
     ];
 
-    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v20')) || [...DEFAULT_MEMBERS];
-    let globalLogs = JSON.parse(localStorage.getItem('todal_logs_v20')) || [];
+    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v22')) || [...DEFAULT_MEMBERS];
+    let globalLogs = JSON.parse(localStorage.getItem('todal_logs_v22')) || [];
     let adminPassword = "1234";
 
     let selectedDateStr = localStorage.getItem('todal_selected_date') || "";
@@ -166,6 +163,7 @@
 
     const currentYear = new Date().getFullYear();
     document.getElementById('current-year-text').innerText = currentYear;
+    document.getElementById('tab-month-label').innerText = checkinSelectedMonth;
 
     function formatDateToString(dateObj) {
         const years = dateObj.getFullYear();
@@ -215,6 +213,7 @@
                     btn.classList.add('active');
                     checkinSelectedMonth = m;
                     localStorage.setItem('todal_selected_month', m);
+                    document.getElementById('tab-month-label').innerText = m;
                     
                     const filtered = allSaturdays.filter(dStr => {
                         const mMatch = dStr.match(/(\d+)월/);
@@ -339,8 +338,8 @@
 
     function saveLocally() {
         sortMembers();
-        localStorage.setItem('todal_members_v20', JSON.stringify(globalMembers));
-        localStorage.setItem('todal_logs_v20', JSON.stringify(globalLogs));
+        localStorage.setItem('todal_members_v22', JSON.stringify(globalMembers));
+        localStorage.setItem('todal_logs_v22', JSON.stringify(globalLogs));
     }
 
     async function loadDataFromSheet() {
