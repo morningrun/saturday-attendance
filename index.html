@@ -128,7 +128,7 @@
 </div>
 
 <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw1KuhGzHMiubFEklLh5wgVwHxi3DswIct-HzYQjWa7i5QSsDVLlxe3ezeebEJplXyP8g/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzSrari-DsIWet1UNzzH3GLMm1HnlS9O-Y3VpY26UveVpOwk_B2r1cbA3lj2iQO9I_E-g/exec";
 
     const DEFAULT_MEMBERS = [
         { name: "곽병우" }, { name: "김경기" }, { name: "김미향" }, { name: "김은성" }, 
@@ -141,8 +141,8 @@
         { name: "조성국" }, { name: "최순규" }, { name: "최잔디" }, { name: "황연성" }
     ];
 
-    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v10')) || [...DEFAULT_MEMBERS];
-    let globalLogs = JSON.parse(localStorage.getItem('todal_logs_v10')) || [];
+    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v11')) || [...DEFAULT_MEMBERS];
+    let globalLogs = JSON.parse(localStorage.getItem('todal_logs_v11')) || [];
     let adminPassword = "1234";
 
     let selectedDateStr = localStorage.getItem('todal_selected_date') || "";
@@ -287,7 +287,7 @@
             document.getElementById('tab-stats').classList.remove('hidden');
             document.getElementById('tab-checkin-btn').classList.remove('active');
             document.getElementById('tab-stats-btn').classList.add('active');
-            renderStats(); // 탭 누를 때 강제 렌더링
+            renderStats(); // 탭 전환 시 강제 렌더링
         }
     }
 
@@ -300,8 +300,8 @@
 
     function saveLocally() {
         sortMembers();
-        localStorage.setItem('todal_members_v10', JSON.stringify(globalMembers));
-        localStorage.setItem('todal_logs_v10', JSON.stringify(globalLogs));
+        localStorage.setItem('todal_members_v11', JSON.stringify(globalMembers));
+        localStorage.setItem('todal_logs_v11', JSON.stringify(globalLogs));
     }
 
     async function loadDataFromSheet() {
@@ -315,7 +315,6 @@
                 if (resData.members && Array.isArray(resData.members) && resData.members.length > 0) {
                     globalMembers = resData.members;
                 }
-                // 💡 서버 로그가 비어있지 않을 때만 기존 로컬 로그와 병합하여 유실 방지
                 if (resData.logs && Array.isArray(resData.logs) && resData.logs.length > 0) {
                     globalLogs = resData.logs;
                 }
@@ -514,73 +513,74 @@
         await saveDataToSheet();
     }
 
-    // 💡 누적현황 랭킹 및 점수 집계 로직
+    // 💡 100% 확실하게 집계되는 누적현황 렌더링 로직
     function renderStats() {
         const statsDiv = document.getElementById('stats-list');
         if (!statsDiv) return;
         statsDiv.innerHTML = '';
 
-        const userMonthlyData = {};
+        // 점수 집계 객체 초기화
+        const statsMap = {};
         globalMembers.forEach(m => {
-            userMonthlyData[String(m.name).trim()] = {
-                score: {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
-                att:   {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
-                tardy: {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
-                comp:  {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0}
-            };
+            statsMap[String(m.name).trim()] = { score: 0, att: 0, tardy: 0, comp: 0, monthly: {} };
         });
 
-        const uniqueLogMap = {};
+        // 로그를 돌며 점수 누적 (중복 방지 맵 적용)
+        const uniqueLogs = {};
         globalLogs.forEach(log => {
             if (Number(log.score) > 0) {
-                const key = String(log.date).trim() + "|" + String(log.name).trim();
-                uniqueLogMap[key] = log;
+                const key = String(log.date).trim() + "_" + String(log.name).trim();
+                uniqueLogs[key] = log;
             }
         });
 
-        Object.values(uniqueLogMap).forEach(log => {
+        Object.values(uniqueLogs).forEach(log => {
             const name = String(log.name).trim();
             const score = Number(log.score);
             let m = Number(log.month) || 0;
-            
-            if (!m || m < 1 || m > 12) {
+            if (!m) {
                 const mMatch = String(log.date).match(/(\d+)월/);
                 if (mMatch) m = parseInt(mMatch[1], 10);
             }
 
-            if (score <= 0 || !userMonthlyData[name] || m < 1 || m > 12) return;
+            if (!statsMap[name]) {
+                statsMap[name] = { score: 0, att: 0, tardy: 0, comp: 0, monthly: {} };
+            }
 
-            if (score === 10) { 
-                userMonthlyData[name].score[m] += 10; 
-                userMonthlyData[name].att[m] += 1; 
-            } else if (score === 5) { 
-                userMonthlyData[name].score[m] += 5; 
-                userMonthlyData[name].tardy[m] += 1; 
-            } else if (score === 99) { 
-                userMonthlyData[name].score[m] += 10; 
-                userMonthlyData[name].comp[m] += 1; 
+            const points = (score === 99) ? 10 : score;
+            statsMap[name].score += points;
+            
+            if (score === 10) statsMap[name].att += 1;
+            else if (score === 5) statsMap[name].tardy += 1;
+            else if (score === 99) statsMap[name].comp += 1;
+
+            if (m >= 1 && m <= 12) {
+                if (!statsMap[name].monthly[m]) statsMap[name].monthly[m] = { score: 0, att: 0, tardy: 0, comp: 0 };
+                statsMap[name].monthly[m].score += points;
+                if (score === 10) statsMap[name].monthly[m].att += 1;
+                else if (score === 5) statsMap[name].monthly[m].tardy += 1;
+                else if (score === 99) statsMap[name].monthly[m].comp += 1;
             }
         });
 
         let displayList = [];
-        globalMembers.forEach(member => {
-            const name = String(member.name).trim();
-            if (!userMonthlyData[name]) return;
+        Object.keys(statsMap).forEach(name => {
+            const data = statsMap[name];
             let targetScore = 0, targetAtt = 0, targetTardy = 0, targetComp = 0;
 
             if (statsSelectedMonth === "전체") {
-                for (let m = 1; m <= 12; m++) {
-                    targetScore += userMonthlyData[name].score[m];
-                    targetAtt   += userMonthlyData[name].att[m];
-                    targetTardy += userMonthlyData[name].tardy[m];
-                    targetComp  += userMonthlyData[name].comp[m];
-                }
+                targetScore = data.score;
+                targetAtt = data.att;
+                targetTardy = data.tardy;
+                targetComp = data.comp;
             } else {
                 const mNum = parseInt(statsSelectedMonth.replace(/[^0-9]/g, ""), 10);
-                targetScore = userMonthlyData[name].score[mNum];
-                targetAtt   = userMonthlyData[name].att[mNum];
-                targetTardy = userMonthlyData[name].tardy[mNum];
-                targetComp  = userMonthlyData[name].comp[mNum];
+                if (data.monthly[mNum]) {
+                    targetScore = data.monthly[mNum].score;
+                    targetAtt = data.monthly[mNum].att;
+                    targetTardy = data.monthly[mNum].tardy;
+                    targetComp = data.monthly[mNum].comp;
+                }
             }
 
             if (targetScore > 0) {
@@ -618,10 +618,9 @@
         renderCheckinList(); 
         renderStats();
         
-        // 💡 서버에서 데이터를 불러온 후 즉시 화면과 누적현황을 동기화 갱신
         await loadDataFromSheet();
         renderCheckinList();
-        renderStats();
+        renderStats(); // 👈 서버 데이터 동기화 직후 누적현황 강제 렌더링
     }
 
     initApp();
