@@ -160,8 +160,8 @@
         { name: "조성국" }, { name: "최순규" }, { name: "최잔디" }, { name: "황연성" }
     ];
 
-    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v11')) || [...DEFAULT_MEMBERS];
-    let globalLogs = JSON.parse(localStorage.getItem('todal_logs_v11')) || [];
+    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v12')) || [...DEFAULT_MEMBERS];
+    let globalLogs = JSON.parse(localStorage.getItem('todal_logs_v12')) || [];
     let adminPassword = "1234";
 
     let selectedDateStr = localStorage.getItem('todal_selected_date') || "";
@@ -246,8 +246,9 @@
     function renderSaturdayVerticalList() {
         const wrapper = document.getElementById('saturday-vertical-wrapper');
         const header = document.getElementById('saturday-list-header');
+        if (!wrapper) return;
         wrapper.innerHTML = '';
-        header.innerText = `📅 ${currentYear}년 ${checkinSelectedMonth} 토달 출석현황`;
+        if (header) header.innerText = `📅 ${currentYear}년 ${checkinSelectedMonth} 토달 출석현황`;
 
         const filteredSaturdays = allSaturdays.filter(dStr => {
             const mMatch = dStr.match(/(\d+)월/);
@@ -283,12 +284,10 @@
             const isSelected = (dStr === selectedDateStr);
 
             if (isFuture) {
-                // 💡 미래 토요일 날짜 회색 잠금 및 클릭 방지
                 btn.className = 'saturday-item-btn disabled';
                 btn.innerHTML = `<span>🔒 ${dStr.replace(/^\d{4}년\s*/, '')} (예정)</span>`;
                 btn.onclick = () => alert("아직 다가오지 않은 미래 날짜는 체크할 수 없습니다!");
             } else {
-                // 💡 지난 토요일 및 오늘 토요일은 선택 가능
                 btn.className = `saturday-item-btn ${isSelected ? 'active' : ''}`;
                 btn.innerText = dStr.replace(/^\d{4}년\s*/, '');
                 btn.onclick = () => {
@@ -309,7 +308,7 @@
             document.getElementById('tab-stats').classList.add('hidden');
             document.getElementById('tab-checkin-btn').classList.add('active');
             document.getElementById('tab-stats-btn').classList.remove('active');
-            renderCheckinList();
+            renderSaturdayVerticalList(); // 💡 탭 전환 시 날짜 리스트도 확실하게 렌더링
         } else {
             document.getElementById('tab-checkin').classList.add('hidden');
             document.getElementById('tab-stats').classList.remove('hidden');
@@ -328,8 +327,8 @@
 
     function saveLocally() {
         sortMembers();
-        localStorage.setItem('todal_members_v11', JSON.stringify(globalMembers));
-        localStorage.setItem('todal_logs_v11', JSON.stringify(globalLogs));
+        localStorage.setItem('todal_members_v12', JSON.stringify(globalMembers));
+        localStorage.setItem('todal_logs_v12', JSON.stringify(globalLogs));
     }
 
     async function loadDataFromSheet() {
@@ -410,7 +409,7 @@
         globalMembers.push({ name: name });
         sortMembers();
         renderAdminMemberList();
-        renderCheckinList();
+        renderSaturdayVerticalList();
         renderStats();
         await saveDataToSheet();
         input.value = '';
@@ -424,7 +423,7 @@
         globalMembers.splice(index, 1);
         sortMembers();
         renderAdminMemberList();
-        renderCheckinList();
+        renderSaturdayVerticalList();
         renderStats();
         await saveDataToSheet();
         alert(`[${targetName}] 회원이 삭제되었습니다.`);
@@ -536,7 +535,7 @@
             });
         }
 
-        renderCheckinList();
+        renderSaturdayVerticalList();
         renderStats();
         await saveDataToSheet();
     }
@@ -640,11 +639,11 @@
         initCheckinMonthButtons();
         initStatsMonthButtons();
         sortMembers();
-        renderCheckinList(); 
+        renderSaturdayVerticalList(); // 💡 초기 실행 시 토요일 리스트 생성 보장
         renderStats();
         
         await loadDataFromSheet();
-        renderCheckinList();
+        renderSaturdayVerticalList();
         renderStats();
     }
 
