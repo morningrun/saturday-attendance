@@ -53,7 +53,6 @@
         .saturday-item-btn.active { background: #eff6ff; color: var(--accent); border: 2px solid var(--accent); }
         .saturday-item-btn.disabled { background: #f1f5f9; color: #94a3b8; border-color: var(--border); cursor: not-allowed; opacity: 0.7; }
 
-        /* 📱 출석체크 카드 초슬림 컴팩트화 (한 화면에 많이 보이게) */
         .member-card { display: flex; flex-direction: column; padding: 8px 10px; margin-bottom: 6px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; gap: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
         .member-card.checked-10 { background-color: #ecfdf5 !important; border-color: #34d399 !important; border-left: 5px solid var(--success) !important; }
         .member-card.checked-5  { background-color: #f0f9ff !important; border-color: #38bdf8 !important; border-left: 5px solid var(--info) !important; }
@@ -72,12 +71,12 @@
         button.selected-comp { background: var(--warning) !important; color: white !important; border-color: var(--warning) !important; font-weight: 800; }
         button.btn-modify { background: #fee2e2 !important; color: var(--danger) !important; border-color: #fca5a5 !important; font-weight: 800; }
 
-        /* 📱 누적현황 랭킹 카드 박스 이탈 방지형 완벽 고정 정렬 */
-        .rank-card { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; margin-bottom: 7px; background: #f8fafc; border: 1.5px solid var(--border); border-radius: 10px; gap: 6px; }
-        .rank-number { font-weight: 800; color: var(--accent); min-width: 44px; font-size: 0.88rem; white-space: nowrap; }
-        .rank-name { font-weight: 800; min-width: 58px; font-size: 0.95rem; color: var(--primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .rank-detail { font-size: 0.72rem; color: var(--text-sub); font-weight: 700; text-align: center; flex: 1; white-space: nowrap; }
-        .rank-score { font-weight: 800; min-width: 46px; font-size: 1rem; color: var(--success); text-align: right; white-space: nowrap; }
+        /* 💡 누적현황 랭킹 카드: 점수 이탈 완전 방지용 밀착형 정렬 (글자 크기 및 여백 최적화) */
+        .rank-card { display: flex; align-items: center; justify-content: space-between; padding: 10px 10px; margin-bottom: 7px; background: #f8fafc; border: 1.5px solid var(--border); border-radius: 10px; gap: 4px; }
+        .rank-number { font-weight: 800; color: var(--accent); width: 38px; font-size: 0.82rem; white-space: nowrap; flex-shrink: 0; }
+        .rank-name { font-weight: 800; width: 52px; font-size: 0.9rem; color: var(--primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+        .rank-detail { font-size: 0.68rem; color: var(--text-sub); font-weight: 700; text-align: center; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .rank-score { font-weight: 800; width: 44px; font-size: 0.95rem; color: var(--success); text-align: right; white-space: nowrap; flex-shrink: 0; }
 
         .admin-panel { background: var(--primary); color: white; padding: 14px; border-radius: 12px; margin-top: 20px; margin-bottom: 12px; }
         .admin-panel h3 { margin: 0 0 10px 0; font-size: 1rem; color: #38bdf8; }
@@ -157,8 +156,8 @@
         { name: "조성국" }, { name: "최순규" }, { name: "최잔디" }, { name: "황연성" }
     ];
 
-    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v19')) || [...DEFAULT_MEMBERS];
-    let globalLogs = JSON.parse(localStorage.getItem('todal_logs_v19')) || [];
+    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v20')) || [...DEFAULT_MEMBERS];
+    let globalLogs = JSON.parse(localStorage.getItem('todal_logs_v20')) || [];
     let adminPassword = "1234";
 
     let selectedDateStr = localStorage.getItem('todal_selected_date') || "";
@@ -340,8 +339,8 @@
 
     function saveLocally() {
         sortMembers();
-        localStorage.setItem('todal_members_v19', JSON.stringify(globalMembers));
-        localStorage.setItem('todal_logs_v19', JSON.stringify(globalLogs));
+        localStorage.setItem('todal_members_v20', JSON.stringify(globalMembers));
+        localStorage.setItem('todal_logs_v20', JSON.stringify(globalLogs));
     }
 
     async function loadDataFromSheet() {
@@ -616,7 +615,7 @@
                 if (!statsMap[name].monthly[m]) statsMap[name].monthly[m] = { score: 0, att: 0, tardy: 0, comp: 0 };
                 statsMap[name].monthly[m].score += points;
                 if (score === 10) statsMap[name].monthly[m].att += 1;
-                else if (score === 5) statsMap[name].monthly[m].monthly[m].tardy += 1; // 안전 처리
+                else if (score === 5) statsMap[name].monthly[m].tardy += 1;
                 else if (score === 99) statsMap[name].monthly[m].comp += 1;
             }
         });
@@ -662,7 +661,7 @@
             card.innerHTML = `
                 <div class="rank-number">${rankBadge}</div>
                 <div class="rank-name">${item.name}</div>
-                <div class="rank-detail">출석${item.att} · 지각${item.tardy} · 대회${item.comp}</div>
+                <div class="rank-detail">출석${item.att}·지각${item.tardy}·대회${item.comp}</div>
                 <div class="rank-score">${item.score}점</div>
             `;
             statsDiv.appendChild(card);
