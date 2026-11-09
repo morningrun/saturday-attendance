@@ -101,7 +101,7 @@
             <div class="saturday-vertical-group" id="saturday-vertical-wrapper"></div>
         </div>
 
-        <div id="member-list" class="loading">구글 시트에서 명단 불러오는 중...</div>
+        <div id="member-list" class="loading">데이터 로딩 중...</div>
     </div>
 
     <!-- 누적현황 탭 -->
@@ -142,8 +142,9 @@
         { name: "조성국" }, { name: "최순규" }, { name: "최잔디" }, { name: "황연성" }
     ];
 
-    let globalMembers = [...DEFAULT_MEMBERS];
-    let globalLogs = [];
+    // 💡 1순위 안전망: 브라우저에 저장된 기록이 있으면 즉시 불러와서 리셋 원천 차단
+    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v4')) || [...DEFAULT_MEMBERS];
+    let globalLogs = JSON.parse(localStorage.getItem('todal_logs_v4')) || [];
     let adminPassword = "1234";
 
     let selectedDateStr = localStorage.getItem('todal_selected_date') || "";
@@ -282,13 +283,13 @@
             document.getElementById('tab-stats').classList.add('hidden');
             document.getElementById('tab-checkin-btn').classList.add('active');
             document.getElementById('tab-stats-btn').classList.remove('active');
-            loadDataFromSheet().then(() => renderCheckinList());
+            renderCheckinList();
         } else {
             document.getElementById('tab-checkin').classList.add('hidden');
             document.getElementById('tab-stats').classList.remove('hidden');
             document.getElementById('tab-checkin-btn').classList.remove('active');
             document.getElementById('tab-stats-btn').classList.add('active');
-            loadDataFromSheet().then(() => renderStats()); 
+            renderStats(); 
         }
     }
 
@@ -296,7 +297,13 @@
         globalMembers.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
     }
 
-    // 💡 구글 시트에서 최신 데이터를 확실하게 끌어오는 로드 함수
+    // 로컬 저장소와 구글 시트 동기화 함수
+    function saveLocally() {
+        sortMembers();
+        localStorage.setItem('todal_members_v4', JSON.stringify(globalMembers));
+        localStorage.setItem('todal_logs_v4', JSON.stringify(globalLogs));
+    }
+
     async function loadDataFromSheet() {
         try {
             const res = await fetch(GOOGLE_SCRIPT_URL, {
@@ -305,34 +312,24 @@
             });
             const resData = await res.json();
             if (resData.status === "success") {
-                // 시트에 기록된 회원이 존재하면 반영
                 if (resData.members && resData.members.length > 0) {
                     globalMembers = resData.members;
                 }
-                // 시트에 기록된 출석 로그가 존재하면 반영 (이 부분이 핵심!)
-                if (resData.logs && Array.isArray(resData.logs)) {
+                // 시트에 데이터가 존재할 때만 덮어씀 (빈 데이터로 초기화되는 현상 방어)
+                if (resData.logs && Array.isArray(resData.logs) && resData.logs.length > 0) {
                     globalLogs = resData.logs;
                 }
+                saveLocally();
             }
         } catch (e) {
-            console.error("구글 시트 로드 에러 발생");
+            console.error("구글 시트 연동 실패, 로컬 데이터 유지");
         }
         sortMembers();
     }
 
-    // 💡 구글 시트에 데이터를 완벽하게 덮어쓰는 저장 함수
     async function saveDataToSheet() {
         sortMembers();
-        
-        // 중복 로그 방어 정제
-        const uniqueMap = {};
-        globalLogs.forEach(log => {
-            if (log.date && log.name && Number(log.score) > 0) {
-                uniqueMap[log.date + "|" + log.name] = log;
-            }
-        });
-        globalLogs = Object.values(uniqueMap);
-
+        saveLocally(); // 먼저 로컬에 안전하게 저장
         try {
             await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
@@ -343,7 +340,7 @@
                 })
             });
         } catch (e) {
-            console.error("구글 시트 저장 에러 발생");
+            console.error("구글 시트 저장 실패");
         }
     }
 
@@ -470,7 +467,7 @@
                 modifyBtn.textContent = '수정';
                 modifyBtn.className = 'btn-modify';
                 modifyBtn.addEventListener('click', () => handleCheckIn(name, 0));
-                buttonGroup.appendChild(modifyBtn);
+                buttonGroup.appendChild(button);
             }
 
             card.appendChild(info);
@@ -509,10 +506,11 @@
             });
         }
 
-        // 1. 화면 즉시 반영
+        // 1. 화면 즉시 반영 & 로컬 즉시 저장
         renderCheckinList();
+        saveLocally();
 
-        // 2. 구글 시트에 확실하게 저장
+        // 2. 구글 시트로 백그라운드 전송
         await saveDataToSheet();
     }
 
@@ -601,12 +599,13 @@
         });
     }
 
-    // 💡 앱이 켜질 때 무조건 구글 시트의 최신 데이터를 완벽하게 읽어오고 화면을 구성
+    // 초기 실행: 로컬에 저장된 데이터를 먼저 즉시 띄우고, 백그라운드에서 시트 최신 데이터 동기화
     async function initApp() {
         initCheckinMonthButtons();
         initStatsMonthButtons();
-        await loadDataFromSheet();
-        renderSaturdayVerticalList();
+        renderSaturdayVerticalList(); // 먼저 로컬 데이터로 즉시 화면 표시
+        await loadDataFromSheet();    // 뒤에서 시트 최신 데이터 동기화
+        renderSaturdayVerticalList(); // 동기화된 데이터로 재렌더링
     }
 
     initApp();
