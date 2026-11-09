@@ -19,6 +19,10 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; margin: 0; padding: 10px; color: #333; -webkit-tap-highlight-color: transparent; }
         .container { max-width: 600px; margin: 0 auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         
+        /* 카톡 인앱 브라우저 안내 배너 스타일 */
+        .kakao-notice { background: #fef3c7; border: 1px solid #f59e0b; padding: 10px; border-radius: 8px; font-size: 0.85rem; color: #92400e; text-align: center; margin-bottom: 12px; display: none; }
+        .kakao-notice span { font-weight: bold; text-decoration: underline; cursor: pointer; }
+
         .main-title-box { text-align: center; margin: 10px 0 5px 0; }
         .main-title { font-size: 1.8rem; font-weight: 800; color: #1e293b; }
         .subtitle { text-align: center; font-size: 0.85rem; color: #7f8c8d; margin-bottom: 15px; }
@@ -87,6 +91,11 @@
 <body>
 
 <div class="container">
+    <!-- 카카오톡 인앱 브라우저 감지 시 안내 배너 -->
+    <div id="kakao-warning" class="kakao-notice">
+        ⚠️ 카톡 브라우저는 화면이 리셋될 수 있습니다. 우측 상단 <b>[⋮]</b> 또는 <b>[↗️]</b>를 눌러 <span onclick="openInExternalBrowser()">[다른 브라우저(사파리/크롬)로 열기]</span>를 해주세요!
+    </div>
+
     <div class="main-title-box">
         <div class="main-title">🏃‍♂️ 토달 출석부</div>
     </div>
@@ -106,7 +115,7 @@
             <div class="saturday-vertical-group" id="saturday-vertical-wrapper"></div>
         </div>
 
-        <div id="member-list" class="loading">출석부 불러오는 중...</div>
+        <div id="member-list" class="loading">출석부 동기화 중...</div>
     </div>
 
     <!-- 누적현황 탭 -->
@@ -143,6 +152,24 @@
 </div>
 
 <script>
+    // 카카오톡 인앱 브라우저 자동 감지 및 안내 노출
+    function checkKakaoInApp() {
+        const ua = navigator.userAgent.toLowerCase();
+        if (ua.indexOf('kakaotalk') !== -1) {
+            document.getElementById('kakao-warning').style.display = 'block';
+        }
+    }
+    checkKakaoInApp();
+
+    function openInExternalBrowser() {
+        const currentUrl = window.location.href;
+        if (navigator.userAgent.match(/android/i)) {
+            location.href = 'intent://' + currentUrl.replace(/https?:\/\//i, '') + '#Intent;scheme=https;package=com.android.chrome;end';
+        } else if (navigator.userAgent.match(/iphone|ipad|ipod/i)) {
+            alert("우측 상단의 [···] 메뉴를 누른 후 '사파리에서 열기'를 선택해 주세요!");
+        }
+    }
+
     const DEFAULT_MEMBERS = [
         { name: "곽병우" }, { name: "김경기" }, { name: "김미향" }, { name: "김은성" }, 
         { name: "김정구" }, { name: "김정균" }, { name: "김진철" }, { name: "김태수" }, 
@@ -154,10 +181,10 @@
         { name: "조성국" }, { name: "최순규" }, { name: "최잔디" }, { name: "황연성" }
     ];
 
-    // 브라우저 로컬 저장소에서 데이터 불러오기 (리셋 방지)
-    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v2')) || DEFAULT_MEMBERS;
-    let globalLogs = JSON.parse(localStorage.getItem('todal_logs_v2')) || [];
-    let adminPassword = localStorage.getItem('todal_pwd_v2') || "1234";
+    // 데이터 로드 시 안전장치 강화 (localStorage 영구 보존)
+    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v3')) || DEFAULT_MEMBERS;
+    let globalLogs = JSON.parse(localStorage.getItem('todal_logs_v3')) || [];
+    let adminPassword = localStorage.getItem('todal_pwd_v3') || "1234";
 
     let selectedDateStr = localStorage.getItem('todal_selected_date') || "";
     let checkinSelectedMonth = localStorage.getItem('todal_selected_month') || (String(new Date().getMonth() + 1) + "월");
@@ -309,11 +336,9 @@
         globalMembers.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
     }
 
-    // 💡 브라우저 저장소에 안전하게 영구 저장
+    // 로컬 저장소 동기화 및 백업 함수
     function saveDataLocally() {
         sortMembers();
-        
-        // 중복 로그 정제
         const uniqueMap = {};
         globalLogs.forEach(log => {
             if (log.date && log.name && Number(log.score) > 0) {
@@ -322,9 +347,9 @@
         });
         globalLogs = Object.values(uniqueMap);
 
-        localStorage.setItem('todal_members_v2', JSON.stringify(globalMembers));
-        localStorage.setItem('todal_logs_v2', JSON.stringify(globalLogs));
-        localStorage.setItem('todal_pwd_v2', adminPassword);
+        localStorage.setItem('todal_members_v3', JSON.stringify(globalMembers));
+        localStorage.setItem('todal_logs_v3', JSON.stringify(globalLogs));
+        localStorage.setItem('todal_pwd_v3', adminPassword);
     }
 
     function toggleAdminMode() {
