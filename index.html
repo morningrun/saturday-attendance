@@ -65,6 +65,9 @@
         
         .admin-member-row { display: flex; justify-content: space-between; align-items: center; background: #334155; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; font-size: 0.9rem; }
         .admin-member-row button { background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
+        
+        .password-box { background: #334155; padding: 10px; border-radius: 6px; margin-bottom: 12px; }
+        .password-box label { font-size: 0.85rem; color: #cbd5e1; display: block; margin-bottom: 4px; }
 
         /* 하단 설정 버튼 영역 */
         .footer-setting-box { text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid #e2e8f0; }
@@ -113,13 +116,24 @@
 
     <!-- 관리자 회원 관리 패널 (기본 숨김) -->
     <div id="admin-panel" class="admin-panel hidden">
-        <h3>🔒 관리자 회원 관리</h3>
+        <h3>🔒 관리자 설정 및 회원 관리</h3>
+        
+        <!-- 비밀번호 변경 구역 -->
+        <div class="password-box">
+            <label>관리자 비밀번호 변경</label>
+            <div class="admin-input-group" style="margin-bottom:0;">
+                <input type="password" id="new-admin-pwd" placeholder="새 비밀번호 입력">
+                <button onclick="changePassword()" style="background:#10b981;">변경</button>
+            </div>
+        </div>
+
+        <h3 style="margin-top:15px;">👥 회원 추가/삭제</h3>
         <div class="admin-input-group">
             <input type="text" id="new-member-name" placeholder="추가할 회원 이름 입력">
             <button onclick="addMember()">회원 추가</button>
         </div>
         <div id="admin-member-list"></div>
-        <button onclick="toggleAdminMode()" style="width:100%; margin-top:8px; background:#475569; color:white; border:none; padding:8px; border-radius:6px; cursor:pointer;">설정 닫기</button>
+        <button onclick="toggleAdminMode()" style="width:100%; margin-top:12px; background:#475569; color:white; border:none; padding:8px; border-radius:6px; cursor:pointer;">설정 닫기</button>
     </div>
 
     <!-- 화면 맨 하단에 작게 배치된 설정 버튼 -->
@@ -317,8 +331,9 @@
     function toggleAdminMode() {
         const panel = document.getElementById('admin-panel');
         if (panel.classList.contains('hidden')) {
+            const currentPwd = localStorage.getItem('todal_admin_pwd') || "1234";
             const pwd = prompt("관리자 비밀번호를 입력하세요:");
-            if (pwd === "1234") {
+            if (pwd === currentPwd) {
                 panel.classList.remove('hidden');
                 renderAdminMemberList();
                 panel.scrollIntoView({ behavior: 'smooth' });
@@ -327,6 +342,20 @@
             }
         } else {
             panel.classList.add('hidden');
+        }
+    }
+
+    function changePassword() {
+        const input = document.getElementById('new-admin-pwd');
+        const newPwd = input.value.trim();
+        if (!newPwd) {
+            alert("변경할 새 비밀번호를 입력해주세요.");
+            return;
+        }
+        if (confirm(`관리자 비밀번호를 [${newPwd}]로 변경하시겠습니까?`)) {
+            localStorage.setItem('todal_admin_pwd', newPwd);
+            input.value = '';
+            alert("비밀번호가 성공적으로 변경되었습니다!");
         }
     }
 
