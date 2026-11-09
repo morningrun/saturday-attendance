@@ -81,7 +81,7 @@
         .rank-score { font-weight: bold; font-size: 1.1rem; color: #059669; }
 
         .hidden { display: none; }
-        .loading { text-align: center; color: #888; padding: 20px; }
+        .loading { text-align: center; color: #888; padding: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -106,7 +106,7 @@
             <div class="saturday-vertical-group" id="saturday-vertical-wrapper"></div>
         </div>
 
-        <div id="member-list" class="loading">데이터 불러오는 중...</div>
+        <div id="member-list" class="loading">실시간 데이터 동기화 중...</div>
     </div>
 
     <!-- 누적현황 탭 -->
@@ -143,6 +143,7 @@
 </div>
 
 <script>
+    // 💡 클라우드 저장소 연동 키 (CORS 차단 없이 어디서나 실시간 동기화 보장)
     const API_BIN_ID = "672f2e5ead19ca34f8c1b29a";
     const API_MASTER_KEY = "$2a$10$wK1W0J6c7XlQ1v2K8b5v0u8J2X8f3v0z5v3u8J2X8f3v0z5v3u8J2";
 
@@ -297,12 +298,13 @@
             document.getElementById('tab-stats').classList.add('hidden');
             document.getElementById('tab-checkin-btn').classList.add('active');
             document.getElementById('tab-stats-btn').classList.remove('active');
+            loadData(); // 탭 이동 시 최신 데이터 실시간 동기화
         } else {
             document.getElementById('tab-checkin').classList.add('hidden');
             document.getElementById('tab-stats').classList.remove('hidden');
             document.getElementById('tab-checkin-btn').classList.remove('active');
             document.getElementById('tab-stats-btn').classList.add('active');
-            renderStats(); 
+            loadData().then(() => renderStats()); 
         }
     }
 
@@ -310,6 +312,7 @@
         globalMembers.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
     }
 
+    // 💡 클라우드에서 최신 데이터 불러오기 (어디서 열든 항상 실시간 동기화)
     async function loadData() {
         try {
             const response = await fetch(`https://api.jsonbin.io/v3/b/${API_BIN_ID}/latest`, {
@@ -339,6 +342,7 @@
         renderSaturdayVerticalList();
     }
 
+    // 💡 클라우드에 데이터 즉시 저장하기 (누가 눌러도 즉시 반영)
     async function saveDataToCloud() {
         sortMembers();
         const payload = {
@@ -518,9 +522,21 @@
         const cleanName = String(name).trim();
         const targetDate = selectedDateStr;
 
+        // 체크 직전 최신 데이터를 서버에서 다시 불러와서 다른 사람과의 충돌 방지
+        try {
+            const res = await fetch(`https://api.jsonbin.io/v3/b/${API_BIN_ID}/latest`, {
+                headers: { 'X-Master-Key': API_MASTER_KEY }
+            });
+            if (res.ok) {
+                const resData = await res.json();
+                if (resData.record && resData.record.logs) globalLogs = resData.record.logs;
+            }
+        } catch(e) {}
+
         const existing = globalLogs.find(log => log.name === cleanName && log.date === targetDate && Number(log.score) > 0);
         if (score > 0 && existing) {
             alert(`[${cleanName}]님은 이미 출석 체크가 완료되었습니다.`);
+            renderCheckinList();
             return;
         }
 
@@ -632,6 +648,7 @@
         });
     }
 
+    // 앱 실행 시 실시간 데이터 로드
     loadData();
 </script>
 
