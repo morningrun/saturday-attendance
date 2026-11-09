@@ -106,7 +106,7 @@
             <div class="saturday-vertical-group" id="saturday-vertical-wrapper"></div>
         </div>
 
-        <div id="member-list" class="loading">명단 불러오는 중...</div>
+        <div id="member-list" class="loading">데이터 불러오는 중...</div>
     </div>
 
     <!-- 누적현황 탭 -->
@@ -132,7 +132,6 @@
             <input type="text" id="new-member-name" placeholder="추가할 회원 이름 입력">
             <button onclick="addMember()">회원 추가</button>
         </div>
-        <div id="admin-admin-member-list"></div>
         <div id="admin-member-list"></div>
         <button onclick="toggleAdminMode()" style="width:100%; margin-top:12px; background:#475569; color:white; border:none; padding:8px; border-radius:6px; cursor:pointer;">설정 닫기</button>
     </div>
@@ -158,7 +157,6 @@
         { name: "조성국" }, { name: "최순규" }, { name: "최잔디" }, { name: "황연성" }
     ];
 
-    // 최초 로드 시 기본 명단을 먼저 박아두어 리스트가 바로 보이게 함
     let globalMembers = [...DEFAULT_MEMBERS];
     let globalLogs = [];
     let adminPassword = "1234";
@@ -312,7 +310,7 @@
         globalMembers.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
     }
 
-    // 서버 데이터 로드 (실패해도 기본 명단 유지)
+    // 💡 핵심: 서버 데이터를 불러올 때 빈 데이터로 리셋되는 현상을 방어하는 안전 로직
     async function loadData() {
         try {
             const response = await fetch(`https://api.jsonbin.io/v3/b/${API_BIN_ID}/latest`, {
@@ -321,14 +319,28 @@
             if (response.ok) {
                 const resData = await response.json();
                 const data = resData.record;
-                if (data.members && data.members.length > 0) {
+                
+                // 서버에 회원이 있으면 반영, 없으면 기본 명단 유지
+                if (data.members && Array.isArray(data.members) && data.members.length > 0) {
                     globalMembers = data.members;
                 }
-                globalLogs = data.logs || [];
-                if (data.password) adminPassword = data.password;
+                
+                // 출석 로그 안전 반영
+                if (data.logs && Array.isArray(data.logs)) {
+                    globalLogs = data.logs;
+                }
+                
+                // 비밀번호 반영
+                if (data.password !== undefined && data.password !== null && data.password !== "") {
+                    adminPassword = data.password;
+                }
             }
         } catch (e) {
-            console.error("서버 로드 실패, 기본 명단 사용");
+            console.error("서버 로드 에러 (로컬 캐시 백업 활용):", e);
+            const localMembers = localStorage.getItem('todal_members');
+            if (localMembers) globalMembers = JSON.parse(localMembers);
+            const localLogs = localStorage.getItem('todal_pure_logs');
+            if (localLogs) globalLogs = JSON.parse(localLogs);
         }
 
         sortMembers();
@@ -337,8 +349,11 @@
         renderSaturdayVerticalList();
     }
 
+    // 💡 핵심: 서버에 저장할 때 포맷이 깨지거나 빈 데이터가 들어가지 않도록 완벽하게 보장하는 저장 함수
     async function saveDataToCloud() {
         sortMembers();
+        
+        // 중복 로그 원천 차단 정제
         const uniqueMap = {};
         globalLogs.forEach(log => {
             if (log.date && log.name && Number(log.score) > 0) {
@@ -353,8 +368,12 @@
             password: adminPassword
         };
 
+        // 로컬 브라우저에도 철저히 백업
+        localStorage.setItem('todal_members', JSON.stringify(globalMembers));
+        localStorage.setItem('todal_pure_logs', JSON.stringify(globalLogs));
+
         try {
-            await fetch(`https://api.jsonbin.io/v3/b/${API_BIN_ID}`, {
+            const res = await fetch(`https://api.jsonbin.io/v3/b/${API_BIN_ID}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -362,8 +381,11 @@
                 },
                 body: JSON.stringify(payload)
             });
+            if (!res.ok) {
+                console.error("서버 저장 응답 실패:", res.status);
+            }
         } catch (e) {
-            console.error("클라우드 저장 실패");
+            console.error("클라우드 저장 네트워크 에러:", e);
         }
     }
 
@@ -518,13 +540,14 @@
         const cleanName = String(name).trim();
         const targetDate = selectedDateStr;
 
+        // 1. 동작 직전 서버 최신 상태를 불러와서 동기화 충돌 방지
         try {
             const res = await fetch(`https://api.jsonbin.io/v3/b/${API_BIN_ID}/latest`, {
                 headers: { 'X-Master-Key': API_MASTER_KEY }
             });
             if (res.ok) {
                 const resData = await res.json();
-                if (resData.record && resData.record.logs) {
+                if (resData.record && resData.record.logs && Array.isArray(resData.record.logs)) {
                     globalLogs = resData.record.logs;
                 }
             }
@@ -646,7 +669,7 @@
         });
     }
 
-    // 페이지 접속 즉시 기본 명단부터 화면에 뿌리고 서버 데이터 동기화 시작
+    // 초기 화면 즉시 출력 후 클라우드 데이터 동기화
     initCheckinMonthButtons();
     initStatsMonthButtons();
     renderSaturdayVerticalList();
