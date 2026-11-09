@@ -27,7 +27,7 @@
         .tab-btn { flex: 1; padding: 10px 4px; font-size: 0.95rem; border: none; background: #f1f5f9; color: #64748b; font-weight: bold; border-radius: 8px; cursor: pointer; transition: all 0.2s; text-align: center; }
         .tab-btn.active { background: #2c3e50; color: white; }
 
-        /* 월 버튼 두 줄 정렬 */
+        /* 월 버튼 두 줄 정렬 완벽 적용 */
         .month-filter { display: flex; flex-wrap: wrap; gap: 6px; padding-bottom: 5px; margin-bottom: 15px; justify-content: center; }
         .month-btn { padding: 8px 12px; font-size: 0.85rem; border: 1px solid #cbd5e1; border-radius: 8px; background: white; cursor: pointer; font-weight: bold; color: #64748b; }
         .month-btn.active { background: #0284c7; color: white; border-color: #0284c7; }
@@ -142,8 +142,8 @@
         { name: "조성국" }, { name: "최순규" }, { name: "최잔디" }, { name: "황연성" }
     ];
 
-    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v6')) || [...DEFAULT_MEMBERS];
-    let globalLogs = JSON.parse(localStorage.getItem('todal_logs_v6')) || [];
+    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v7')) || [...DEFAULT_MEMBERS];
+    let globalLogs = JSON.parse(localStorage.getItem('todal_logs_v7')) || [];
     let adminPassword = "1234";
 
     let selectedDateStr = localStorage.getItem('todal_selected_date') || "";
@@ -301,8 +301,8 @@
 
     function saveLocally() {
         sortMembers();
-        localStorage.setItem('todal_members_v6', JSON.stringify(globalMembers));
-        localStorage.setItem('todal_logs_v6', JSON.stringify(globalLogs));
+        localStorage.setItem('todal_members_v7', JSON.stringify(globalMembers));
+        localStorage.setItem('todal_logs_v7', JSON.stringify(globalLogs));
     }
 
     async function loadDataFromSheet() {
@@ -402,6 +402,7 @@
 
     function renderCheckinList() {
         const listDiv = document.getElementById('member-list');
+        if (!listDiv) return;
         listDiv.innerHTML = '';
 
         if (!globalMembers || globalMembers.length === 0) {
@@ -473,7 +474,7 @@
                 modifyBtn.textContent = '수정';
                 modifyBtn.className = 'btn-modify';
                 modifyBtn.addEventListener('click', () => handleCheckIn(name, 0));
-                buttonGroup.appendChild(button);
+                buttonGroup.appendChild(modifyBtn);
             }
 
             card.appendChild(info);
@@ -513,12 +514,13 @@
         }
 
         renderCheckinList();
+        renderStats();
         await saveDataToSheet();
     }
 
-    // 💡 누적현황 렌더링 로직 (월 매칭 및 점수 집계 강화)
     function renderStats() {
         const statsDiv = document.getElementById('stats-list');
+        if (!statsDiv) return;
         statsDiv.innerHTML = '';
 
         const userMonthlyData = {};
@@ -543,7 +545,6 @@
             const score = Number(log.score);
             let m = Number(log.month) || 0;
             
-            // month 값이 비어있거나 잘못되었으면 날짜 문자열에서 월 추출
             if (!m || m < 1 || m > 12) {
                 const mMatch = String(log.date).match(/(\d+)월/);
                 if (mMatch) m = parseInt(mMatch[1], 10);
@@ -559,6 +560,7 @@
         let displayList = [];
         globalMembers.forEach(member => {
             const name = String(member.name).trim();
+            if (!userMonthlyData[name]) return;
             let targetScore = 0, targetAtt = 0, targetTardy = 0, targetComp = 0;
 
             if (statsSelectedMonth === "전체") {
@@ -609,9 +611,10 @@
         initStatsMonthButtons();
         sortMembers();
         renderCheckinList(); 
+        renderStats();
         await loadDataFromSheet();
         renderCheckinList();
-        renderStats(); // 👈 앱이 켜질 때 누적현황 데이터도 미리 완벽하게 계산
+        renderStats();
     }
 
     initApp();
