@@ -142,9 +142,9 @@
         { name: "조성국" }, { name: "최순규" }, { name: "최잔디" }, { name: "황연성" }
     ];
 
-    // 💡 1순위 안전망: 브라우저에 저장된 기록이 있으면 즉시 불러와서 리셋 원천 차단
-    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v4')) || [...DEFAULT_MEMBERS];
-    let globalLogs = JSON.parse(localStorage.getItem('todal_logs_v4')) || [];
+    // 데이터 변수 (v5로 키 갱신하여 꼬임 방지)
+    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v5')) || [...DEFAULT_MEMBERS];
+    let globalLogs = JSON.parse(localStorage.getItem('todal_logs_v5')) || [];
     let adminPassword = "1234";
 
     let selectedDateStr = localStorage.getItem('todal_selected_date') || "";
@@ -294,14 +294,14 @@
     }
 
     function sortMembers() {
-        globalMembers.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+        if (!Array.isArray(globalMembers)) globalMembers = [...DEFAULT_MEMBERS];
+        globalMembers.sort((a, b) => (a.name || "").localeCompare(b.name || "", 'ko'));
     }
 
-    // 로컬 저장소와 구글 시트 동기화 함수
     function saveLocally() {
         sortMembers();
-        localStorage.setItem('todal_members_v4', JSON.stringify(globalMembers));
-        localStorage.setItem('todal_logs_v4', JSON.stringify(globalLogs));
+        localStorage.setItem('todal_members_v5', JSON.stringify(globalMembers));
+        localStorage.setItem('todal_logs_v5', JSON.stringify(globalLogs));
     }
 
     async function loadDataFromSheet() {
@@ -312,24 +312,23 @@
             });
             const resData = await res.json();
             if (resData.status === "success") {
-                if (resData.members && resData.members.length > 0) {
+                if (resData.members && Array.isArray(resData.members) && resData.members.length > 0) {
                     globalMembers = resData.members;
                 }
-                // 시트에 데이터가 존재할 때만 덮어씀 (빈 데이터로 초기화되는 현상 방어)
-                if (resData.logs && Array.isArray(resData.logs) && resData.logs.length > 0) {
+                if (resData.logs && Array.isArray(resData.logs)) {
                     globalLogs = resData.logs;
                 }
                 saveLocally();
             }
         } catch (e) {
-            console.error("구글 시트 연동 실패, 로컬 데이터 유지");
+            console.error("구글 시트 로드 실패, 로컬 데이터 사용");
         }
         sortMembers();
     }
 
     async function saveDataToSheet() {
         sortMembers();
-        saveLocally(); // 먼저 로컬에 안전하게 저장
+        saveLocally();
         try {
             await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
@@ -404,6 +403,10 @@
         const listDiv = document.getElementById('member-list');
         listDiv.innerHTML = '';
 
+        if (!globalMembers || globalMembers.length === 0) {
+            globalMembers = [...DEFAULT_MEMBERS];
+        }
+
         const dayAttendance = {};
         globalLogs.forEach(log => {
             if (log.date === selectedDateStr && Number(log.score) > 0) {
@@ -412,7 +415,9 @@
         });
 
         globalMembers.forEach((member, index) => {
-            const name = String(member.name).trim();
+            const name = String(member.name || "").trim();
+            if (!name) return;
+            
             const score = dayAttendance[name] || 0;
             const isChecked = score > 0;
 
@@ -467,7 +472,7 @@
                 modifyBtn.textContent = '수정';
                 modifyBtn.className = 'btn-modify';
                 modifyBtn.addEventListener('click', () => handleCheckIn(name, 0));
-                buttonGroup.appendChild(button);
+                buttonGroup.appendChild(modifyBtn);
             }
 
             card.appendChild(info);
@@ -506,11 +511,8 @@
             });
         }
 
-        // 1. 화면 즉시 반영 & 로컬 즉시 저장
         renderCheckinList();
         saveLocally();
-
-        // 2. 구글 시트로 백그라운드 전송
         await saveDataToSheet();
     }
 
@@ -599,13 +601,14 @@
         });
     }
 
-    // 초기 실행: 로컬에 저장된 데이터를 먼저 즉시 띄우고, 백그라운드에서 시트 최신 데이터 동기화
+    // 초기 실행: 즉시 기본 명단으로 화면을 채운 뒤 백그라운드에서 시트 동기화
     async function initApp() {
         initCheckinMonthButtons();
         initStatsMonthButtons();
-        renderSaturdayVerticalList(); // 먼저 로컬 데이터로 즉시 화면 표시
-        await loadDataFromSheet();    // 뒤에서 시트 최신 데이터 동기화
-        renderSaturdayVerticalList(); // 동기화된 데이터로 재렌더링
+        sortMembers();
+        renderCheckinList(); 
+        await loadDataFromSheet();
+        renderCheckinList();
     }
 
     initApp();
