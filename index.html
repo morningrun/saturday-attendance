@@ -102,7 +102,7 @@
             <div class="saturday-vertical-group" id="saturday-vertical-wrapper"></div>
         </div>
 
-        <div id="member-list" class="loading">데이터 불러오는 중...</div>
+        <div id="member-list"></div>
     </div>
 
     <!-- 누적현황 탭 -->
@@ -469,3 +469,101 @@
                 name: cleanName,
                 date: targetDate,
                 score: score,
+                month: mMatch ? parseInt(mMatch[1], 10) : 0
+            });
+        }
+
+        localStorage.setItem('todal_pure_logs', JSON.stringify(globalLogs));
+        renderCheckinList();
+    }
+
+    function renderStats() {
+        const statsDiv = document.getElementById('stats-list');
+        statsDiv.innerHTML = '';
+
+        const userMonthlyData = {};
+        globalMembers.forEach(m => {
+            userMonthlyData[String(m.name).trim()] = {
+                score: {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
+                att:   {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
+                tardy: {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
+                comp:  {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0}
+            };
+        });
+
+        const uniqueLogMap = {};
+        globalLogs.forEach(log => {
+            if (Number(log.score) > 0) {
+                uniqueLogMap[log.date + "|" + log.name] = log;
+            }
+        });
+
+        Object.values(uniqueLogMap).forEach(log => {
+            const name = String(log.name).trim();
+            const score = Number(log.score);
+            let m = log.month || 0;
+            if (!m) {
+                const mMatch = String(log.date).match(/(\d+)월/);
+                if (mMatch) m = parseInt(mMatch[1], 10);
+            }
+
+            if (score <= 0 || !userMonthlyData[name] || m < 1 || m > 12) return;
+
+            if (score === 10) { userMonthlyData[name].score[m] += 10; userMonthlyData[name].att[m] += 1; }
+            else if (score === 5) { userMonthlyData[name].score[m] += 5; userMonthlyData[name].tardy[m] += 1; }
+            else if (score === 99) { userMonthlyData[name].score[m] += 10; userMonthlyData[name].comp[m] += 1; }
+        });
+
+        let displayList = [];
+        globalMembers.forEach(member => {
+            const name = String(member.name).trim();
+            let targetScore = 0, targetAtt = 0, targetTardy = 0, targetComp = 0;
+
+            if (statsSelectedMonth === "전체") {
+                for (let m = 1; m <= 12; m++) {
+                    targetScore += userMonthlyData[name].score[m];
+                    targetAtt   += userMonthlyData[name].att[m];
+                    targetTardy += userMonthlyData[name].tardy[m];
+                    targetComp  += userMonthlyData[name].comp[m];
+                }
+            } else {
+                const mNum = parseInt(statsSelectedMonth.replace(/[^0-9]/g, ""), 10);
+                targetScore = userMonthlyData[name].score[mNum];
+                targetAtt   = userMonthlyData[name].att[mNum];
+                targetTardy = userMonthlyData[name].tardy[mNum];
+                targetComp  = userMonthlyData[name].comp[mNum];
+            }
+
+            if (targetScore > 0) {
+                displayList.push({ name, score: targetScore, att: targetAtt, tardy: targetTardy, comp: targetComp });
+            }
+        });
+
+        if (displayList.length === 0) {
+            statsDiv.innerHTML = "<div style='text-align:center; padding:30px; color:#94a3b8; font-weight:bold;'>해당 기간에 출석 기록이 있는 회원이 없습니다.</div>";
+            return;
+        }
+
+        displayList.sort((a, b) => (b.score !== a.score) ? b.score - a.score : a.name.localeCompare(b.name));
+
+        let currentRank = 1;
+        displayList.forEach((item, index) => {
+            if (index > 0 && item.score < displayList[index - 1].score) currentRank = index + 1;
+            const card = document.createElement('div');
+            card.className = 'rank-card';
+            let rankBadge = (currentRank === 1 ? '🥇 1위' : (currentRank === 2 ? '🥈 2위' : (currentRank === 3 ? '🥉 3위' : `${currentRank}위`)));
+            card.innerHTML = `
+                <div class="rank-number">${rankBadge}</div>
+                <div class="rank-name">${item.name}</div>
+                <div class="rank-detail">출석${item.att} · 지각${item.tardy} · 대회${item.comp}</div>
+                <div class="rank-score">${item.score}점</div>
+            `;
+            statsDiv.appendChild(card);
+        });
+    }
+
+    loadData();
+</script>
+
+</body>
+</html>
