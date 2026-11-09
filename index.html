@@ -19,9 +19,6 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; margin: 0; padding: 10px; color: #333; -webkit-tap-highlight-color: transparent; }
         .container { max-width: 600px; margin: 0 auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         
-        .kakao-notice { background: #fef3c7; border: 1px solid #f59e0b; padding: 10px; border-radius: 8px; font-size: 0.85rem; color: #92400e; text-align: center; margin-bottom: 12px; display: none; }
-        .kakao-notice span { font-weight: bold; text-decoration: underline; cursor: pointer; }
-
         .main-title-box { text-align: center; margin: 10px 0 5px 0; }
         .main-title { font-size: 1.8rem; font-weight: 800; color: #1e293b; }
         .subtitle { text-align: center; font-size: 0.85rem; color: #7f8c8d; margin-bottom: 15px; }
@@ -88,14 +85,10 @@
 <body>
 
 <div class="container">
-    <div id="kakao-warning" class="kakao-notice">
-        ⚠️ 카톡 브라우저는 동기화가 지연될 수 있습니다. 우측 상단 <b>[⋮]</b>를 눌러 <span onclick="openInExternalBrowser()">[다른 브라우저로 열기]</span>를 권장합니다!
-    </div>
-
     <div class="main-title-box">
         <div class="main-title">🏃‍♂️ 토달 출석부</div>
     </div>
-    <div class="subtitle">매주 토요일 운동모임 출석 & 누적 현황 (실시간 공용 동기화)</div>
+    <div class="subtitle">구글 시트 연동 · 실시간 공용 출석부</div>
     
     <div class="tab-group">
         <button class="tab-btn active" id="tab-checkin-btn" onclick="switchTab('checkin')">📅 출석체크</button>
@@ -111,7 +104,7 @@
             <div class="saturday-vertical-group" id="saturday-vertical-wrapper"></div>
         </div>
 
-        <div id="member-list" class="loading">공용 서버에서 데이터 동기화 중...</div>
+        <div id="member-list" class="loading">구글 시트에서 명단 불러오는 중...</div>
     </div>
 
     <!-- 누적현황 탭 -->
@@ -124,15 +117,7 @@
     <div id="admin-panel" class="admin-panel hidden">
         <h3>🔒 관리자 설정 및 회원 관리</h3>
         
-        <div class="password-box">
-            <label>관리자 비밀번호 변경</label>
-            <div class="admin-input-group" style="margin-bottom:0;">
-                <input type="password" id="new-admin-pwd" placeholder="새 비밀번호 입력">
-                <button onclick="changePassword()" style="background:#10b981;">변경</button>
-            </div>
-        </div>
-
-        <h3 style="margin-top:15px;">👥 회원 추가/삭제</h3>
+        <h3 style="margin-top:5px;">👥 회원 추가/삭제</h3>
         <div class="admin-input-group">
             <input type="text" id="new-member-name" placeholder="추가할 회원 이름 입력">
             <button onclick="addMember()">회원 추가</button>
@@ -147,16 +132,8 @@
 </div>
 
 <script>
-    const API_BIN_ID = "672f2e5ead19ca34f8c1b29a";
-    const API_MASTER_KEY = "$2a$10$wK1W0J6c7XlQ1v2K8b5v0u8J2X8f3v0z5v3u8J2X8f3v0z5v3u8J2";
-
-    function checkKakaoInApp() {
-        const ua = navigator.userAgent.toLowerCase();
-        if (ua.indexOf('kakaotalk') !== -1) {
-            document.getElementById('kakao-warning').style.display = 'block';
-        }
-    }
-    checkKakaoInApp();
+    // 💡 여기에 위에서 복사한 구글 앱스 스크립트 [웹 앱 URL]을 넣으세요!
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyFW6ojeM67AV3CjGJv5vuUKidWPeC32vKQmc1i2rpplknZK901sXgISITYPJOCnc8bYw/exec";
 
     const DEFAULT_MEMBERS = [
         { name: "곽병우" }, { name: "김경기" }, { name: "김미향" }, { name: "김은성" }, 
@@ -309,13 +286,13 @@
             document.getElementById('tab-stats').classList.add('hidden');
             document.getElementById('tab-checkin-btn').classList.add('active');
             document.getElementById('tab-stats-btn').classList.remove('active');
-            loadDataFromCloud().then(() => renderCheckinList());
+            loadDataFromSheet().then(() => renderCheckinList());
         } else {
             document.getElementById('tab-checkin').classList.add('hidden');
             document.getElementById('tab-stats').classList.remove('hidden');
             document.getElementById('tab-checkin-btn').classList.remove('active');
             document.getElementById('tab-stats-btn').classList.add('active');
-            loadDataFromCloud().then(() => renderStats()); 
+            loadDataFromSheet().then(() => renderStats()); 
         }
     }
 
@@ -323,59 +300,42 @@
         globalMembers.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
     }
 
-    // 💡 1. 공용 서버(JsonBin)에서 최신 데이터를 실시간으로 가져오기
-    async function loadDataFromCloud() {
+    // 구글 시트에서 데이터 불러오기
+    async function loadDataFromSheet() {
         try {
-            const response = await fetch(`https://api.jsonbin.io/v3/b/${API_BIN_ID}/latest`, {
-                headers: { 'X-Master-Key': API_MASTER_KEY }
+            const res = await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: "getData" })
             });
-            if (response.ok) {
-                const resData = await response.json();
-                const data = resData.record;
-                if (data.members && Array.isArray(data.members) && data.members.length > 0) {
-                    globalMembers = data.members;
+            const resData = await res.json();
+            if (resData.status === "success") {
+                if (resData.members && resData.members.length > 0) {
+                    globalMembers = resData.members;
                 }
-                if (data.logs && Array.isArray(data.logs)) {
-                    globalLogs = data.logs;
-                }
-                if (data.password) {
-                    adminPassword = data.password;
+                if (resData.logs) {
+                    globalLogs = resData.logs;
                 }
             }
         } catch (e) {
-            console.error("서버 동기화 중 통신 지연 발생", e);
+            console.error("구글 시트 로드 실패, 기본 명단 유지");
         }
         sortMembers();
     }
 
-    // 💡 2. 데이터를 변경하면 공용 서버(JsonBin)에 즉시 반영하여 모든 기기에 동기화
-    async function saveDataToCloud() {
+    // 구글 시트에 데이터 저장하기
+    async function saveDataToSheet() {
         sortMembers();
-        const uniqueMap = {};
-        globalLogs.forEach(log => {
-            if (log.date && log.name && Number(log.score) > 0) {
-                uniqueMap[log.date + "|" + log.name] = log;
-            }
-        });
-        globalLogs = Object.values(uniqueMap);
-
-        const payload = {
-            members: globalMembers,
-            logs: globalLogs,
-            password: adminPassword
-        };
-
         try {
-            await fetch(`https://api.jsonbin.io/v3/b/${API_BIN_ID}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Master-Key': API_MASTER_KEY
-                },
-                body: JSON.stringify(payload)
+            await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: "saveData",
+                    members: globalMembers,
+                    logs: globalLogs
+                })
             });
         } catch (e) {
-            console.error("서버 저장 실패", e);
+            console.error("구글 시트 저장 실패");
         }
     }
 
@@ -392,18 +352,6 @@
             }
         } else {
             panel.classList.add('hidden');
-        }
-    }
-
-    async function changePassword() {
-        const input = document.getElementById('new-admin-pwd');
-        const newPwd = input.value.trim();
-        if (!newPwd) { alert("변경할 새 비밀번호를 입력해주세요."); return; }
-        if (confirm(`관리자 비밀번호를 [${newPwd}]로 변경하시겠습니까?`)) {
-            adminPassword = newPwd;
-            await saveDataToCloud();
-            input.value = '';
-            alert("비밀번호가 서버에 성공적으로 반영되었습니다!");
         }
     }
 
@@ -429,12 +377,12 @@
         
         globalMembers.push({ name: name });
         sortMembers();
-        await saveDataToCloud();
+        await saveDataToSheet();
         
         input.value = '';
         renderAdminMemberList();
         renderCheckinList();
-        alert(`[${name}] 회원이 추가되었습니다. (모든 기기에 실시간 동기화 완료!)`);
+        alert(`[${name}] 회원이 추가되었습니다. (구글 시트 실시간 동기화 완료!)`);
     }
 
     async function removeMember(index) {
@@ -443,7 +391,7 @@
         
         globalMembers.splice(index, 1);
         sortMembers();
-        await saveDataToCloud();
+        await saveDataToSheet();
         
         renderAdminMemberList();
         renderCheckinList();
@@ -530,8 +478,8 @@
         const cleanName = String(name).trim();
         const targetDate = selectedDateStr;
 
-        // 클릭 직전 서버 최신 데이터를 한 번 더 불러와서 충돌 방지
-        await loadDataFromCloud();
+        // 클릭 직전 최신 데이터를 시트에서 다시 끌어와서 충돌 방지
+        await loadDataFromSheet();
 
         const alreadyExists = globalLogs.some(log => log.name === cleanName && log.date === targetDate && Number(log.score) > 0);
         
@@ -560,8 +508,7 @@
             });
         }
 
-        // 공용 서버에 즉시 전송 후 화면 갱신
-        await saveDataToCloud();
+        await saveDataToSheet();
         renderCheckinList();
     }
 
@@ -650,11 +597,11 @@
         });
     }
 
-    // 초기 실행: 앱이 켜질 때 공용 서버에서 최신 데이터를 싹 끌어와서 화면에 세팅
+    // 초기 실행
     async function initApp() {
         initCheckinMonthButtons();
         initStatsMonthButtons();
-        await loadDataFromCloud();
+        await loadDataFromSheet();
         renderSaturdayVerticalList();
     }
 
