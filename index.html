@@ -19,8 +19,9 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; margin: 0; padding: 10px; color: #333; -webkit-tap-highlight-color: transparent; }
         .container { max-width: 600px; margin: 0 auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         
-        .main-title-box { text-align: center; margin: 10px 0 5px 0; }
-        .main-title { font-size: 1.8rem; font-weight: 800; color: #1e293b; }
+        .main-title-box { text-align: center; margin: 10px 0 5px 0; display: flex; justify-content: space-between; align-items: center; }
+        .main-title { font-size: 1.6rem; font-weight: 800; color: #1e293b; text-align: left; }
+        .admin-gear-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 5px; color: #64748b; }
         .subtitle { text-align: center; font-size: 0.85rem; color: #7f8c8d; margin-bottom: 15px; }
         
         .tab-group { display: flex; gap: 6px; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; position: sticky; top: 0; background: white; z-index: 10; }
@@ -45,7 +46,7 @@
         .member-card.checked-comp { background-color: #fef5e7 !important; border-color: #f39c12 !important; border-left: 5px solid #f39c12 !important; }
 
         .member-info { display: flex; justify-content: space-between; align-items: center; }
-        .member-name { font-weight: bold; font-size: 1.05rem; color: #2c3e50; white-space: nowrap; }
+        .member-name { font-weight: bold; font-size: 1.05rem; color: #2c3e50; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
         .badge { font-size: 0.85rem; font-weight: bold; padding: 2px 8px; border-radius: 4px; }
         
         .btn-group { display: flex; gap: 4px; width: 100%; }
@@ -55,6 +56,16 @@
         button.selected-5  { background: #3498db !important; color: white !important; border-color: #3498db !important; }
         button.selected-comp { background: #f39c12 !important; color: white !important; border-color: #f39c12 !important; }
         button.btn-cancel { background: #fff5f5; color: #e74c3c; border-color: #fab6b6; }
+
+        /* 관리자 회원관리 패널 */
+        .admin-panel { background: #1e293b; color: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
+        .admin-panel h3 { margin: 0 0 10px 0; font-size: 1rem; color: #38bdf8; }
+        .admin-input-group { display: flex; gap: 6px; margin-bottom: 10px; }
+        .admin-input-group input { flex: 1; padding: 8px 12px; border-radius: 6px; border: none; font-size: 0.95rem; }
+        .admin-input-group button { background: #0284c7; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        
+        .admin-member-row { display: flex; justify-content: space-between; align-items: center; background: #334155; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; font-size: 0.9rem; }
+        .admin-member-row button { background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
 
         .rank-card { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; margin-bottom: 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; }
         .rank-number { font-weight: bold; color: #3b82f6; width: 45px; font-size: 0.95rem; }
@@ -71,8 +82,20 @@
 <div class="container">
     <div class="main-title-box">
         <div class="main-title">🏃‍♂️ 토달 출석부 👟</div>
+        <button class="admin-gear-btn" onclick="toggleAdminMode()" title="관리자 설정">⚙️ 설정</button>
     </div>
     <div class="subtitle">매주 토요일 운동모임 출석 & 누적 현황</div>
+
+    <!-- 관리자 회원 관리 패널 (기본 숨김) -->
+    <div id="admin-panel" class="admin-panel hidden">
+        <h3>🔒 관리자 회원 관리</h3>
+        <div class="admin-input-group">
+            <input type="text" id="new-member-name" placeholder="추가할 회원 이름 입력">
+            <button onclick="addMember()">회원 추가</button>
+        </div>
+        <div id="admin-member-list"></div>
+        <button onclick="toggleAdminMode()" style="width:100%; margin-top:8px; background:#475569; color:white; border:none; padding:8px; border-radius:6px; cursor:pointer;">설정 닫기</button>
+    </div>
     
     <div class="tab-group">
         <button class="tab-btn active" id="tab-checkin-btn" onclick="switchTab('checkin')">📅 출석체크</button>
@@ -109,11 +132,12 @@
         { name: "은대영" }
     ];
 
-    let globalMembers = DEFAULT_MEMBERS;
+    let globalMembers = [];
     let globalLogs = [];
     let selectedDateStr = localStorage.getItem('todal_selected_date') || "";
     let checkinSelectedMonth = localStorage.getItem('todal_selected_month') || (String(new Date().getMonth() + 1) + "월");
     let statsSelectedMonth = "전체";
+    let isAdminLoggedIn = false;
 
     const currentYear = new Date().getFullYear();
     document.getElementById('current-year-text').innerText = currentYear;
@@ -152,7 +176,6 @@
                 checkinSelectedMonth = m;
                 localStorage.setItem('todal_selected_month', m);
                 
-                // 해당 월의 첫 번째 토요일을 기본 선택으로 맞춤
                 const filtered = allSaturdays.filter(dStr => {
                     const mMatch = dStr.match(/(\d+)월/);
                     return mMatch && (mMatch[1] + "월") === m;
@@ -259,6 +282,19 @@
     }
 
     function loadData() {
+        // 회원 명단 불러오기 (저장된 게 없으면 기본 명단 사용)
+        const localMembers = localStorage.getItem('todal_members');
+        if (localMembers) {
+            try {
+                globalMembers = JSON.parse(localMembers);
+            } catch(e) {
+                globalMembers = DEFAULT_MEMBERS;
+            }
+        } else {
+            globalMembers = DEFAULT_MEMBERS;
+            localStorage.setItem('todal_members', JSON.stringify(DEFAULT_MEMBERS));
+        }
+
         const localLogs = localStorage.getItem('todal_pure_logs');
         if (localLogs) {
             try {
@@ -271,6 +307,66 @@
         initCheckinMonthButtons();
         initStatsMonthButtons();
         renderSaturdayVerticalList();
+    }
+
+    // 관리자 모드 토글 (비밀번호 검증)
+    function toggleAdminMode() {
+        const panel = document.getElementById('admin-panel');
+        if (panel.classList.contains('hidden')) {
+            const pwd = prompt("관리자 비밀번호를 입력하세요:");
+            if (pwd === "1234") { // 비밀번호는 원하시는 대로 변경 가능합니다 ("1234")
+                isAdminLoggedIn = true;
+                panel.classList.remove('hidden');
+                renderAdminMemberList();
+            } else if (pwd !== null) {
+                alert("비밀번호가 틀렸습니다!");
+            }
+        } else {
+            panel.classList.add('hidden');
+            isAdminLoggedIn = false;
+        }
+    }
+
+    function renderAdminMemberList() {
+        const listDiv = document.getElementById('admin-member-list');
+        listDiv.innerHTML = '';
+        globalMembers.forEach((member, index) => {
+            const row = document.createElement('div');
+            row.className = 'admin-member-row';
+            row.innerHTML = `
+                <span>${member.name}</span>
+                <button onclick="removeMember(${index})">삭제</button>
+            `;
+            listDiv.appendChild(row);
+        });
+    }
+
+    function addMember() {
+        const input = document.getElementById('new-member-name');
+        const name = input.value.trim();
+        if (!name) {
+            alert("회원 이름을 입력해주세요.");
+            return;
+        }
+        if (globalMembers.some(m => m.name === name)) {
+            alert("이미 존재하는 회원 이름입니다.");
+            return;
+        }
+        globalMembers.push({ name: name });
+        localStorage.setItem('todal_members', JSON.stringify(globalMembers));
+        input.value = '';
+        renderAdminMemberList();
+        renderCheckinList();
+        alert(`[${name}] 회원이 추가되었습니다.`);
+    }
+
+    function removeMember(index) {
+        const targetName = globalMembers[index].name;
+        if (!confirm(`[${targetName}] 회원을 정말 삭제하시겠습니까?`)) return;
+        globalMembers.splice(index, 1);
+        localStorage.setItem('todal_members', JSON.stringify(globalMembers));
+        renderAdminMemberList();
+        renderCheckinList();
     }
 
     function renderCheckinList() {
