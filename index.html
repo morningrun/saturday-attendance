@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>토달 출석부</title>
+    <title>토달 출석부 (구글 연동형)</title>
     
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="icon" sizes="192x192" href="icon.png">
@@ -57,7 +57,6 @@
         button.selected-comp { background: #f39c12 !important; color: white !important; border-color: #f39c12 !important; }
         button.btn-cancel { background: #fff5f5; color: #e74c3c; border-color: #fab6b6; }
 
-        /* 관리자 회원관리 패널 */
         .admin-panel { background: #1e293b; color: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
         .admin-panel h3 { margin: 0 0 10px 0; font-size: 1rem; color: #38bdf8; }
         .admin-input-group { display: flex; gap: 6px; margin-bottom: 10px; }
@@ -84,11 +83,10 @@
         <div class="main-title">🏃‍♂️ 토달 출석부 👟</div>
         <button class="admin-gear-btn" onclick="toggleAdminMode()" title="관리자 설정">⚙️ 설정</button>
     </div>
-    <div class="subtitle">매주 토요일 운동모임 출석 & 누적 현황</div>
+    <div class="subtitle">구글 시트 연동형 (출석 & 누적 현황)</div>
 
-    <!-- 관리자 회원 관리 패널 (기본 숨김) -->
     <div id="admin-panel" class="admin-panel hidden">
-        <h3>🔒 관리자 회원 관리</h3>
+        <h3>🔒 관리자 회원 관리 (구글 동기화)</h3>
         <div class="admin-input-group">
             <input type="text" id="new-member-name" placeholder="추가할 회원 이름 입력">
             <button onclick="addMember()">회원 추가</button>
@@ -102,7 +100,6 @@
         <button class="tab-btn" id="tab-stats-btn" onclick="switchTab('stats')">🏆 <span id="current-year-text">2026</span>년 누적현황</button>
     </div>
 
-    <!-- 출석체크 탭 -->
     <div id="tab-checkin">
         <div class="month-filter" id="checkin-month-buttons"></div>
         
@@ -111,10 +108,9 @@
             <div class="saturday-vertical-group" id="saturday-vertical-wrapper"></div>
         </div>
 
-        <div id="member-list" class="loading">데이터 불러오는 중...</div>
+        <div id="member-list" class="loading">구글 시트에서 데이터 불러오는 중...</div>
     </div>
 
-    <!-- 누적현황 탭 -->
     <div id="tab-stats" class="hidden">
         <div class="month-filter" id="stats-month-buttons"></div>
         <div id="stats-list" class="loading">누적 데이터 계산 중...</div>
@@ -122,22 +118,14 @@
 </div>
 
 <script>
-    const DEFAULT_MEMBERS = [
-        { name: "김경기" },
-        { name: "김미향" },
-        { name: "김은성" },
-        { name: "이실권" },
-        { name: "박지혜" },
-        { name: "김정균" },
-        { name: "은대영" }
-    ];
+    // ★ 여기에 새로 발급받은 구글 Apps Script 웹앱 URL을 입력하세요 ★
+    const API_URL = "https://script.google.com/macros/s/AKfycby6a1_Qbt2kliZDspXn4Gl7ttVO8pft2utAhKViTmzQwrmy2zKOtYKq6MXcrQyAX-M2rQ/exec"; 
 
     let globalMembers = [];
     let globalLogs = [];
     let selectedDateStr = localStorage.getItem('todal_selected_date') || "";
     let checkinSelectedMonth = localStorage.getItem('todal_selected_month') || (String(new Date().getMonth() + 1) + "월");
     let statsSelectedMonth = "전체";
-    let isAdminLoggedIn = false;
 
     const currentYear = new Date().getFullYear();
     document.getElementById('current-year-text').innerText = currentYear;
@@ -281,41 +269,35 @@
         }
     }
 
+    // 구글 시트에서 데이터 불러오기
     function loadData() {
-        // 회원 명단 불러오기 (저장된 게 없으면 기본 명단 사용)
-        const localMembers = localStorage.getItem('todal_members');
-        if (localMembers) {
-            try {
-                globalMembers = JSON.parse(localMembers);
-            } catch(e) {
-                globalMembers = DEFAULT_MEMBERS;
-            }
-        } else {
-            globalMembers = DEFAULT_MEMBERS;
-            localStorage.setItem('todal_members', JSON.stringify(DEFAULT_MEMBERS));
+        if (!API_URL || API_URL.includes("...")) {
+            document.getElementById('member-list').innerHTML = "<div style='color:red; text-align:center;'>API_URL 설정이 필요합니다! 코드를 확인해주세요.</div>";
+            return;
         }
 
-        const localLogs = localStorage.getItem('todal_pure_logs');
-        if (localLogs) {
-            try {
-                globalLogs = JSON.parse(localLogs);
-            } catch(e) {
-                globalLogs = [];
-            }
-        }
-
-        initCheckinMonthButtons();
-        initStatsMonthButtons();
-        renderSaturdayVerticalList();
+        fetch(API_URL + "?action=getData")
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    globalMembers = data.members || [];
+                    globalLogs = data.logs || [];
+                }
+                initCheckinMonthButtons();
+                initStatsMonthButtons();
+                renderSaturdayVerticalList();
+            })
+            .catch(err => {
+                console.error("데이터 로드 실패:", err);
+                document.getElementById('member-list').innerHTML = "<div style='color:red; text-align:center;'>구글 시트 연동 실패 (인터넷 연결을 확인하세요)</div>";
+            });
     }
 
-    // 관리자 모드 토글 (비밀번호 검증)
     function toggleAdminMode() {
         const panel = document.getElementById('admin-panel');
         if (panel.classList.contains('hidden')) {
             const pwd = prompt("관리자 비밀번호를 입력하세요:");
-            if (pwd === "1234") { // 비밀번호는 원하시는 대로 변경 가능합니다 ("1234")
-                isAdminLoggedIn = true;
+            if (pwd === "1234") {
                 panel.classList.remove('hidden');
                 renderAdminMemberList();
             } else if (pwd !== null) {
@@ -323,7 +305,6 @@
             }
         } else {
             panel.classList.add('hidden');
-            isAdminLoggedIn = false;
         }
     }
 
@@ -344,29 +325,36 @@
     function addMember() {
         const input = document.getElementById('new-member-name');
         const name = input.value.trim();
-        if (!name) {
-            alert("회원 이름을 입력해주세요.");
-            return;
-        }
-        if (globalMembers.some(m => m.name === name)) {
-            alert("이미 존재하는 회원 이름입니다.");
-            return;
-        }
+        if (!name) { alert("회원 이름을 입력해주세요."); return; }
+        if (globalMembers.some(m => m.name === name)) { alert("이미 존재하는 회원 이름입니다."); return; }
+        
         globalMembers.push({ name: name });
-        localStorage.setItem('todal_members', JSON.stringify(globalMembers));
+        syncMembersToServer();
         input.value = '';
-        renderAdminMemberList();
-        renderCheckinList();
-        alert(`[${name}] 회원이 추가되었습니다.`);
     }
 
     function removeMember(index) {
         const targetName = globalMembers[index].name;
         if (!confirm(`[${targetName}] 회원을 정말 삭제하시겠습니까?`)) return;
+        
         globalMembers.splice(index, 1);
-        localStorage.setItem('todal_members', JSON.stringify(globalMembers));
-        renderAdminMemberList();
-        renderCheckinList();
+        syncMembersToServer();
+    }
+
+    function syncMembersToServer() {
+        fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'updateMembers', members: globalMembers })
+        })
+        .then(res => res.json())
+        .then(res => {
+            if (res.status === "success") {
+                renderAdminMemberList();
+                renderCheckinList();
+                alert("회원 명단이 구글 시트에 동기화되었습니다!");
+            }
+        })
+        .catch(err => alert("동기화 실패: " + err));
     }
 
     function renderCheckinList() {
@@ -449,11 +437,8 @@
         const cleanName = String(name).trim();
         const targetDate = selectedDateStr;
 
-        const existing = globalLogs.find(log => log.name === cleanName && log.date === targetDate && Number(log.score) > 0);
-        if (score > 0 && existing) {
-            alert(`[${cleanName}]님은 이미 출석 체크가 완료되었습니다.`);
-            return;
-        }
+        let mMatch = targetDate.match(/(\d+)월/);
+        const monthNum = mMatch ? parseInt(mMatch[1], 10) : 0;
 
         if (score === 0) {
             if (!confirm(`[${targetDate.replace(/^\d{4}년\s*/, '')}] [${cleanName}]님의 출석을 취소하시겠습니까?`)) return;
@@ -462,20 +447,25 @@
             if (!confirm(`[${targetDate.replace(/^\d{4}년\s*/, '')}] [${cleanName}]님을 [${label}]으로 기록하시겠습니까?`)) return;
         }
 
+        // 로컬에서 먼저 반영 후 서버로 전송
         globalLogs = globalLogs.filter(log => !(log.name === cleanName && log.date === targetDate));
-        
         if (score > 0) {
-            let mMatch = targetDate.match(/(\d+)월/);
-            globalLogs.push({
-                name: cleanName,
-                date: targetDate,
-                score: score,
-                month: mMatch ? parseInt(mMatch[1], 10) : 0
-            });
+            globalLogs.push({ name: cleanName, date: targetDate, score: score, month: monthNum });
         }
-
-        localStorage.setItem('todal_pure_logs', JSON.stringify(globalLogs));
         renderCheckinList();
+
+        fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'saveCheckin', name: cleanName, date: targetDate, score: score, month: monthNum })
+        })
+        .then(res => res.json())
+        .then(res => {
+            if (res.status !== "success") {
+                alert("구글 시트 저장 중 문제가 발생했습니다.");
+                loadData(); // 실패 시 재동기화
+            }
+        })
+        .catch(err => console.error("통신 에러:", err));
     }
 
     function renderStats() {
