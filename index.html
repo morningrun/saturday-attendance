@@ -89,7 +89,7 @@
             <div class="saturday-vertical-group" id="saturday-vertical-wrapper"></div>
         </div>
 
-        <div id="member-list" class="loading">구글 서버에서 데이터를 불러오는 중...</div>
+        <div id="member-list" class="loading">구글 시트에서 데이터를 불러오는 중...</div>
     </div>
 
     <!-- 누적현황 탭 -->
@@ -100,21 +100,11 @@
 </div>
 
 <script>
-    // 💡 여기에 위에서 복사한 구글 앱스 스크립트 웹 앱 URL을 넣으세요!
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz2epIV7O5t1SYZUwUstPnTH3eFUk5FkFmL1CACKP1dKoiPKsBrf-krQMBTzAGb_CbU0g/exec";
-
-    const MEMBERS = [
-        { name: "곽병우" }, { name: "김경기" }, { name: "김미향" }, { name: "김은성" }, 
-        { name: "김정구" }, { name: "김정균" }, { name: "김진철" }, { name: "김태수" }, 
-        { name: "노현종" }, { name: "박광남" }, { name: "박정후" }, { name: "박지혜" }, 
-        { name: "송영숙" }, { name: "은대영" }, { name: "이동기" }, { name: "이세형" }, 
-        { name: "이실권" }, { name: "이은순" }, { name: "이재응" }, { name: "이정숙" }, 
-        { name: "이종호" }, { name: "이학조" }, { name: "이해식" }, { name: "이호병" }, 
-        { name: "정세원" }, { name: "정하근" }, { name: "정현주" }, { name: "정호진" }, 
-        { name: "조성국" }, { name: "최순규" }, { name: "최잔디" }, { name: "황연성" }
-    ];
-
+    // 💡 구글 앱스 스크립트 웹 앱 URL 입력
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby2bQZYTrFAhnlLzwt-EGvtlN1lgc95Jb9NM5Gxz1ZpxvxMZv_RfyAUPSYTXlV5OCwBVw/exec
+    let globalMembers = [];
     let attendanceLogs = [];
+    
     let selectedDateStr = localStorage.getItem('todal_selected_date') || "";
     let checkinSelectedMonth = localStorage.getItem('todal_selected_month') || (String(new Date().getMonth() + 1) + "월");
     let statsSelectedMonth = "전체";
@@ -143,38 +133,61 @@
 
     const allSaturdays = getAllSaturdaysOfCurrentYear();
 
-    // 구글 서버에서 데이터 불러오기
+    // 서버에서 최신 데이터 가져오기 (리셋 방지용 방어벽 포함)
     async function loadDataFromGoogle() {
         try {
             const response = await fetch(GOOGLE_SCRIPT_URL);
             if (response.ok) {
                 const data = await response.json();
-                attendanceLogs = data.logs || [];
+                if (data.members && data.members.length > 0) {
+                    globalMembers = data.members;
+                }
+                // 서버 데이터가 비어있지 않거나 유효할 때만 덮어씌움 (빈 데이터로 인한 리셋 방지)
+                if (data.logs) {
+                    attendanceLogs = data.logs;
+                }
             }
         } catch (e) {
-            console.error("데이터 로드 실패:", e);
+            console.error("구글 시트 데이터 로드 실패 (기존 로컬 백업 유지):", e);
+            // 통신 에러 시 로컬 백업 활용
+            const backup = localStorage.getItem('todal_logs_safe_backup');
+            if (backup && attendanceLogs.length === 0) {
+                attendanceLogs = JSON.parse(backup);
+            }
         }
         initCheckinMonthButtons();
         initStatsMonthButtons();
         renderSaturdayVerticalList();
     }
 
-    // 구글 서버로 데이터 안전하게 저장하기 (중복 체크 및 안전 장치 포함)
+    // 서버로 데이터 안전하게 저장하기
     async function saveDataToGoogle() {
-        const payload = JSON.stringify({ logs: attendanceLogs });
-        
-        // 로컬 비상 백업도 함께 유지하여 통신 불안정 대비
-        localStorage.setItem('todal_logs_backup', payload);
+        // 중복 제거 정제 (같은 날짜 같은 이름은 무조건 1개만 존재하도록 철저히 필터링)
+        const cleanMap = {};
+        attendanceLogs.forEach(log => {
+            if (log.date && log.name && Number(log.score) > 0) {
+                cleanMap[log.date + "_" + log.name] = log;
+            }
+        });
+        attendanceLogs = Object.values(cleanMap);
+
+        // 로컬 안전 백업
+        localStorage.setItem('todal_logs_safe_backup', JSON.stringify(attendanceLogs));
+
+        const payload = JSON.stringify({
+            members: globalMembers,
+            logs: attendanceLogs
+        });
 
         try {
             await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
-                mode: 'no-cors', // CORS 우회 핵심 설정
+                mode: 'no-cors',
                 headers: { 'Content-Type': 'text/plain' },
                 body: payload
             });
         } catch (e) {
-            console.error("서버 저장 지연:", e);
+            console.error("구글 시트 저장 에러:", e);
         }
     }
 
@@ -286,7 +299,7 @@
             document.getElementById('tab-stats').classList.add('hidden');
             document.getElementById('tab-checkin-btn').classList.add('active');
             document.getElementById('tab-stats-btn').classList.remove('active');
-            loadDataFromGoogle(); // 탭 이동 시 최신 데이터 동기화
+            loadDataFromGoogle();
         } else {
             document.getElementById('tab-checkin').classList.add('hidden');
             document.getElementById('tab-stats').classList.remove('hidden');
@@ -307,7 +320,7 @@
             }
         });
 
-        MEMBERS.forEach((member, index) => {
+        globalMembers.forEach((member, index) => {
             const name = String(member.name).trim();
             const score = dayAttendance[name] || 0;
             const isChecked = score > 0;
@@ -372,34 +385,37 @@
         });
     }
 
+    // 💡 중복 합산 및 충돌을 원천 차단하는 핵심 체크인 로직
     async function handleCheckIn(name, score) {
         const cleanName = String(name).trim();
         const targetDate = selectedDateStr;
 
-        // 최신 데이터 먼저 불러와서 다른 사람이 먼저 체크한 내용과 충돌 방지
+        // 1. 동작 직전 서버에서 최신 데이터를 먼저 불러와서 다른 사람과의 충돌 방지
         try {
             const res = await fetch(GOOGLE_SCRIPT_URL);
             if (res.ok) {
                 const d = await res.json();
-                if (d.logs) attendanceLogs = d.logs;
+                if (d.logs && d.logs.length > 0) attendanceLogs = d.logs;
             }
         } catch(e) {}
 
-        const existing = attendanceLogs.find(log => log.name === cleanName && log.date === targetDate && Number(log.score) > 0);
-        if (score > 0 && existing) {
-            alert(`[${cleanName}]님은 이미 출석 체크가 완료되었습니다.`);
+        // 2. 이미 해당 날짜에 기록이 존재하는지 철저히 검사
+        const alreadyExists = attendanceLogs.some(log => log.name === cleanName && log.date === targetDate && Number(log.score) > 0);
+        
+        if (score > 0 && alreadyExists) {
+            alert(`[${cleanName}]님은 이미 해당 날짜에 출석 체크가 완료되었습니다.`);
             renderCheckinList();
             return;
         }
 
         if (score === 0) {
-            if (!confirm(`[${targetDate.replace(/^\d{4}년\s*/, '')}] [${cleanName}]님의 출석 기록을 수정(취소)하시겠습니까?`)) return;
+            if (!confirm(`[${targetDate.replace(/^\d{4}년\s*/, '')}] [${cleanName}]님의 출석 기록을 취소하시겠습니까?`)) return;
         } else {
             const label = score === 5 ? '지각(+5점)' : score === 99 ? '대회(+10점)' : '출석(+10점)';
             if (!confirm(`[${targetDate.replace(/^\d{4}년\s*/, '')}] [${cleanName}]님을 [${label}]으로 기록하시겠습니까?`)) return;
         }
 
-        // 중복 방지 정제 후 반영
+        // 3. 기존 기록 완벽하게 제거 후 새로 반영 (중복 누적 원천 차단)
         attendanceLogs = attendanceLogs.filter(log => !(log.name === cleanName && log.date === targetDate));
         
         if (score > 0) {
@@ -412,7 +428,7 @@
             });
         }
 
-        // 구글 서버로 실시간 전송
+        // 4. 구글 시트로 즉시 안전 전송
         await saveDataToGoogle();
         renderCheckinList();
     }
@@ -422,7 +438,7 @@
         statsDiv.innerHTML = '';
 
         const userMonthlyData = {};
-        MEMBERS.forEach(m => {
+        globalMembers.forEach(m => {
             userMonthlyData[String(m.name).trim()] = {
                 score: {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
                 att:   {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
@@ -431,9 +447,10 @@
             };
         });
 
+        // 5. 통계 계산 시에도 중복 합산 방지를 위해 고유 키(날짜+이름)로 필터링
         const uniqueLogMap = {};
         attendanceLogs.forEach(log => {
-            if (Number(log.score) > 0) {
+            if (log.date && log.name && Number(log.score) > 0) {
                 uniqueLogMap[log.date + "|" + log.name] = log;
             }
         });
@@ -455,7 +472,7 @@
         });
 
         let displayList = [];
-        MEMBERS.forEach(member => {
+        globalMembers.forEach(member => {
             const name = String(member.name).trim();
             let targetScore = 0, targetAtt = 0, targetTardy = 0, targetComp = 0;
 
@@ -502,7 +519,7 @@
         });
     }
 
-    // 초기 실행 시 구글 서버에서 데이터 로드
+    // 최초 실행 시 데이터 로드
     loadDataFromGoogle();
 </script>
 
