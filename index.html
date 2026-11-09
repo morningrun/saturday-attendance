@@ -310,6 +310,7 @@
         globalMembers.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
     }
 
+    // 서버에서 최신 데이터 불러오기 (안전 장치 추가)
     async function loadData() {
         try {
             const response = await fetch(`https://api.jsonbin.io/v3/b/${API_BIN_ID}/latest`, {
@@ -320,7 +321,6 @@
                 const data = resData.record;
                 globalMembers = (data.members && data.members.length > 0) ? data.members : DEFAULT_MEMBERS;
                 globalLogs = data.logs || [];
-                // 서버에 저장된 비번이 있으면 가져오고, 없으면 기본값 유지
                 if (data.password !== undefined && data.password !== null && String(data.password).trim() !== "") {
                     adminPassword = String(data.password);
                 }
@@ -329,8 +329,7 @@
                 globalLogs = [];
             }
         } catch (e) {
-            globalMembers = DEFAULT_MEMBERS;
-            globalLogs = [];
+            console.error("데이터 로드 실패");
         }
 
         sortMembers();
@@ -339,7 +338,7 @@
         renderSaturdayVerticalList();
     }
 
-    // 서버에 저장할 때 현재 설정된 adminPassword를 절대 누락시키지 않고 함께 동기화
+    // 서버에 데이터를 안전하게 저장하고 완료될 때까지 기다리는 함수
     async function saveDataToCloud() {
         sortMembers();
         const payload = {
@@ -349,7 +348,7 @@
         };
 
         try {
-            await fetch(`https://api.jsonbin.io/v3/b/${API_BIN_ID}`, {
+            const response = await fetch(`https://api.jsonbin.io/v3/b/${API_BIN_ID}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -357,8 +356,10 @@
                 },
                 body: JSON.stringify(payload)
             });
+            return response.ok;
         } catch (e) {
             console.error("클라우드 동기화 실패");
+            return false;
         }
     }
 
@@ -387,7 +388,7 @@
         }
         if (confirm(`관리자 비밀번호를 [${newPwd}]로 변경하시겠습니까?`)) {
             adminPassword = newPwd;
-            await saveDataToCloud(); // 즉시 서버에 새 비번 고정 저장
+            await saveDataToCloud();
             input.value = '';
             alert("비밀번호가 서버에 완벽하게 고정되었습니다!");
         }
@@ -512,6 +513,7 @@
         });
     }
 
+    // 출석 체크 및 수정 시 서버에 확실하게 저장된 후 화면을 갱신하도록 개선
     async function handleCheckIn(name, score) {
         const cleanName = String(name).trim();
         const targetDate = selectedDateStr;
@@ -529,6 +531,20 @@
             if (!confirm(`[${targetDate.replace(/^\d{4}년\s*/, '')}] [${cleanName}]님을 [${label}]으로 기록하시겠습니까?`)) return;
         }
 
+        // 먼저 최신 서버 데이터를 다시 불러와서 다른 사람의 기록과 충돌하지 않도록 병합 준비
+        try {
+            const response = await fetch(`https://api.jsonbin.io/v3/b/${API_BIN_ID}/latest`, {
+                headers: { 'X-Master-Key': API_MASTER_KEY }
+            });
+            if (response.ok) {
+                const resData = await response.json();
+                if (resData.record && resData.record.logs) {
+                    globalLogs = resData.record.logs;
+                }
+            }
+        } catch(e) {}
+
+        // 내 기록 반영
         globalLogs = globalLogs.filter(log => !(log.name === cleanName && log.date === targetDate));
         
         if (score > 0) {
@@ -541,8 +557,14 @@
             });
         }
 
-        await saveDataToCloud();
-        renderCheckinList();
+        // 서버에 저장 완료될 때까지 대기
+        const success = await saveDataToCloud();
+        if (success) {
+            renderCheckinList();
+        } else {
+            alert("서버 저장 중 오류가 발생했습니다. 다시 시도해 주세요.");
+            loadData();
+        }
     }
 
     function renderStats() {
