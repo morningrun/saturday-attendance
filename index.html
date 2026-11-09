@@ -64,6 +64,7 @@
         .rank-score { font-weight: bold; font-size: 1.1rem; color: #059669; }
 
         .hidden { display: none; }
+        .loading { text-align: center; color: #888; padding: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -88,18 +89,20 @@
             <div class="saturday-vertical-group" id="saturday-vertical-wrapper"></div>
         </div>
 
-        <div id="member-list"></div>
+        <div id="member-list" class="loading">구글 서버에서 데이터를 불러오는 중...</div>
     </div>
 
     <!-- 누적현황 탭 -->
     <div id="tab-stats" class="hidden">
         <div class="month-filter" id="stats-month-buttons"></div>
-        <div id="stats-list"></div>
+        <div id="stats-list" class="loading">누적 데이터 계산 중...</div>
     </div>
 </div>
 
 <script>
-    // 32명 전체 회원 명단 (고정형)
+    // 💡 여기에 위에서 복사한 구글 앱스 스크립트 웹 앱 URL을 넣으세요!
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxtV3J04XeMwNzJhatXTKDzJnK3naZknnWmEjsSYXqK4lXwrMYj2XNOgcXj5YcPKvV6/exec";
+
     const MEMBERS = [
         { name: "곽병우" }, { name: "김경기" }, { name: "김미향" }, { name: "김은성" }, 
         { name: "김정구" }, { name: "김정균" }, { name: "김진철" }, { name: "김태수" }, 
@@ -111,8 +114,7 @@
         { name: "조성국" }, { name: "최순규" }, { name: "최잔디" }, { name: "황연성" }
     ];
 
-    let attendanceLogs = JSON.parse(localStorage.getItem('todal_logs') || '[]');
-    
+    let attendanceLogs = [];
     let selectedDateStr = localStorage.getItem('todal_selected_date') || "";
     let checkinSelectedMonth = localStorage.getItem('todal_selected_month') || (String(new Date().getMonth() + 1) + "월");
     let statsSelectedMonth = "전체";
@@ -141,6 +143,41 @@
 
     const allSaturdays = getAllSaturdaysOfCurrentYear();
 
+    // 구글 서버에서 데이터 불러오기
+    async function loadDataFromGoogle() {
+        try {
+            const response = await fetch(GOOGLE_SCRIPT_URL);
+            if (response.ok) {
+                const data = await response.json();
+                attendanceLogs = data.logs || [];
+            }
+        } catch (e) {
+            console.error("데이터 로드 실패:", e);
+        }
+        initCheckinMonthButtons();
+        initStatsMonthButtons();
+        renderSaturdayVerticalList();
+    }
+
+    // 구글 서버로 데이터 안전하게 저장하기 (중복 체크 및 안전 장치 포함)
+    async function saveDataToGoogle() {
+        const payload = JSON.stringify({ logs: attendanceLogs });
+        
+        // 로컬 비상 백업도 함께 유지하여 통신 불안정 대비
+        localStorage.setItem('todal_logs_backup', payload);
+
+        try {
+            await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors', // CORS 우회 핵심 설정
+                headers: { 'Content-Type': 'text/plain' },
+                body: payload
+            });
+        } catch (e) {
+            console.error("서버 저장 지연:", e);
+        }
+    }
+
     function initCheckinMonthButtons() {
         const wrapper = document.getElementById('checkin-month-buttons');
         wrapper.innerHTML = '';
@@ -162,7 +199,6 @@
                     selectedDateStr = filtered[filtered.length - 1];
                     localStorage.setItem('todal_selected_date', selectedDateStr);
                 }
-                
                 renderSaturdayVerticalList();
             };
             wrapper.appendChild(btn);
@@ -250,12 +286,13 @@
             document.getElementById('tab-stats').classList.add('hidden');
             document.getElementById('tab-checkin-btn').classList.add('active');
             document.getElementById('tab-stats-btn').classList.remove('active');
+            loadDataFromGoogle(); // 탭 이동 시 최신 데이터 동기화
         } else {
             document.getElementById('tab-checkin').classList.add('hidden');
             document.getElementById('tab-stats').classList.remove('hidden');
             document.getElementById('tab-checkin-btn').classList.remove('active');
             document.getElementById('tab-stats-btn').classList.add('active');
-            renderStats(); 
+            loadDataFromGoogle().then(() => renderStats()); 
         }
     }
 
@@ -335,13 +372,23 @@
         });
     }
 
-    function handleCheckIn(name, score) {
+    async function handleCheckIn(name, score) {
         const cleanName = String(name).trim();
         const targetDate = selectedDateStr;
+
+        // 최신 데이터 먼저 불러와서 다른 사람이 먼저 체크한 내용과 충돌 방지
+        try {
+            const res = await fetch(GOOGLE_SCRIPT_URL);
+            if (res.ok) {
+                const d = await res.json();
+                if (d.logs) attendanceLogs = d.logs;
+            }
+        } catch(e) {}
 
         const existing = attendanceLogs.find(log => log.name === cleanName && log.date === targetDate && Number(log.score) > 0);
         if (score > 0 && existing) {
             alert(`[${cleanName}]님은 이미 출석 체크가 완료되었습니다.`);
+            renderCheckinList();
             return;
         }
 
@@ -352,6 +399,7 @@
             if (!confirm(`[${targetDate.replace(/^\d{4}년\s*/, '')}] [${cleanName}]님을 [${label}]으로 기록하시겠습니까?`)) return;
         }
 
+        // 중복 방지 정제 후 반영
         attendanceLogs = attendanceLogs.filter(log => !(log.name === cleanName && log.date === targetDate));
         
         if (score > 0) {
@@ -364,7 +412,8 @@
             });
         }
 
-        localStorage.setItem('todal_logs', JSON.stringify(attendanceLogs));
+        // 구글 서버로 실시간 전송
+        await saveDataToGoogle();
         renderCheckinList();
     }
 
@@ -453,9 +502,8 @@
         });
     }
 
-    initCheckinMonthButtons();
-    initStatsMonthButtons();
-    renderSaturdayVerticalList();
+    // 초기 실행 시 구글 서버에서 데이터 로드
+    loadDataFromGoogle();
 </script>
 
 </body>
