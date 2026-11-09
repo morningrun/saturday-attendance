@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>토달 출석부 (구글 연동형)</title>
+    <title>토달 출석부</title>
     
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="icon" sizes="192x192" href="icon.png">
@@ -19,9 +19,8 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; margin: 0; padding: 10px; color: #333; -webkit-tap-highlight-color: transparent; }
         .container { max-width: 600px; margin: 0 auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         
-        .main-title-box { text-align: center; margin: 10px 0 5px 0; display: flex; justify-content: space-between; align-items: center; }
-        .main-title { font-size: 1.6rem; font-weight: 800; color: #1e293b; text-align: left; }
-        .admin-gear-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 5px; color: #64748b; }
+        .main-title-box { text-align: center; margin: 10px 0 5px 0; }
+        .main-title { font-size: 1.8rem; font-weight: 800; color: #1e293b; }
         .subtitle { text-align: center; font-size: 0.85rem; color: #7f8c8d; margin-bottom: 15px; }
         
         .tab-group { display: flex; gap: 6px; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; position: sticky; top: 0; background: white; z-index: 10; }
@@ -57,7 +56,8 @@
         button.selected-comp { background: #f39c12 !important; color: white !important; border-color: #f39c12 !important; }
         button.btn-cancel { background: #fff5f5; color: #e74c3c; border-color: #fab6b6; }
 
-        .admin-panel { background: #1e293b; color: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
+        /* 관리자 회원관리 패널 */
+        .admin-panel { background: #1e293b; color: white; padding: 15px; border-radius: 10px; margin-top: 20px; margin-bottom: 15px; }
         .admin-panel h3 { margin: 0 0 10px 0; font-size: 1rem; color: #38bdf8; }
         .admin-input-group { display: flex; gap: 6px; margin-bottom: 10px; }
         .admin-input-group input { flex: 1; padding: 8px 12px; border-radius: 6px; border: none; font-size: 0.95rem; }
@@ -65,6 +65,10 @@
         
         .admin-member-row { display: flex; justify-content: space-between; align-items: center; background: #334155; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; font-size: 0.9rem; }
         .admin-member-row button { background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
+
+        /* 하단 설정 버튼 영역 */
+        .footer-setting-box { text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid #e2e8f0; }
+        .admin-gear-btn-small { background: #f1f5f9; border: 1px solid #cbd5e1; font-size: 0.75rem; cursor: pointer; padding: 4px 10px; color: #64748b; border-radius: 4px; font-weight: bold; }
 
         .rank-card { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; margin-bottom: 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; }
         .rank-number { font-weight: bold; color: #3b82f6; width: 45px; font-size: 0.95rem; }
@@ -81,25 +85,15 @@
 <div class="container">
     <div class="main-title-box">
         <div class="main-title">🏃‍♂️ 토달 출석부 👟</div>
-        <button class="admin-gear-btn" onclick="toggleAdminMode()" title="관리자 설정">⚙️ 설정</button>
     </div>
-    <div class="subtitle">구글 시트 연동형 (출석 & 누적 현황)</div>
-
-    <div id="admin-panel" class="admin-panel hidden">
-        <h3>🔒 관리자 회원 관리 (구글 동기화)</h3>
-        <div class="admin-input-group">
-            <input type="text" id="new-member-name" placeholder="추가할 회원 이름 입력">
-            <button onclick="addMember()">회원 추가</button>
-        </div>
-        <div id="admin-member-list"></div>
-        <button onclick="toggleAdminMode()" style="width:100%; margin-top:8px; background:#475569; color:white; border:none; padding:8px; border-radius:6px; cursor:pointer;">설정 닫기</button>
-    </div>
+    <div class="subtitle">매주 토요일 운동모임 출석 & 누적 현황</div>
     
     <div class="tab-group">
         <button class="tab-btn active" id="tab-checkin-btn" onclick="switchTab('checkin')">📅 출석체크</button>
         <button class="tab-btn" id="tab-stats-btn" onclick="switchTab('stats')">🏆 <span id="current-year-text">2026</span>년 누적현황</button>
     </div>
 
+    <!-- 출석체크 탭 -->
     <div id="tab-checkin">
         <div class="month-filter" id="checkin-month-buttons"></div>
         
@@ -108,18 +102,42 @@
             <div class="saturday-vertical-group" id="saturday-vertical-wrapper"></div>
         </div>
 
-        <div id="member-list" class="loading">구글 시트에서 데이터 불러오는 중...</div>
+        <div id="member-list" class="loading">데이터 불러오는 중...</div>
     </div>
 
+    <!-- 누적현황 탭 -->
     <div id="tab-stats" class="hidden">
         <div class="month-filter" id="stats-month-buttons"></div>
         <div id="stats-list" class="loading">누적 데이터 계산 중...</div>
     </div>
+
+    <!-- 관리자 회원 관리 패널 (기본 숨김) -->
+    <div id="admin-panel" class="admin-panel hidden">
+        <h3>🔒 관리자 회원 관리</h3>
+        <div class="admin-input-group">
+            <input type="text" id="new-member-name" placeholder="추가할 회원 이름 입력">
+            <button onclick="addMember()">회원 추가</button>
+        </div>
+        <div id="admin-member-list"></div>
+        <button onclick="toggleAdminMode()" style="width:100%; margin-top:8px; background:#475569; color:white; border:none; padding:8px; border-radius:6px; cursor:pointer;">설정 닫기</button>
+    </div>
+
+    <!-- 화면 맨 하단에 작게 배치된 설정 버튼 -->
+    <div class="footer-setting-box">
+        <button class="admin-gear-btn-small" onclick="toggleAdminMode()">⚙️ 관리자 설정</button>
+    </div>
 </div>
 
 <script>
-    // ★ 여기에 새로 발급받은 구글 Apps Script 웹앱 URL을 입력하세요 ★
-    const API_URL = "https://script.google.com/macros/s/AKfycby6a1_Qbt2kliZDspXn4Gl7ttVO8pft2utAhKViTmzQwrmy2zKOtYKq6MXcrQyAX-M2rQ/exec"; 
+    const DEFAULT_MEMBERS = [
+        { name: "김경기" },
+        { name: "김미향" },
+        { name: "김은성" },
+        { name: "이실권" },
+        { name: "박지혜" },
+        { name: "김정균" },
+        { name: "은대영" }
+    ];
 
     let globalMembers = [];
     let globalLogs = [];
@@ -269,28 +287,31 @@
         }
     }
 
-    // 구글 시트에서 데이터 불러오기
     function loadData() {
-        if (!API_URL || API_URL.includes("...")) {
-            document.getElementById('member-list').innerHTML = "<div style='color:red; text-align:center;'>API_URL 설정이 필요합니다! 코드를 확인해주세요.</div>";
-            return;
+        const localMembers = localStorage.getItem('todal_members');
+        if (localMembers) {
+            try {
+                globalMembers = JSON.parse(localMembers);
+            } catch(e) {
+                globalMembers = DEFAULT_MEMBERS;
+            }
+        } else {
+            globalMembers = DEFAULT_MEMBERS;
+            localStorage.setItem('todal_members', JSON.stringify(DEFAULT_MEMBERS));
         }
 
-        fetch(API_URL + "?action=getData")
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === "success") {
-                    globalMembers = data.members || [];
-                    globalLogs = data.logs || [];
-                }
-                initCheckinMonthButtons();
-                initStatsMonthButtons();
-                renderSaturdayVerticalList();
-            })
-            .catch(err => {
-                console.error("데이터 로드 실패:", err);
-                document.getElementById('member-list').innerHTML = "<div style='color:red; text-align:center;'>구글 시트 연동 실패 (인터넷 연결을 확인하세요)</div>";
-            });
+        const localLogs = localStorage.getItem('todal_pure_logs');
+        if (localLogs) {
+            try {
+                globalLogs = JSON.parse(localLogs);
+            } catch(e) {
+                globalLogs = [];
+            }
+        }
+
+        initCheckinMonthButtons();
+        initStatsMonthButtons();
+        renderSaturdayVerticalList();
     }
 
     function toggleAdminMode() {
@@ -300,6 +321,7 @@
             if (pwd === "1234") {
                 panel.classList.remove('hidden');
                 renderAdminMemberList();
+                panel.scrollIntoView({ behavior: 'smooth' });
             } else if (pwd !== null) {
                 alert("비밀번호가 틀렸습니다!");
             }
@@ -329,8 +351,11 @@
         if (globalMembers.some(m => m.name === name)) { alert("이미 존재하는 회원 이름입니다."); return; }
         
         globalMembers.push({ name: name });
-        syncMembersToServer();
+        localStorage.setItem('todal_members', JSON.stringify(globalMembers));
         input.value = '';
+        renderAdminMemberList();
+        renderCheckinList();
+        alert(`[${name}] 회원이 추가되었습니다.`);
     }
 
     function removeMember(index) {
@@ -338,23 +363,9 @@
         if (!confirm(`[${targetName}] 회원을 정말 삭제하시겠습니까?`)) return;
         
         globalMembers.splice(index, 1);
-        syncMembersToServer();
-    }
-
-    function syncMembersToServer() {
-        fetch(API_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'updateMembers', members: globalMembers })
-        })
-        .then(res => res.json())
-        .then(res => {
-            if (res.status === "success") {
-                renderAdminMemberList();
-                renderCheckinList();
-                alert("회원 명단이 구글 시트에 동기화되었습니다!");
-            }
-        })
-        .catch(err => alert("동기화 실패: " + err));
+        localStorage.setItem('todal_members', JSON.stringify(globalMembers));
+        renderAdminMemberList();
+        renderCheckinList();
     }
 
     function renderCheckinList() {
@@ -437,8 +448,11 @@
         const cleanName = String(name).trim();
         const targetDate = selectedDateStr;
 
-        let mMatch = targetDate.match(/(\d+)월/);
-        const monthNum = mMatch ? parseInt(mMatch[1], 10) : 0;
+        const existing = globalLogs.find(log => log.name === cleanName && log.date === targetDate && Number(log.score) > 0);
+        if (score > 0 && existing) {
+            alert(`[${cleanName}]님은 이미 출석 체크가 완료되었습니다.`);
+            return;
+        }
 
         if (score === 0) {
             if (!confirm(`[${targetDate.replace(/^\d{4}년\s*/, '')}] [${cleanName}]님의 출석을 취소하시겠습니까?`)) return;
@@ -447,114 +461,11 @@
             if (!confirm(`[${targetDate.replace(/^\d{4}년\s*/, '')}] [${cleanName}]님을 [${label}]으로 기록하시겠습니까?`)) return;
         }
 
-        // 로컬에서 먼저 반영 후 서버로 전송
         globalLogs = globalLogs.filter(log => !(log.name === cleanName && log.date === targetDate));
+        
         if (score > 0) {
-            globalLogs.push({ name: cleanName, date: targetDate, score: score, month: monthNum });
-        }
-        renderCheckinList();
-
-        fetch(API_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'saveCheckin', name: cleanName, date: targetDate, score: score, month: monthNum })
-        })
-        .then(res => res.json())
-        .then(res => {
-            if (res.status !== "success") {
-                alert("구글 시트 저장 중 문제가 발생했습니다.");
-                loadData(); // 실패 시 재동기화
-            }
-        })
-        .catch(err => console.error("통신 에러:", err));
-    }
-
-    function renderStats() {
-        const statsDiv = document.getElementById('stats-list');
-        statsDiv.innerHTML = '';
-
-        const userMonthlyData = {};
-        globalMembers.forEach(m => {
-            userMonthlyData[String(m.name).trim()] = {
-                score: {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
-                att:   {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
-                tardy: {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
-                comp:  {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0}
-            };
-        });
-
-        const uniqueLogMap = {};
-        globalLogs.forEach(log => {
-            if (Number(log.score) > 0) {
-                uniqueLogMap[log.date + "|" + log.name] = log;
-            }
-        });
-
-        Object.values(uniqueLogMap).forEach(log => {
-            const name = String(log.name).trim();
-            const score = Number(log.score);
-            let m = log.month || 0;
-            if (!m) {
-                const mMatch = String(log.date).match(/(\d+)월/);
-                if (mMatch) m = parseInt(mMatch[1], 10);
-            }
-
-            if (score <= 0 || !userMonthlyData[name] || m < 1 || m > 12) return;
-
-            if (score === 10) { userMonthlyData[name].score[m] += 10; userMonthlyData[name].att[m] += 1; }
-            else if (score === 5) { userMonthlyData[name].score[m] += 5; userMonthlyData[name].tardy[m] += 1; }
-            else if (score === 99) { userMonthlyData[name].score[m] += 10; userMonthlyData[name].comp[m] += 1; }
-        });
-
-        let displayList = [];
-        globalMembers.forEach(member => {
-            const name = String(member.name).trim();
-            let targetScore = 0, targetAtt = 0, targetTardy = 0, targetComp = 0;
-
-            if (statsSelectedMonth === "전체") {
-                for (let m = 1; m <= 12; m++) {
-                    targetScore += userMonthlyData[name].score[m];
-                    targetAtt   += userMonthlyData[name].att[m];
-                    targetTardy += userMonthlyData[name].tardy[m];
-                    targetComp  += userMonthlyData[name].comp[m];
-                }
-            } else {
-                const mNum = parseInt(statsSelectedMonth.replace(/[^0-9]/g, ""), 10);
-                targetScore = userMonthlyData[name].score[mNum];
-                targetAtt   = userMonthlyData[name].att[mNum];
-                targetTardy = userMonthlyData[name].tardy[mNum];
-                targetComp  = userMonthlyData[name].comp[mNum];
-            }
-
-            if (targetScore > 0) {
-                displayList.push({ name, score: targetScore, att: targetAtt, tardy: targetTardy, comp: targetComp });
-            }
-        });
-
-        if (displayList.length === 0) {
-            statsDiv.innerHTML = "<div style='text-align:center; padding:30px; color:#94a3b8; font-weight:bold;'>해당 기간에 출석 기록이 있는 회원이 없습니다.</div>";
-            return;
-        }
-
-        displayList.sort((a, b) => (b.score !== a.score) ? b.score - a.score : a.name.localeCompare(b.name));
-
-        let currentRank = 1;
-        displayList.forEach((item, index) => {
-            if (index > 0 && item.score < displayList[index - 1].score) currentRank = index + 1;
-            const card = document.createElement('div');
-            card.className = 'rank-card';
-            let rankBadge = (currentRank === 1 ? '🥇 1위' : (currentRank === 2 ? '🥈 2위' : (currentRank === 3 ? '🥉 3위' : `${currentRank}위`)));
-            card.innerHTML = `
-                <div class="rank-number">${rankBadge}</div>
-                <div class="rank-name">${item.name}</div>
-                <div class="rank-detail">출석${item.att} · 지각${item.tardy} · 대회${item.comp}</div>
-                <div class="rank-score">${item.score}점</div>
-            `;
-            statsDiv.appendChild(card);
-        });
-    }
-
-    loadData();
-</script>
-
-</body>
-</html>
+            let mMatch = targetDate.match(/(\d+)월/);
+            globalLogs.push({
+                name: cleanName,
+                date: targetDate,
+                score: score,
