@@ -318,13 +318,13 @@
             if (response.ok) {
                 const resData = await response.json();
                 const data = resData.record;
-                // 클라우드에 기존 데이터가 없거나 비어있으면 32명 기본 명단 적용
                 globalMembers = (data.members && data.members.length > 0) ? data.members : DEFAULT_MEMBERS;
                 globalLogs = data.logs || [];
-                adminPassword = data.password || "1234";
+                adminPassword = (data.password !== undefined && data.password !== null && data.password !== "") ? data.password : "1234";
             } else {
                 globalMembers = DEFAULT_MEMBERS;
                 globalLogs = [];
+                adminPassword = "1234";
             }
         } catch (e) {
             const localMembers = localStorage.getItem('todal_members');
@@ -391,7 +391,7 @@
             adminPassword = newPwd;
             await saveDataToCloud();
             input.value = '';
-            alert("비밀번호가 성공적으로 변경되었습니다!");
+            alert("비밀번호가 서버에 성공적으로 반영되었습니다!");
         }
     }
 
