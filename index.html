@@ -118,7 +118,6 @@
     <div id="admin-panel" class="admin-panel hidden">
         <h3>🔒 관리자 설정 및 회원 관리</h3>
         
-        <!-- 비밀번호 변경 구역 -->
         <div class="password-box">
             <label>관리자 비밀번호 변경</label>
             <div class="admin-input-group" style="margin-bottom:0;">
@@ -301,6 +300,10 @@
         }
     }
 
+    function sortMembers() {
+        globalMembers.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+    }
+
     function loadData() {
         const localMembers = localStorage.getItem('todal_members');
         if (localMembers) {
@@ -313,6 +316,7 @@
             globalMembers = DEFAULT_MEMBERS;
             localStorage.setItem('todal_members', JSON.stringify(DEFAULT_MEMBERS));
         }
+        sortMembers();
 
         const localLogs = localStorage.getItem('todal_pure_logs');
         if (localLogs) {
@@ -380,6 +384,7 @@
         if (globalMembers.some(m => m.name === name)) { alert("이미 존재하는 회원 이름입니다."); return; }
         
         globalMembers.push({ name: name });
+        sortMembers(); // 가나다순 정렬 적용
         localStorage.setItem('todal_members', JSON.stringify(globalMembers));
         input.value = '';
         renderAdminMemberList();
@@ -392,6 +397,7 @@
         if (!confirm(`[${targetName}] 회원을 정말 삭제하시겠습니까?`)) return;
         
         globalMembers.splice(index, 1);
+        sortMembers();
         localStorage.setItem('todal_members', JSON.stringify(globalMembers));
         renderAdminMemberList();
         renderCheckinList();
