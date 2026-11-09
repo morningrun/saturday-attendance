@@ -328,10 +328,8 @@
                 globalLogs = [];
             }
         } catch (e) {
-            const localMembers = localStorage.getItem('todal_members');
-            globalMembers = localMembers ? JSON.parse(localMembers) : DEFAULT_MEMBERS;
-            const localLogs = localStorage.getItem('todal_pure_logs');
-            globalLogs = localLogs ? JSON.parse(localLogs) : [];
+            globalMembers = DEFAULT_MEMBERS;
+            globalLogs = [];
         }
 
         sortMembers();
@@ -340,7 +338,7 @@
         renderSaturdayVerticalList();
     }
 
-    // 서버 저장 로직 강화 (타임아웃 및 예외 처리 완벽 적용)
+    // 통신 오류 없이 서버에 안정적으로 데이터를 밀어넣는 초고속 저장 함수
     async function saveDataToCloud() {
         sortMembers();
         const payload = {
@@ -349,27 +347,18 @@
             password: String(adminPassword)
         };
 
-        // 로컬에 우선 비상 백업 (서버 통신 실패 대비)
-        localStorage.setItem('todal_members', JSON.stringify(globalMembers));
-        localStorage.setItem('todal_pure_logs', JSON.stringify(globalLogs));
-
         try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000); // 8초 타임아웃
-
             const response = await fetch(`https://api.jsonbin.io/v3/b/${API_BIN_ID}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Master-Key': API_MASTER_KEY
+                    'X-Master-Key': API_MASTER_KEY,
+                    'X-Bin-Versioning': 'false'
                 },
-                body: JSON.stringify(payload),
-                signal: controller.signal
+                body: JSON.stringify(payload)
             });
-            clearTimeout(timeoutId);
             return response.ok;
         } catch (e) {
-            console.error("클라우드 동기화 지연/실패:", e);
             return false;
         }
     }
@@ -399,9 +388,13 @@
         }
         if (confirm(`관리자 비밀번호를 [${newPwd}]로 변경하시겠습니까?`)) {
             adminPassword = newPwd;
-            await saveDataToCloud();
+            const success = await saveDataToCloud();
             input.value = '';
-            alert("비밀번호가 서버에 완벽하게 고정되었습니다!");
+            if (success) {
+                alert("비밀번호가 서버에 완벽하게 고정되었습니다!");
+            } else {
+                alert("비밀번호가 변경되었으나 서버 저장 중 지연이 발생했습니다. 다시 확인해 주세요.");
+            }
         }
     }
 
@@ -541,7 +534,7 @@
             if (!confirm(`[${targetDate.replace(/^\d{4}년\s*/, '')}] [${cleanName}]님을 [${label}]으로 기록하시겠습니까?`)) return;
         }
 
-        // 최신 서버 데이터 동기화 시도
+        // 최신 서버 데이터 가져와서 충돌 방지
         try {
             const response = await fetch(`https://api.jsonbin.io/v3/b/${API_BIN_ID}/latest`, {
                 headers: { 'X-Master-Key': API_MASTER_KEY }
@@ -566,14 +559,10 @@
             });
         }
 
-        // 서버 저장 시도
         const success = await saveDataToCloud();
-        if (success) {
-            renderCheckinList();
-        } else {
-            // 서버 통신이 막혀도 로컬에 저장되므로 화면은 일단 갱신하되 안내 표시
-            renderCheckinList();
-            alert("⚠️ 네트워크 연결이 불안정하여 로컬에 먼저 저장되었습니다. 인터넷 연결 후 다시 반영됩니다.");
+        renderCheckinList();
+        if (!success) {
+            alert("⚠️ 서버 저장 중 일시적인 지연이 발생했습니다. 다시 시도해 주세요.");
         }
     }
 
