@@ -57,20 +57,6 @@
         button.selected-comp { background: #f39c12 !important; color: white !important; border-color: #f39c12 !important; }
         button.btn-modify { background: #fff5f5; color: #e74c3c; border-color: #fab6b6; }
 
-        /* 관리자 비밀번호 변경 패널 */
-        .admin-panel { background: #1e293b; color: white; padding: 15px; border-radius: 10px; margin-top: 20px; margin-bottom: 15px; }
-        .admin-panel h3 { margin: 0 0 10px 0; font-size: 1rem; color: #38bdf8; }
-        .admin-input-group { display: flex; gap: 6px; margin-bottom: 10px; }
-        .admin-input-group input { flex: 1; padding: 8px 12px; border-radius: 6px; border: none; font-size: 0.95rem; }
-        .admin-input-group button { background: #10b981; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        
-        .password-box { background: #334155; padding: 10px; border-radius: 6px; }
-        .password-box label { font-size: 0.85rem; color: #cbd5e1; display: block; margin-bottom: 4px; }
-
-        /* 하단 설정 버튼 영역 */
-        .footer-setting-box { text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid #e2e8f0; }
-        .admin-gear-btn-small { background: #f1f5f9; border: 1px solid #cbd5e1; font-size: 0.75rem; cursor: pointer; padding: 4px 10px; color: #64748b; border-radius: 4px; font-weight: bold; }
-
         .rank-card { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; margin-bottom: 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; }
         .rank-number { font-weight: bold; color: #3b82f6; width: 45px; font-size: 0.95rem; }
         .rank-name { font-weight: bold; flex: 1; font-size: 1rem; color: #1e293b; }
@@ -110,24 +96,6 @@
         <div class="month-filter" id="stats-month-buttons"></div>
         <div id="stats-list"></div>
     </div>
-
-    <!-- 관리자 설정 패널 (비밀번호 변경용) -->
-    <div id="admin-panel" class="admin-panel hidden">
-        <h3>🔒 관리자 설정</h3>
-        <div class="password-box">
-            <label>관리자 비밀번호 변경</label>
-            <div class="admin-input-group" style="margin-bottom:0;">
-                <input type="password" id="new-admin-pwd" placeholder="새 비밀번호 입력">
-                <button onclick="changePassword()">변경</button>
-            </div>
-        </div>
-        <button onclick="toggleAdminMode()" style="width:100%; margin-top:12px; background:#475569; color:white; border:none; padding:8px; border-radius:6px; cursor:pointer;">설정 닫기</button>
-    </div>
-
-    <!-- 화면 맨 하단에 작게 배치된 설정 버튼 -->
-    <div class="footer-setting-box">
-        <button class="admin-gear-btn-small" onclick="toggleAdminMode()">⚙️ 관리자 설정</button>
-    </div>
 </div>
 
 <script>
@@ -144,7 +112,6 @@
     ];
 
     let attendanceLogs = JSON.parse(localStorage.getItem('todal_logs') || '[]');
-    let adminPassword = localStorage.getItem('todal_admin_pwd') || '1234';
     
     let selectedDateStr = localStorage.getItem('todal_selected_date') || "";
     let checkinSelectedMonth = localStorage.getItem('todal_selected_month') || (String(new Date().getMonth() + 1) + "월");
@@ -289,36 +256,6 @@
             document.getElementById('tab-checkin-btn').classList.remove('active');
             document.getElementById('tab-stats-btn').classList.add('active');
             renderStats(); 
-        }
-    }
-
-    function toggleAdminMode() {
-        const panel = document.getElementById('admin-panel');
-        if (panel.classList.contains('hidden')) {
-            const pwd = prompt("관리자 비밀번호를 입력하세요:");
-            if (pwd === adminPassword) {
-                panel.classList.remove('hidden');
-                panel.scrollIntoView({ behavior: 'smooth' });
-            } else if (pwd !== null) {
-                alert("비밀번호가 틀렸습니다!");
-            }
-        } else {
-            panel.classList.add('hidden');
-        }
-    }
-
-    function changePassword() {
-        const input = document.getElementById('new-admin-pwd');
-        const newPwd = input.value.trim();
-        if (!newPwd) {
-            alert("변경할 새 비밀번호를 입력해주세요.");
-            return;
-        }
-        if (confirm(`관리자 비밀번호를 [${newPwd}]로 변경하시겠습니까?`)) {
-            adminPassword = newPwd;
-            localStorage.setItem('todal_admin_pwd', newPwd);
-            input.value = '';
-            alert("비밀번호가 안전하게 변경되었습니다!");
         }
     }
 
