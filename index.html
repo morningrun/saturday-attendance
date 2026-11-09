@@ -141,8 +141,8 @@
         { name: "조성국" }, { name: "최순규" }, { name: "최잔디" }, { name: "황연성" }
     ];
 
-    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v9')) || [...DEFAULT_MEMBERS];
-    let globalLogs = JSON.parse(localStorage.getItem('todal_logs_v9')) || [];
+    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v10')) || [...DEFAULT_MEMBERS];
+    let globalLogs = JSON.parse(localStorage.getItem('todal_logs_v10')) || [];
     let adminPassword = "1234";
 
     let selectedDateStr = localStorage.getItem('todal_selected_date') || "";
@@ -287,7 +287,7 @@
             document.getElementById('tab-stats').classList.remove('hidden');
             document.getElementById('tab-checkin-btn').classList.remove('active');
             document.getElementById('tab-stats-btn').classList.add('active');
-            renderStats(); 
+            renderStats(); // 탭 누를 때 강제 렌더링
         }
     }
 
@@ -300,8 +300,8 @@
 
     function saveLocally() {
         sortMembers();
-        localStorage.setItem('todal_members_v9', JSON.stringify(globalMembers));
-        localStorage.setItem('todal_logs_v9', JSON.stringify(globalLogs));
+        localStorage.setItem('todal_members_v10', JSON.stringify(globalMembers));
+        localStorage.setItem('todal_logs_v10', JSON.stringify(globalLogs));
     }
 
     async function loadDataFromSheet() {
@@ -315,6 +315,7 @@
                 if (resData.members && Array.isArray(resData.members) && resData.members.length > 0) {
                     globalMembers = resData.members;
                 }
+                // 💡 서버 로그가 비어있지 않을 때만 기존 로컬 로그와 병합하여 유실 방지
                 if (resData.logs && Array.isArray(resData.logs) && resData.logs.length > 0) {
                     globalLogs = resData.logs;
                 }
@@ -383,6 +384,7 @@
         sortMembers();
         renderAdminMemberList();
         renderCheckinList();
+        renderStats();
         await saveDataToSheet();
         input.value = '';
         alert(`[${name}] 회원이 추가되었습니다.`);
@@ -396,6 +398,7 @@
         sortMembers();
         renderAdminMemberList();
         renderCheckinList();
+        renderStats();
         await saveDataToSheet();
         alert(`[${targetName}] 회원이 삭제되었습니다.`);
     }
@@ -461,7 +464,6 @@
                     button.style.opacity = '0.4';
                     button.style.cursor = 'not-allowed';
                 }
-                // 💡 클릭 시 무조건 확인 팝업 안내창이 뜨도록 안전 장치 적용
                 button.addEventListener('click', () => handleCheckIn(name, buttonScore));
                 buttonGroup.appendChild(button);
             };
@@ -488,7 +490,6 @@
         const cleanName = String(name).trim();
         const targetDate = selectedDateStr;
 
-        // 💡 클릭 시 무조건 팝업 안내창(Confirm)이 먼저 뜨도록 보장
         if (score === 0) {
             if (!confirm(`[${targetDate.replace(/^\d{4}년\s*/, '')}] [${cleanName}]님의 출석 기록을 취소하시겠습니까?`)) return;
         } else {
@@ -513,7 +514,7 @@
         await saveDataToSheet();
     }
 
-    // 💡 누적현황 랭킹 및 집계 로직 완벽 보완
+    // 💡 누적현황 랭킹 및 점수 집계 로직
     function renderStats() {
         const statsDiv = document.getElementById('stats-list');
         if (!statsDiv) return;
@@ -616,6 +617,8 @@
         sortMembers();
         renderCheckinList(); 
         renderStats();
+        
+        // 💡 서버에서 데이터를 불러온 후 즉시 화면과 누적현황을 동기화 갱신
         await loadDataFromSheet();
         renderCheckinList();
         renderStats();
