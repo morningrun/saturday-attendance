@@ -467,7 +467,7 @@
 
             if (isChecked) {
                 const cancelBtn = document.createElement('button');
-                cancelBtn.textContent = '취소';
+                cancelBtn.textContent = '수정';
                 cancelBtn.className = 'btn-cancel';
                 cancelBtn.addEventListener('click', () => handleCheckIn(name, 0));
                 buttonGroup.appendChild(cancelBtn);
@@ -490,7 +490,7 @@
         }
 
         if (score === 0) {
-            if (!confirm(`[${targetDate.replace(/^\d{4}년\s*/, '')}] [${cleanName}]님의 출석을 취소하시겠습니까?`)) return;
+            if (!confirm(`[${targetDate.replace(/^\d{4}년\s*/, '')}] [${cleanName}]님의 출석을 수정하시겠습니까?`)) return;
         } else {
             const label = score === 5 ? '지각(+5점)' : score === 99 ? '대회(+10점)' : '출석(+10점)';
             if (!confirm(`[${targetDate.replace(/^\d{4}년\s*/, '')}] [${cleanName}]님을 [${label}]으로 기록하시겠습니까?`)) return;
