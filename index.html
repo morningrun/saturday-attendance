@@ -4,18 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>토달 출석부</title>
-    <!-- 카카오톡 링크 미리보기 설정 -->
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="토달 출석부">
-    <meta property="og:description" content="복사골마라톤클럽 토요일 출석부입니다. 출석하고 함께 달려보세요!">
-    <meta property="og:url" content="https://morningrun.github.io/saturday-attendance/">
-    <meta property="og:image" content="https://raw.githubusercontent.com/morningrun/saturday-attendance/main/todal_attendance_og.jpg">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="토달 출석부">
-    <meta name="twitter:description" content="복사골마라톤클럽 토요일 출석부입니다">
-    <meta name="twitter:image" content="https://raw.githubusercontent.com/morningrun/saturday-attendance/main/todal_attendance_og.jpg">
+    
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="icon" sizes="192x192" href="icon.png">
     <link rel="icon" href="icon.png" type="image/png">
@@ -32,335 +21,666 @@
             --accent: #2563eb;
             --success: #059669;
             --warning: #d97706;
-            --bg: #f8fafc;
+            --info: #0284c7;
+            --danger: #dc2626;
+            --bg-color: #f1f5f9;
             --card-bg: #ffffff;
-            --text: #1e293b;
-            --text-secondary: #64748b;
-            --border: #e2e8f0;
+            --text-main: #1e293b;
+            --text-sub: #475569;
+            --border: #cbd5e1;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg-color); margin: 0; padding: 8px; color: var(--text-main); -webkit-tap-highlight-color: transparent; }
+        .container { max-width: 600px; margin: 0 auto; background: var(--card-bg); padding: 12px; border-radius: 14px; box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08); }
+        
+        .main-title-box { text-align: center; margin: 8px 0 12px 0; }
+        .main-title { font-size: 1.6rem; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
+        
+        .tab-group { display: flex; gap: 6px; margin-bottom: 12px; background: #cbd5e1; padding: 3px; border-radius: 10px; position: sticky; top: 6px; z-index: 10; backdrop-filter: blur(8px); }
+        .tab-btn { flex: 1; padding: 9px 4px; font-size: 0.9rem; border: none; background: transparent; color: var(--text-sub); font-weight: 700; border-radius: 8px; cursor: pointer; transition: all 0.2s; text-align: center; }
+        .tab-btn.active { background: var(--card-bg); color: var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            padding-bottom: 40px;
-            min-height: 100vh;
-        }
+        .month-filter { display: flex; flex-wrap: wrap; gap: 5px; padding-bottom: 4px; margin-bottom: 12px; justify-content: center; }
+        .month-btn { padding: 7px 10px; font-size: 0.8rem; border: 1px solid var(--border); border-radius: 7px; background: #ffffff; cursor: pointer; font-weight: 700; color: var(--text-sub); }
+        .month-btn.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 2px 6px rgba(37,99,235,0.25); }
 
-        header {
-            background: var(--primary);
-            color: white;
-            padding: 20px 16px;
-            text-align: center;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
+        .saturday-list-box { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 10px; margin-bottom: 12px; }
+        .saturday-list-title { font-size: 0.88rem; font-weight: 800; color: var(--primary); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .saturday-vertical-group { display: flex; flex-direction: column; gap: 5px; max-height: 160px; overflow-y: auto; }
+        
+        .saturday-item-btn { padding: 9px 12px; background: #ffffff; border: 1px solid var(--border); border-radius: 8px; font-size: 0.85rem; font-weight: 700; color: var(--primary); cursor: pointer; text-align: left; display: flex; justify-content: space-between; align-items: center; }
+        .saturday-item-btn.active { background: #eff6ff; color: var(--accent); border: 2px solid var(--accent); }
+        .saturday-item-btn.disabled { background: #f1f5f9; color: #94a3b8; border-color: var(--border); cursor: not-allowed; opacity: 0.7; }
 
-        header h1 {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
+        .member-card { display: flex; flex-direction: column; padding: 8px 10px; margin-bottom: 6px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; gap: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .member-card.checked-10 { background-color: #ecfdf5 !important; border-color: #34d399 !important; border-left: 5px solid var(--success) !important; }
+        .member-card.checked-5  { background-color: #f0f9ff !important; border-color: #38bdf8 !important; border-left: 5px solid var(--info) !important; }
+        .member-card.checked-comp { background-color: #fffbeb !important; border-color: #fbbf24 !important; border-left: 5px solid var(--warning) !important; }
 
-        header p {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-        }
+        .member-info { display: flex; justify-content: space-between; align-items: center; }
+        .member-name { font-weight: 800; font-size: 0.95rem; color: var(--primary); display: flex; align-items: center; gap: 6px; }
+        .member-index { font-size: 0.75rem; color: #64748b; font-weight: 700; }
+        .badge { font-size: 0.75rem; font-weight: 800; padding: 2px 8px; border-radius: 5px; }
+        
+        .btn-group { display: flex; gap: 5px; width: 100%; }
+        .btn-group button { flex: 1; padding: 7px 2px; font-size: 0.78rem; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-weight: 700; background: #f8fafc; color: var(--text-sub); text-align: center; }
+        
+        button.selected-10 { background: var(--success) !important; color: white !important; border-color: var(--success) !important; font-weight: 800; }
+        button.selected-5  { background: var(--info) !important; color: white !important; border-color: var(--info) !important; font-weight: 800; }
+        button.selected-comp { background: var(--warning) !important; color: white !important; border-color: var(--warning) !important; font-weight: 800; }
+        button.btn-modify { background: #fee2e2 !important; color: var(--danger) !important; border-color: #fca5a5 !important; font-weight: 800; }
 
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 16px;
-        }
+        .rank-card { display: flex; align-items: center; justify-content: space-between; padding: 10px 10px; margin-bottom: 7px; background: #f8fafc; border: 1.5px solid var(--border); border-radius: 10px; gap: 4px; }
+        .rank-number { font-weight: 800; color: var(--accent); width: 38px; font-size: 0.82rem; white-space: nowrap; flex-shrink: 0; }
+        .rank-name { font-weight: 800; width: 52px; font-size: 0.9rem; color: var(--primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+        .rank-detail { font-size: 0.68rem; color: var(--text-sub); font-weight: 700; text-align: center; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .rank-score { font-weight: 800; width: 44px; font-size: 0.95rem; color: var(--success); text-align: right; white-space: nowrap; flex-shrink: 0; }
 
-        .card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 16px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            border: 1px solid var(--border);
-        }
+        .admin-panel { background: var(--primary); color: white; padding: 14px; border-radius: 12px; margin-top: 20px; margin-bottom: 12px; }
+        .admin-panel h3 { margin: 0 0 10px 0; font-size: 1rem; color: #38bdf8; }
+        .admin-input-group { display: flex; gap: 6px; margin-bottom: 10px; }
+        .admin-input-group input { flex: 1; padding: 9px 12px; border-radius: 7px; border: none; font-size: 0.9rem; outline: none; }
+        .admin-input-group button { background: var(--accent); color: white; border: none; padding: 9px 14px; border-radius: 7px; font-weight: 800; cursor: pointer; }
+        
+        .admin-member-row { display: flex; justify-content: space-between; align-items: center; background: #1e293b; padding: 8px 12px; border-radius: 7px; margin-bottom: 6px; font-size: 0.88rem; border: 1px solid #334155; }
+        .admin-member-row button { background: var(--danger); color: white; border: none; padding: 4px 8px; border-radius: 5px; cursor: pointer; font-size: 0.78rem; font-weight: 700; }
+        
+        .footer-setting-box { text-align: center; margin-top: 24px; padding-top: 14px; border-top: 1.5px solid var(--border); }
+        .admin-gear-btn-small { background: #f8fafc; border: 1.5px solid var(--border); font-size: 0.8rem; cursor: pointer; padding: 6px 14px; color: var(--text-sub); border-radius: 7px; font-weight: 800; }
 
-        .date-selector {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
-        }
-
-        .date-selector button {
-            background: none;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 8px 12px;
-            font-size: 0.9rem;
-            cursor: pointer;
-            color: var(--text);
-            background-color: #fff;
-        }
-
-        .date-selector button:active {
-            background-color: var(--border);
-        }
-
-        #current-date {
-            font-weight: 600;
-            font-size: 1rem;
-        }
-
-        .stats-box {
-            display: flex;
-            justify-content: space-around;
-            text-align: center;
-            padding-top: 8px;
-            border-top: 1px solid var(--border);
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-        }
-
-        .stats-box span {
-            font-weight: 700;
-            color: var(--success);
-        }
-
-        .member-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .member-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 16px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            background: #fff;
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }
-
-        /* 출석 완료한 회원 스타일 */
-        .member-item.checked {
-            background-color: #f0fdf4;
-            border-color: #bbf7d0;
-        }
-
-        .member-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .member-name {
-            font-size: 1rem;
-            font-weight: 500;
-        }
-
-        .member-item.checked .member-name {
-            color: var(--success);
-            font-weight: 600;
-        }
-
-        /* 커스텀 체크박스 버튼 */
-        .attendance-checkbox {
-            width: 24px;
-            height: 24px;
-            border: 2px solid var(--border);
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #fff;
-            transition: all 0.2s;
-        }
-
-        .member-item.checked .attendance-checkbox {
-            background: var(--success);
-            border-color: var(--success);
-            color: white;
-        }
-
-        .attendance-checkbox::after {
-            content: '✓';
-            font-size: 14px;
-            font-weight: bold;
-            display: none;
-        }
-
-        .member-item.checked .attendance-checkbox::after {
-            display: block;
-        }
-
-        .footer-setting {
-            text-align: right;
-            margin-top: 10px;
-        }
-
-        .admin-gear-btn-small {
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            cursor: pointer;
-            padding: 4px 8px;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: var(--text-secondary);
-        }
+        .hidden { display: none; }
+        .loading { text-align: center; color: var(--text-sub); padding: 25px; font-weight: 700; }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1 id="header-title">토달 출석부</h1>
-        <p>복사골마라톤클럽 토요일 출석 체크</p>
-    </header>
-
-    <div class="container">
-        <div class="card">
-            <div class="date-selector">
-                <button id="prev-btn">◀ 이전</button>
-                <span id="current-date">날짜 로딩중...</span>
-                <button id="next-btn">다음 ▶</button>
-            </div>
-            <div class="stats-box">
-                <div>출석 인원: <span id="checked-count">0</span>명</div>
-                <div>전체 회원: <span id="total-count">0</span>명</div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div id="member-container" class="member-list">
-                <div class="loading">출석부 명단을 불러오는 중입니다...</div>
-            </div>
-            <div class="footer-setting">
-                <button class="admin-gear-btn-small" onclick="toggleAdminMode()">⚙️ 관리자 설정</button>
-            </div>
-        </div>
+<div class="container">
+    <div class="main-title-box">
+        <div class="main-title">🏃‍♂️ 토달 출석부</div>
+    </div>
+    
+    <div class="tab-group">
+        <button class="tab-btn active" id="tab-checkin-btn" onclick="switchTab('checkin')">📅 <span id="tab-month-label">11월</span> 출석체크</button>
+        <button class="tab-btn" id="tab-stats-btn" onclick="switchTab('stats')">🏆 <span id="current-year-text">2026</span>년 누적현황</button>
     </div>
 
-    <script>
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwZPhNLvPnwomHKRgW68nqd268BBPgUIVQUFiDYmVgClqe9Az1Tvo-o0o6WEM9YY-4x0Q/exec";
+    <!-- 출석체크 탭 -->
+    <div id="tab-checkin">
+        <div class="month-filter" id="checkin-month-buttons"></div>
+        
+        <div class="saturday-list-box">
+            <div class="saturday-list-title" id="saturday-list-header">📅 2026년 11월 토달 출석현황</div>
+            <div class="saturday-vertical-group" id="saturday-vertical-wrapper"></div>
+        </div>
 
-        const DEFAULT_MEMBERS = [
-            { name: "곽병우" }, { name: "김경기" }, { name: "김미향" }, { name: "김은성" },
-            { name: "김정구" }, { name: "김정균" }, { name: "김진철" }, { name: "김태수" },
-            { name: "노현종" }, { name: "박광남" }, { name: "박정후" }, { name: "박지혜" },
-            { name: "송영숙" }, { name: "은대영" }, { name: "이동기" }, { name: "이세형" },
-            { name: "이실권" }, { name: "이은순" }, { name: "이재응" }, { name: "이정숙" }
-        ];
+        <div id="member-list" class="loading">데이터 로딩 중...</div>
+    </div>
 
-        let members = DEFAULT_MEMBERS.map(m => ({ ...m, checked: false }));
-        let currentDate = new Date();
+    <!-- 누적현황 탭 -->
+    <div id="tab-stats" class="hidden">
+        <div class="month-filter" id="stats-month-buttons"></div>
+        <div id="stats-list" class="loading">누적 데이터 계산 중...</div>
+    </div>
 
-        // 날짜를 YYYY-MM-DD 형식으로 변환
-        function formatDate(date) {
-            const y = date.getFullYear();
-            const m = String(date.getMonth() + 1).padStart(2, '0');
-            const d = String(date.getDate().getDate ? date.getDate() : date.getDate()).padStart(2, '0'); // 안전 처리
-            return `${y}-${m}-${d}`;
+    <!-- 관리자 회원 관리 패널 -->
+    <div id="admin-panel" class="admin-panel hidden">
+        <h3>🔒 관리자 설정 및 회원 관리</h3>
+        <h3 style="margin-top:6px;">👥 회원 추가/삭제</h3>
+        <div class="admin-input-group">
+            <input type="text" id="new-member-name" placeholder="추가할 회원 이름 입력">
+            <button onclick="addMember()">회원 추가</button>
+        </div>
+        <div id="admin-member-list"></div>
+        <button onclick="toggleAdminMode()" style="width:100%; margin-top:12px; background:#475569; color:white; border:none; padding:9px; border-radius:7px; cursor:pointer; font-weight:800;">설정 닫기</button>
+    </div>
+
+    <div class="footer-setting-box">
+        <button class="admin-gear-btn-small" onclick="toggleAdminMode()">⚙️ 관리자 설정</button>
+    </div>
+</div>
+
+<script>
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwZPhNLvPNwomHKRgW68nqD268BBPGuIVQUFIdYMVgCLqe9AzlTvo-o0o6WEM9YY-4x0Q/exec";
+
+    const DEFAULT_MEMBERS = [
+        { name: "곽병우" }, { name: "김경기" }, { name: "김미향" }, { name: "김은성" }, 
+        { name: "김정구" }, { name: "김정균" }, { name: "김진철" }, { name: "김태수" }, 
+        { name: "노현종" }, { name: "박광남" }, { name: "박정후" }, { name: "박지혜" }, 
+        { name: "송영숙" }, { name: "은대영" }, { name: "이동기" }, { name: "이세형" }, 
+        { name: "이실권" }, { name: "이은순" }, { name: "이재응" }, { name: "이정숙" }, 
+        { name: "이종호" }, { name: "이학조" }, { name: "이해식" }, { name: "이호병" }, 
+        { name: "정세원" }, { name: "정하근" }, { name: "정현주" }, { name: "정호진" }, 
+        { name: "조성국" }, { name: "최순규" }, { name: "최잔디" }, { name: "황연성" }
+    ];
+
+    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v22')) || [...DEFAULT_MEMBERS];
+    let globalLogs = JSON.parse(localStorage.getItem('todal_logs_v22')) || [];
+    let adminPassword = "1234";
+
+    let selectedDateStr = localStorage.getItem('todal_selected_date') || "";
+    let checkinSelectedMonth = localStorage.getItem('todal_selected_month') || (String(new Date().getMonth() + 1) + "월");
+    let statsSelectedMonth = "전체";
+
+    const currentYear = new Date().getFullYear();
+    document.getElementById('current-year-text').innerText = currentYear;
+    document.getElementById('tab-month-label').innerText = checkinSelectedMonth;
+
+    function formatDateToString(dateObj) {
+        const years = dateObj.getFullYear();
+        const months = dateObj.getMonth() + 1;
+        const days = dateObj.getDate();
+        const weekDays = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+        return `${years}년 ${months}월 ${days}일 ${weekDays[dateObj.getDay()]}`;
+    }
+
+    function getAllSaturdaysOfCurrentYear() {
+        const saturdays = [];
+        let d = new Date(currentYear, 0, 1);
+        while (d.getDay() !== 6) d.setDate(d.getDate() + 1);
+        while (d.getFullYear() === currentYear) {
+            saturdays.push(formatDateToString(new Date(d)));
+            d.setDate(d.getDate() + 7);
         }
+        return saturdays;
+    }
 
-        // 가장 가까운 토요일 계산 함수
-        function getSaturday(d) {
-            d = new Date(d);
-            let day = d.getDay();
-            let diff = d.getDate() - day + (day === 0 ? -6 : 6); // 토요일 기준으로 맞춤
-            return new Date(d.setDate(diff));
-        }
+    const allSaturdays = getAllSaturdaysOfCurrentYear();
 
-        function renderMembers() {
-            const container = document.getElementById('member-container');
-            container.innerHTML = '';
+    function initCheckinMonthButtons() {
+        const wrapper = document.getElementById('checkin-month-buttons');
+        wrapper.innerHTML = '';
+        const currentMonthNum = new Date().getMonth() + 1;
 
-            // ★ 핵심 정렬 로직: 출석(checked: true)된 회원이 상단으로, 미출석 회원이 하단으로 정렬
-            members.sort((a, b) => {
-                const statusA = a.checked ? 1 : 0;
-                const statusB = b.checked ? 1 : 0;
-                if (statusA !== statusB) {
-                    return statusB - statusA; // 출석한 사람이 위로
-                }
-                return a.name.localeCompare(b.name); // 상태가 같으면 가나다순 정렬
-            });
-
-            let checkedCount = 0;
-
-            members.forEach(member => {
-                if (member.checked) checkedCount++;
-
-                const item = document.createElement('div');
-                item.className = `member-item ${member.checked ? 'checked' : ''}`;
-                
-                item.innerHTML = `
-                    <div class="member-info">
-                        <span class="member-name">${member.name}</span>
-                    </div>
-                    <div class="attendance-checkbox"></div>
-                `;
-
-                // 항목 클릭 시 출석 상태 토글 및 즉시 재정렬 렌더링
-                item.addEventListener('click', () => {
-                    member.checked = !member.checked;
-                    renderMembers();
-                    saveAttendanceToServer(); // 서버(스프레드시트) 동기화 호출
-                });
-
-                container.appendChild(item);
-            });
-
-            // 상단 카운트 갱신
-            document.getElementById('checked-count').innerText = checkedCount;
-            document.getElementById('total-count').innerText = members.length;
-        }
-
-        // 서버 데이터 동기화 함수 (구글 앱스 스크립트 연동)
-        function saveAttendanceToServer() {
-            // 여기에 fetch를 이용한 구글 스크립트 통신 로직이 연동됩니다.
-            console.log("출석 상태 서버 동기화 중...");
-        }
-
-        function toggleAdminMode() {
-            alert("관리자 설정 모드입니다.");
-        }
-
-        // 초기 실행
-        document.addEventListener('DOMContentLoaded', () => {
-            currentDate = getSaturday(new Date());
+        ["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"].forEach(m => {
+            const mNum = parseInt(m.replace("월", ""), 10);
+            const btn = document.createElement('button');
             
-            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' };
-            document.getElementById('current-date').innerText = currentDate.toLocaleDateString('ko-KR', options);
-            
-            renderMembers();
-
-            // 이전/다음 토요일 버튼 이벤트
-            document.getElementById('prev-btn').addEventListener('click', () => {
-                currentDate.setDate(currentDate.getDate() - 7);
-                document.getElementById('current-date').innerText = currentDate.toLocaleDateString('ko-KR', options);
-                renderMembers();
-            });
-
-            document.getElementById('next-btn').addEventListener('click', () => {
-                currentDate.setDate(currentDate.getDate() + 7);
-                document.getElementById('current-date').innerText = currentDate.toLocaleDateString('ko-KR', options);
-                renderMembers();
-            });
+            if (mNum > currentMonthNum) {
+                btn.className = 'month-btn disabled';
+                btn.style.background = '#f1f5f9';
+                btn.style.color = '#94a3b8';
+                btn.style.borderColor = '#cbd5e1';
+                btn.style.cursor = 'not-allowed';
+                btn.innerText = m + " 🔒";
+                btn.onclick = () => alert("아직 다가오지 않은 미래 월은 조회 및 체크할 수 없습니다!");
+            } else {
+                btn.className = `month-btn ${m === checkinSelectedMonth ? 'active' : ''}`;
+                btn.innerText = m;
+                btn.onclick = () => {
+                    document.querySelectorAll('#checkin-month-buttons .month-btn').forEach(b => {
+                        if(!b.classList.contains('disabled')) b.classList.remove('active');
+                    });
+                    btn.classList.add('active');
+                    checkinSelectedMonth = m;
+                    localStorage.setItem('todal_selected_month', m);
+                    document.getElementById('tab-month-label').innerText = m;
+                    
+                    const filtered = allSaturdays.filter(dStr => {
+                        const mMatch = dStr.match(/(\d+)월/);
+                        return mMatch && (mMatch[1] + "월") === m;
+                    });
+                    if (filtered.length > 0) {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const validFiltered = filtered.filter(dStr => {
+                            const tDate = new Date(dStr.replace(/년|월/g, '-').replace(/일.*/, '').trim());
+                            tDate.setHours(0, 0, 0, 0);
+                            return tDate <= today;
+                        });
+                        selectedDateStr = validFiltered.length > 0 ? validFiltered[validFiltered.length - 1] : filtered[0];
+                        localStorage.setItem('todal_selected_date', selectedDateStr);
+                    }
+                    renderSaturdayVerticalList();
+                };
+            }
+            wrapper.appendChild(btn);
         });
-    </script>
+    }
+
+    function initStatsMonthButtons() {
+        const wrapper = document.getElementById('stats-month-buttons');
+        wrapper.innerHTML = '';
+        ["전체","1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"].forEach(m => {
+            const btn = document.createElement('button');
+            btn.className = `month-btn ${m === statsSelectedMonth ? 'active' : ''}`;
+            btn.innerText = m;
+            btn.onclick = () => {
+                document.querySelectorAll('#stats-month-buttons .month-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                statsSelectedMonth = m; 
+                renderStats();     
+            };
+            wrapper.appendChild(btn);
+        });
+    }
+
+    function renderSaturdayVerticalList() {
+        const wrapper = document.getElementById('saturday-vertical-wrapper');
+        const header = document.getElementById('saturday-list-header');
+        if (!wrapper) return;
+        wrapper.innerHTML = '';
+        if (header) header.innerText = `📅 ${currentYear}년 ${checkinSelectedMonth} 토달 출석현황`;
+
+        const filteredSaturdays = allSaturdays.filter(dStr => {
+            const mMatch = dStr.match(/(\d+)월/);
+            return mMatch && (mMatch[1] + "월") === checkinSelectedMonth;
+        });
+
+        if (filteredSaturdays.length === 0) {
+            wrapper.innerHTML = "<div style='padding:10px; color:#888;'>해당 월에 토요일이 없습니다.</div>";
+            return;
+        }
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const validSaturdays = filteredSaturdays.filter(dStr => {
+            const tDate = new Date(dStr.replace(/년|월/g, '-').replace(/일.*/, '').trim());
+            tDate.setHours(0, 0, 0, 0);
+            return tDate <= today;
+        });
+
+        let defaultDate = validSaturdays.length > 0 ? validSaturdays[validSaturdays.length - 1] : filteredSaturdays[0];
+        if (!selectedDateStr || !filteredSaturdays.includes(selectedDateStr)) {
+            selectedDateStr = defaultDate;
+        }
+
+        filteredSaturdays.forEach(dStr => {
+            const btn = document.createElement('button');
+            const cleanDateStr = dStr.replace(/년|월/g, '-').replace(/일.*/, '').trim();
+            const targetDate = new Date(cleanDateStr);
+            targetDate.setHours(0, 0, 0, 0);
+            
+            const isFuture = targetDate > today;
+            const isSelected = (dStr === selectedDateStr);
+
+            if (isFuture) {
+                btn.className = 'saturday-item-btn disabled';
+                btn.innerHTML = `<span>🔒 ${dStr.replace(/^\d{4}년\s*/, '')} (예정)</span>`;
+                btn.onclick = () => alert("아직 다가오지 않은 미래 날짜는 체크할 수 없습니다!");
+            } else {
+                btn.className = `saturday-item-btn ${isSelected ? 'active' : ''}`;
+                btn.innerText = dStr.replace(/^\d{4}년\s*/, '');
+                btn.onclick = () => {
+                    selectedDateStr = dStr;
+                    localStorage.setItem('todal_selected_date', dStr);
+                    renderSaturdayVerticalList();
+                };
+            }
+            wrapper.appendChild(btn);
+        });
+
+        renderCheckinList();
+    }
+
+    function switchTab(tabName) {
+        if (tabName === 'checkin') {
+            document.getElementById('tab-checkin').classList.remove('hidden');
+            document.getElementById('tab-stats').classList.add('hidden');
+            document.getElementById('tab-checkin-btn').classList.add('active');
+            document.getElementById('tab-stats-btn').classList.remove('active');
+            renderSaturdayVerticalList();
+        } else {
+            document.getElementById('tab-checkin').classList.add('hidden');
+            document.getElementById('tab-stats').classList.remove('hidden');
+            document.getElementById('tab-checkin-btn').classList.remove('active');
+            document.getElementById('tab-stats-btn').classList.add('active');
+            renderStats(); 
+        }
+    }
+
+    function sortMembers() {
+        if (!Array.isArray(globalMembers) || globalMembers.length === 0) {
+            globalMembers = [...DEFAULT_MEMBERS];
+        }
+        globalMembers.sort((a, b) => (a.name || "").localeCompare(b.name || "", 'ko'));
+    }
+
+    function saveLocally() {
+        sortMembers();
+        localStorage.setItem('todal_members_v22', JSON.stringify(globalMembers));
+        localStorage.setItem('todal_logs_v22', JSON.stringify(globalLogs));
+    }
+
+    async function loadDataFromSheet() {
+        try {
+            const res = await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: "getData" })
+            });
+            const resData = await res.json();
+            if (resData.status === "success") {
+                if (resData.members && Array.isArray(resData.members) && resData.members.length > 0) {
+                    globalMembers = resData.members;
+                }
+                if (resData.logs && Array.isArray(resData.logs)) {
+                    const uniqueMap = new Map();
+                    resData.logs.forEach(l => {
+                        if (l.name && l.date && Number(l.score) > 0) {
+                            const key = String(l.date).trim() + "_" + String(l.name).trim();
+                            uniqueMap.set(key, l);
+                        }
+                    });
+                    globalLogs = Array.from(uniqueMap.values());
+                }
+                saveLocally();
+            }
+        } catch (e) {
+            console.error("구글 시트 로드 실패, 로컬 데이터 유지");
+        }
+        sortMembers();
+    }
+
+    async function saveDataToSheet() {
+        sortMembers();
+        const uniqueMap = new Map();
+        globalLogs.forEach(l => {
+            if (l.name && l.date && Number(l.score) > 0) {
+                const key = String(l.date).trim() + "_" + String(l.name).trim();
+                uniqueMap.set(key, l);
+            }
+        });
+        globalLogs = Array.from(uniqueMap.values());
+        saveLocally();
+
+        try {
+            await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: "saveData",
+                    members: globalMembers,
+                    logs: globalLogs
+                })
+            });
+        } catch (e) {
+            console.error("구글 시트 저장 실패");
+        }
+    }
+
+    function toggleAdminMode() {
+        const panel = document.getElementById('admin-panel');
+        if (panel.classList.contains('hidden')) {
+            const pwd = prompt("관리자 비밀번호를 입력하세요:");
+            if (pwd === adminPassword) {
+                panel.classList.remove('hidden');
+                renderAdminMemberList();
+                panel.scrollIntoView({ behavior: 'smooth' });
+            } else if (pwd !== null) {
+                alert("비밀번호가 틀렸습니다!");
+            }
+        } else {
+            panel.classList.add('hidden');
+        }
+    }
+
+    function renderAdminMemberList() {
+        const listDiv = document.getElementById('admin-member-list');
+        listDiv.innerHTML = '';
+        globalMembers.forEach((member, index) => {
+            const row = document.createElement('div');
+            row.className = 'admin-member-row';
+            row.innerHTML = `
+                <span>${index + 1}. ${member.name}</span>
+                <button onclick="removeMember(${index})">삭제</button>
+            `;
+            listDiv.appendChild(row);
+        });
+    }
+
+    async function addMember() {
+        const input = document.getElementById('new-member-name');
+        const name = input.value.trim();
+        if (!name) { alert("회원 이름을 입력해주세요."); return; }
+        if (globalMembers.some(m => m.name === name)) { alert("이미 존재하는 회원 이름입니다."); return; }
+        
+        globalMembers.push({ name: name });
+        sortMembers();
+        renderAdminMemberList();
+        renderSaturdayVerticalList();
+        renderStats();
+        await saveDataToSheet();
+        input.value = '';
+        alert(`[${name}] 회원이 추가되었습니다.`);
+    }
+
+    async function removeMember(index) {
+        const targetName = globalMembers[index].name;
+        if (!confirm(`[${targetName}] 회원을 정말 삭제하시겠습니까?`)) return;
+        
+        globalMembers.splice(index, 1);
+        sortMembers();
+        renderAdminMemberList();
+        renderSaturdayVerticalList();
+        renderStats();
+        await saveDataToSheet();
+        alert(`[${targetName}] 회원이 삭제되었습니다.`);
+    }
+
+    function renderCheckinList() {
+        const listDiv = document.getElementById('member-list');
+        if (!listDiv) return;
+        listDiv.innerHTML = '';
+
+        if (!globalMembers || globalMembers.length === 0) {
+            globalMembers = [...DEFAULT_MEMBERS];
+        }
+
+        const dayAttendance = {};
+        globalLogs.forEach(log => {
+            if (log.date === selectedDateStr && Number(log.score) > 0) {
+                dayAttendance[String(log.name).trim()] = Number(log.score);
+            }
+        });
+
+        globalMembers.forEach((member, index) => {
+            const name = String(member.name || "").trim();
+            if (!name) return;
+            
+            const score = dayAttendance[name] || 0;
+            const isChecked = score > 0;
+
+            const card = document.createElement('div');
+            let cardClass = 'member-card';
+            if (isChecked) {
+                if (score === 10) cardClass += ' checked-10';
+                else if (score === 5) cardClass += ' checked-5';
+                else if (score === 99) cardClass += ' checked-comp';
+            }
+            card.className = cardClass;
+            
+            let badgeHtml = '';
+            if (isChecked) {
+                if (score === 10) badgeHtml = '<span class="badge" style="background:#059669; color:white;">🟢 출석</span>';
+                else if (score === 5) badgeHtml = '<span class="badge" style="background:#0284c7; color:white;">🔵 지각</span>';
+                else if (score === 99) badgeHtml = '<span class="badge" style="background:#d97706; color:white;">🟠 대회</span>';
+            }
+
+            const info = document.createElement('div');
+            info.className = 'member-info';
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 'member-name';
+            nameDiv.innerHTML = `<span class="member-index">${index + 1}.</span> ${name}`;
+            const badgeDiv = document.createElement('div');
+            badgeDiv.innerHTML = badgeHtml;
+            info.appendChild(nameDiv);
+            info.appendChild(badgeDiv);
+
+            const buttonGroup = document.createElement('div');
+            buttonGroup.className = 'btn-group';
+
+            const makeButton = (label, buttonScore, className) => {
+                const button = document.createElement('button');
+                button.textContent = label;
+                button.className = className || '';
+                if (isChecked) {
+                    button.disabled = true;
+                    button.style.opacity = '0.35';
+                    button.style.cursor = 'not-allowed';
+                }
+                button.addEventListener('click', () => handleCheckIn(name, buttonScore));
+                buttonGroup.appendChild(button);
+            };
+
+            makeButton('출석(+10)', 10, score === 10 ? 'selected-10' : '');
+            makeButton('지각(+5)', 5, score === 5 ? 'selected-5' : '');
+            makeButton('대회(+10)', 99, score === 99 ? 'selected-comp' : '');
+
+            if (isChecked) {
+                const modifyBtn = document.createElement('button');
+                modifyBtn.textContent = '수정';
+                modifyBtn.className = 'btn-modify';
+                modifyBtn.addEventListener('click', () => handleCheckIn(name, 0));
+                buttonGroup.appendChild(modifyBtn);
+            }
+
+            card.appendChild(info);
+            card.appendChild(buttonGroup);
+            listDiv.appendChild(card);
+        });
+    }
+
+    async function handleCheckIn(name, score) {
+        const cleanName = String(name).trim();
+        const targetDate = selectedDateStr;
+
+        if (!targetDate || targetDate === "" || targetDate === "undefined") {
+            alert("날짜가 올바르지 않습니다. 다시 선택해주세요.");
+            return;
+        }
+
+        if (score === 0) {
+            if (!confirm(`[${targetDate.replace(/^\d{4}년\s*/, '')}] [${cleanName}]님의 출석 기록을 취소하시겠습니까?`)) return;
+        } else {
+            const label = score === 5 ? '지각(+5점)' : score === 99 ? '대회(+10점)' : '출석(+10점)';
+            if (!confirm(`[${targetDate.replace(/^\d{4}년\s*/, '')}] [${cleanName}]님을 [${label}]으로 기록하시겠습니까?`)) return;
+        }
+
+        globalLogs = globalLogs.filter(log => !(String(log.name).trim() === cleanName && String(log.date).trim() === targetDate));
+        
+        if (score > 0) {
+            let mMatch = targetDate.match(/(\d+)월/);
+            globalLogs.push({
+                name: cleanName,
+                date: targetDate,
+                score: score,
+                month: mMatch ? parseInt(mMatch[1], 10) : 0
+            });
+        }
+
+        renderCheckinList();
+        renderStats();
+        await saveDataToSheet();
+    }
+
+    function renderStats() {
+        const statsDiv = document.getElementById('stats-list');
+        if (!statsDiv) return;
+        statsDiv.innerHTML = '';
+
+        const statsMap = {};
+        globalMembers.forEach(m => {
+            statsMap[String(m.name).trim()] = { score: 0, att: 0, tardy: 0, comp: 0, monthly: {} };
+        });
+
+        const uniqueLogs = new Map();
+        globalLogs.forEach(log => {
+            if (log.name && log.date && Number(log.score) > 0) {
+                const key = String(log.date).trim() + "_" + String(log.name).trim();
+                uniqueLogs.set(key, log);
+            }
+        });
+
+        uniqueLogs.forEach(log => {
+            const name = String(log.name).trim();
+            const score = Number(log.score);
+            let m = Number(log.month) || 0;
+            if (!m) {
+                const mMatch = String(log.date).match(/(\d+)월/);
+                if (mMatch) m = parseInt(mMatch[1], 10);
+            }
+
+            if (!statsMap[name]) {
+                statsMap[name] = { score: 0, att: 0, tardy: 0, comp: 0, monthly: {} };
+            }
+
+            const points = (score === 99) ? 10 : score;
+            statsMap[name].score += points;
+            
+            if (score === 10) statsMap[name].att += 1;
+            else if (score === 5) statsMap[name].tardy += 1;
+            else if (score === 99) statsMap[name].comp += 1;
+
+            if (m >= 1 && m <= 12) {
+                if (!statsMap[name].monthly[m]) statsMap[name].monthly[m] = { score: 0, att: 0, tardy: 0, comp: 0 };
+                statsMap[name].monthly[m].score += points;
+                if (score === 10) statsMap[name].monthly[m].att += 1;
+                else if (score === 5) statsMap[name].monthly[m].tardy += 1;
+                else if (score === 99) statsMap[name].monthly[m].comp += 1;
+            }
+        });
+
+        let displayList = [];
+        Object.keys(statsMap).forEach(name => {
+            const data = statsMap[name];
+            let targetScore = 0, targetAtt = 0, targetTardy = 0, targetComp = 0;
+
+            if (statsSelectedMonth === "전체") {
+                targetScore = data.score;
+                targetAtt = data.att;
+                targetTardy = data.tardy;
+                targetComp = data.comp;
+            } else {
+                const mNum = parseInt(statsSelectedMonth.replace(/[^0-9]/g, ""), 10);
+                if (data.monthly[mNum]) {
+                    targetScore = data.monthly[mNum].score;
+                    targetAtt = data.monthly[mNum].att;
+                    targetTardy = data.monthly[mNum].tardy;
+                    targetComp = data.monthly[mNum].comp;
+                }
+            }
+
+            if (targetScore > 0) {
+                displayList.push({ name, score: targetScore, att: targetAtt, tardy: targetTardy, comp: targetComp });
+            }
+        });
+
+        if (displayList.length === 0) {
+            statsDiv.innerHTML = "<div style='text-align:center; padding:35px; color:#94a3b8; font-weight:700;'>해당 기간에 출석 기록이 있는 회원이 없습니다.</div>";
+            return;
+        }
+
+        displayList.sort((a, b) => (b.score !== a.score) ? b.score - a.score : a.name.localeCompare(b.name, 'ko'));
+
+        let currentRank = 1;
+        displayList.forEach((item, index) => {
+            if (index > 0 && item.score < displayList[index - 1].score) currentRank = index + 1;
+            const card = document.createElement('div');
+            card.className = 'rank-card';
+            let rankBadge = (currentRank === 1 ? '🥇 1위' : (currentRank === 2 ? '🥈 2위' : (currentRank === 3 ? '🥉 3위' : `${currentRank}위`)));
+            card.innerHTML = `
+                <div class="rank-number">${rankBadge}</div>
+                <div class="rank-name">${item.name}</div>
+                <div class="rank-detail">출석${item.att}·지각${item.tardy}·대회${item.comp}</div>
+                <div class="rank-score">${item.score}점</div>
+            `;
+            statsDiv.appendChild(card);
+        });
+    }
+
+    async function initApp() {
+        initCheckinMonthButtons();
+        initStatsMonthButtons();
+        sortMembers();
+        renderSaturdayVerticalList();
+        renderStats();
+        
+        await loadDataFromSheet();
+        renderSaturdayVerticalList();
+        renderStats();
+    }
+
+    initApp();
+</script>
+
 </body>
 </html>
-```[cite: 1, 2, 8]
