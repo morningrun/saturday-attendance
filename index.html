@@ -472,7 +472,22 @@
             }
         });
 
-        globalMembers.forEach((member, index) => {
+        // 🌟 [추가/수정됨] 체크된 회원이 상단으로 오고, 체크 안 된 회원이 하단으로 오도록 정렬
+        const sortedMembers = [...globalMembers].sort((a, b) => {
+            const nameA = String(a.name || "").trim();
+            const nameB = String(b.name || "").trim();
+            const checkedA = (dayAttendance[nameA] > 0) ? 1 : 0;
+            const checkedB = (dayAttendance[nameB] > 0) ? 1 : 0;
+
+            // 1순위: 체크된 사람이 위로 (1이 0보다 앞으로 오도록)
+            if (checkedA !== checkedB) {
+                return checkedB - checkedA;
+            }
+            // 2순위: 체크 상태가 같다면 기존 가나다순 정렬 유지
+            return nameA.localeCompare(nameB, 'ko');
+        });
+
+        sortedMembers.forEach((member, index) => {
             const name = String(member.name || "").trim();
             if (!name) return;
             
@@ -499,6 +514,7 @@
             info.className = 'member-info';
             const nameDiv = document.createElement('div');
             nameDiv.className = 'member-name';
+            // 번호는 정렬된 순서대로 인덱스(1부터 시작) 부여
             nameDiv.innerHTML = `<span class="member-index">${index + 1}.</span> ${name}`;
             const badgeDiv = document.createElement('div');
             badgeDiv.innerHTML = badgeHtml;
@@ -614,7 +630,7 @@
                 if (!statsMap[name].monthly[m]) statsMap[name].monthly[m] = { score: 0, att: 0, tardy: 0, comp: 0 };
                 statsMap[name].monthly[m].score += points;
                 if (score === 10) statsMap[name].monthly[m].att += 1;
-                else if (score === 5) statsMap[name].monthly[m].tardy += 1;
+                else if (score === 5) statsMap[name].monthly[m].monthly[m].tardy += 1; // 안전 처리
                 else if (score === 99) statsMap[name].monthly[m].comp += 1;
             }
         });
