@@ -489,7 +489,6 @@
             }
         });
 
-        // 🌟 [그룹별 정렬 순서 정의] 출석(10) -> 대회참석(99) -> 미체크(0)
         const getGroupOrder = (score) => {
             if (score === 10) return 1; // 1순위: 출석
             if (score === 99) return 2; // 2순위: 대회참석
@@ -546,23 +545,36 @@
             const buttonGroup = document.createElement('div');
             buttonGroup.className = 'btn-group';
 
-            const makeButton = (label, buttonScore, className) => {
-                const button = document.createElement('button');
-                button.textContent = label;
-                button.className = className || '';
-                if (isChecked) {
+            if (!isChecked) {
+                // 미체크 상태일 때: 출석, 대회참석 버튼만 표시
+                const makeButton = (label, buttonScore, className) => {
+                    const button = document.createElement('button');
+                    button.textContent = label;
+                    button.className = className || '';
+                    button.addEventListener('click', () => handleCheckIn(name, buttonScore));
+                    buttonGroup.appendChild(button);
+                };
+
+                makeButton('출석 (+10)', 10, '');
+                makeButton('대회참석 (+10)', 99, '');
+            } else {
+                // 체크 완료 상태일 때: 선택된 버튼 강조 + 수정 버튼만 표시
+                const makeSelectedButton = (label, buttonScore, className) => {
+                    const button = document.createElement('button');
+                    button.textContent = label;
+                    button.className = className || '';
                     button.disabled = true;
-                    button.style.opacity = '0.35';
+                    button.style.opacity = '0.4';
                     button.style.cursor = 'not-allowed';
+                    buttonGroup.appendChild(button);
+                };
+
+                if (score === 10) {
+                    makeSelectedButton('출석 (+10)', 10, 'selected-10');
+                } else if (score === 99) {
+                    makeSelectedButton('대회참석 (+10)', 99, 'selected-comp');
                 }
-                button.addEventListener('click', () => handleCheckIn(name, buttonScore));
-                buttonGroup.appendChild(button);
-            };
 
-            makeButton('출석 (+10)', 10, score === 10 ? 'selected-10' : '');
-            makeButton('대회참석 (+10)', 99, score === 99 ? 'selected-comp' : '');
-
-            if (isChecked) {
                 const modifyBtn = document.createElement('button');
                 modifyBtn.textContent = '수정';
                 modifyBtn.className = 'btn-modify';
@@ -640,7 +652,7 @@
                 statsMap[name] = { score: 0, att: 0, comp: 0, monthly: {} };
             }
 
-            const points = 10; // 출석이든 대회참석이든 모두 10점
+            const points = 10;
             statsMap[name].score += points;
             
             if (score === 10) statsMap[name].att += 1;
