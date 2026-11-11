@@ -21,7 +21,6 @@
             --accent: #2563eb;
             --success: #059669;
             --warning: #d97706;
-            --info: #0284c7;
             --danger: #dc2626;
             --bg-color: #f1f5f9;
             --card-bg: #ffffff;
@@ -54,7 +53,6 @@
 
         .member-card { display: flex; flex-direction: column; padding: 8px 10px; margin-bottom: 6px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; gap: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
         .member-card.checked-10 { background-color: #ecfdf5 !important; border-color: #34d399 !important; border-left: 5px solid var(--success) !important; }
-        .member-card.checked-5  { background-color: #f0f9ff !important; border-color: #38bdf8 !important; border-left: 5px solid var(--info) !important; }
         .member-card.checked-comp { background-color: #fffbeb !important; border-color: #fbbf24 !important; border-left: 5px solid var(--warning) !important; }
 
         .member-info { display: flex; justify-content: space-between; align-items: center; }
@@ -62,11 +60,10 @@
         .member-index { font-size: 0.75rem; color: #64748b; font-weight: 700; }
         .badge { font-size: 0.75rem; font-weight: 800; padding: 2px 8px; border-radius: 5px; }
         
-        .btn-group { display: flex; gap: 5px; width: 100%; }
-        .btn-group button { flex: 1; padding: 7px 2px; font-size: 0.78rem; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-weight: 700; background: #f8fafc; color: var(--text-sub); text-align: center; }
+        .btn-group { display: flex; gap: 6px; width: 100%; }
+        .btn-group button { flex: 1; padding: 9px 4px; font-size: 0.82rem; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-weight: 700; background: #f8fafc; color: var(--text-sub); text-align: center; }
         
         button.selected-10 { background: var(--success) !important; color: white !important; border-color: var(--success) !important; font-weight: 800; }
-        button.selected-5  { background: var(--info) !important; color: white !important; border-color: var(--info) !important; font-weight: 800; }
         button.selected-comp { background: var(--warning) !important; color: white !important; border-color: var(--warning) !important; font-weight: 800; }
         button.btn-modify { background: #fee2e2 !important; color: var(--danger) !important; border-color: #fca5a5 !important; font-weight: 800; }
 
@@ -126,7 +123,6 @@
     <div id="admin-panel" class="admin-panel hidden">
         <h3>🔒 관리자 설정 및 회원 관리</h3>
         
-        <!-- 비밀번호 변경 구역 -->
         <h3 style="margin-top:6px;">🔑 관리자 비밀번호 변경</h3>
         <div class="admin-input-group">
             <input type="password" id="new-admin-password" placeholder="새 비밀번호 입력">
@@ -493,11 +489,11 @@
             }
         });
 
+        // 🌟 [그룹별 정렬 순서 정의] 출석(10) -> 대회참석(99) -> 미체크(0)
         const getGroupOrder = (score) => {
             if (score === 10) return 1; // 1순위: 출석
-            if (score === 5)  return 2; // 2순위: 지각
-            if (score === 99) return 3; // 3순위: 대회
-            return 4;                   // 4순위: 미체크
+            if (score === 99) return 2; // 2순위: 대회참석
+            return 3;                   // 3순위: 미체크
         };
 
         const sortedMembers = [...globalMembers].sort((a, b) => {
@@ -527,7 +523,6 @@
             let cardClass = 'member-card';
             if (isChecked) {
                 if (score === 10) cardClass += ' checked-10';
-                else if (score === 5) cardClass += ' checked-5';
                 else if (score === 99) cardClass += ' checked-comp';
             }
             card.className = cardClass;
@@ -535,8 +530,7 @@
             let badgeHtml = '';
             if (isChecked) {
                 if (score === 10) badgeHtml = '<span class="badge" style="background:#059669; color:white;">🟢 출석</span>';
-                else if (score === 5) badgeHtml = '<span class="badge" style="background:#0284c7; color:white;">🔵 지각</span>';
-                else if (score === 99) badgeHtml = '<span class="badge" style="background:#d97706; color:white;">🟠 대회</span>';
+                else if (score === 99) badgeHtml = '<span class="badge" style="background:#d97706; color:white;">🟠 대회참석</span>';
             }
 
             const info = document.createElement('div');
@@ -565,9 +559,8 @@
                 buttonGroup.appendChild(button);
             };
 
-            makeButton('출석(+10)', 10, score === 10 ? 'selected-10' : '');
-            makeButton('지각(+5)', 5, score === 5 ? 'selected-5' : '');
-            makeButton('대회(+10)', 99, score === 99 ? 'selected-comp' : '');
+            makeButton('출석 (+10)', 10, score === 10 ? 'selected-10' : '');
+            makeButton('대회참석 (+10)', 99, score === 99 ? 'selected-comp' : '');
 
             if (isChecked) {
                 const modifyBtn = document.createElement('button');
@@ -595,7 +588,7 @@
         if (score === 0) {
             if (!confirm(`[${targetDate.replace(/^\d{4}년\s*/, '')}] [${cleanName}]님의 출석 기록을 취소하시겠습니까?`)) return;
         } else {
-            const label = score === 5 ? '지각(+5점)' : score === 99 ? '대회(+10점)' : '출석(+10점)';
+            const label = score === 99 ? '대회참석(+10점)' : '출석(+10점)';
             if (!confirm(`[${targetDate.replace(/^\d{4}년\s*/, '')}] [${cleanName}]님을 [${label}]으로 기록하시겠습니까?`)) return;
         }
 
@@ -623,7 +616,7 @@
 
         const statsMap = {};
         globalMembers.forEach(m => {
-            statsMap[String(m.name).trim()] = { score: 0, att: 0, tardy: 0, comp: 0, monthly: {} };
+            statsMap[String(m.name).trim()] = { score: 0, att: 0, comp: 0, monthly: {} };
         });
 
         const uniqueLogs = new Map();
@@ -644,23 +637,21 @@
             }
 
             if (!statsMap[name]) {
-                statsMap[name] = { score: 0, att: 0, tardy: 0, comp: 0, monthly: {} };
+                statsMap[name] = { score: 0, att: 0, comp: 0, monthly: {} };
             }
 
-            const points = (score === 99) ? 10 : score;
+            const points = 10; // 출석이든 대회참석이든 모두 10점
             statsMap[name].score += points;
             
             if (score === 10) statsMap[name].att += 1;
-            else if (score === 5) statsMap[name].tardy += 1;
             else if (score === 99) statsMap[name].comp += 1;
 
             if (m >= 1 && m <= 12) {
                 if (!statsMap[name].monthly[m]) {
-                    statsMap[name].monthly[m] = { score: 0, att: 0, tardy: 0, comp: 0 };
+                    statsMap[name].monthly[m] = { score: 0, att: 0, comp: 0 };
                 }
                 statsMap[name].monthly[m].score += points;
                 if (score === 10) statsMap[name].monthly[m].att += 1;
-                else if (score === 5) statsMap[name].monthly[m].tardy += 1;
                 else if (score === 99) statsMap[name].monthly[m].comp += 1;
             }
         });
@@ -668,25 +659,23 @@
         let displayList = [];
         Object.keys(statsMap).forEach(name => {
             const data = statsMap[name];
-            let targetScore = 0, targetAtt = 0, targetTardy = 0, targetComp = 0;
+            let targetScore = 0, targetAtt = 0, targetComp = 0;
 
             if (statsSelectedMonth === "전체") {
                 targetScore = data.score;
                 targetAtt = data.att;
-                targetTardy = data.tardy;
                 targetComp = data.comp;
             } else {
                 const mNum = parseInt(statsSelectedMonth.replace(/[^0-9]/g, ""), 10);
                 if (data.monthly[mNum]) {
                     targetScore = data.monthly[mNum].score;
                     targetAtt = data.monthly[mNum].att;
-                    targetTardy = data.monthly[mNum].tardy;
                     targetComp = data.monthly[mNum].comp;
                 }
             }
 
             if (targetScore > 0) {
-                displayList.push({ name, score: targetScore, att: targetAtt, tardy: targetTardy, comp: targetComp });
+                displayList.push({ name, score: targetScore, att: targetAtt, comp: targetComp });
             }
         });
 
@@ -706,7 +695,7 @@
             card.innerHTML = `
                 <div class="rank-number">${rankBadge}</div>
                 <div class="rank-name">${item.name}</div>
-                <div class="rank-detail">출석${item.att}·지각${item.tardy}·대회${item.comp}</div>
+                <div class="rank-detail">출석${item.att}·대회${item.comp}</div>
                 <div class="rank-score">${item.score}점</div>
             `;
             statsDiv.appendChild(card);
