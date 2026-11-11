@@ -65,7 +65,7 @@
         
         button.selected-10 { background: var(--success) !important; color: white !important; border-color: var(--success) !important; font-weight: 800; }
         button.selected-comp { background: var(--warning) !important; color: white !important; border-color: var(--warning) !important; font-weight: 800; }
-        button.btn-modify { background: #fee2e2 !important; color: var(--danger) !important; border-color: #fca5a5 !important; font-weight: 800; }
+        button.btn-modify { background: #fee2e2 !important; color: var(--danger) !important; border-color: #fca5a5 !important; font-weight: 800; flex: 1; }
 
         .rank-card { display: flex; align-items: center; justify-content: space-between; padding: 10px 10px; margin-bottom: 7px; background: #f8fafc; border: 1.5px solid var(--border); border-radius: 10px; gap: 4px; }
         .rank-number { font-weight: 800; color: var(--accent); width: 38px; font-size: 0.82rem; white-space: nowrap; flex-shrink: 0; }
@@ -546,7 +546,7 @@
             buttonGroup.className = 'btn-group';
 
             if (!isChecked) {
-                // 🌟 미체크 회원: 출석(+10), 대회참석(+10) 버튼만 정확히 생성
+                // 1️⃣ 아직 체크하지 않은 사람: [출석(+10)], [대회참석(+10)] 버튼 2개만 표시
                 const btn1 = document.createElement('button');
                 btn1.textContent = '출석 (+10)';
                 btn1.addEventListener('click', () => handleCheckIn(name, 10));
@@ -558,7 +558,7 @@
                 buttonGroup.appendChild(btn1);
                 buttonGroup.appendChild(btn2);
             } else {
-                // 🌟 체크 완료 회원: 선택된 버튼 표시 + 수정 버튼 표시
+                // 2️⃣ 이미 체크한 사람: [선택된 항목 표시], [수정] 버튼 2개만 표시
                 const selectedBtn = document.createElement('button');
                 selectedBtn.textContent = (score === 10) ? '출석 (+10)' : '대회참석 (+10)';
                 selectedBtn.className = (score === 10) ? 'selected-10' : 'selected-comp';
