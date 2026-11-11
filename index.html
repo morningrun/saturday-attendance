@@ -125,7 +125,15 @@
     <!-- 관리자 회원 관리 패널 -->
     <div id="admin-panel" class="admin-panel hidden">
         <h3>🔒 관리자 설정 및 회원 관리</h3>
-        <h3 style="margin-top:6px;">👥 회원 추가/삭제</h3>
+        
+        <!-- 비밀번호 변경 구역 -->
+        <h3 style="margin-top:6px;">🔑 관리자 비밀번호 변경</h3>
+        <div class="admin-input-group">
+            <input type="password" id="new-admin-password" placeholder="새 비밀번호 입력">
+            <button onclick="changePassword()" style="background:#059669;">비밀번호 변경</button>
+        </div>
+
+        <h3 style="margin-top:14px;">👥 회원 추가/삭제</h3>
         <div class="admin-input-group">
             <input type="text" id="new-member-name" placeholder="추가할 회원 이름 입력">
             <button onclick="addMember()">회원 추가</button>
@@ -155,7 +163,7 @@
 
     let globalMembers = JSON.parse(localStorage.getItem('todal_members_v22')) || [...DEFAULT_MEMBERS];
     let globalLogs = JSON.parse(localStorage.getItem('todal_logs_v22')) || [];
-    let adminPassword = "1234";
+    let adminPassword = localStorage.getItem('todal_admin_pwd') || "1234";
 
     let selectedDateStr = localStorage.getItem('todal_selected_date') || "";
     let checkinSelectedMonth = localStorage.getItem('todal_selected_month') || (String(new Date().getMonth() + 1) + "월");
@@ -413,6 +421,22 @@
         }
     }
 
+    // 비밀번호 변경 함수
+    function changePassword() {
+        const input = document.getElementById('new-admin-password');
+        const newPwd = input.value.trim();
+        if (!newPwd) {
+            alert("새 비밀번호를 입력해주세요.");
+            return;
+        }
+        if (confirm("관리자 비밀번호를 정말 변경하시겠습니까?")) {
+            adminPassword = newPwd;
+            localStorage.setItem('todal_admin_pwd', newPwd);
+            input.value = '';
+            alert("관리자 비밀번호가 성공적으로 변경되었습니다.");
+        }
+    }
+
     function renderAdminMemberList() {
         const listDiv = document.getElementById('admin-member-list');
         listDiv.innerHTML = '';
@@ -472,13 +496,11 @@
             }
         });
 
-        // 🌟 [그룹별 정렬 순서 정의]
-        // 출석(10) -> 지각(5) -> 대회(99) -> 미체크(0) 순으로 그룹 번호 부여
         const getGroupOrder = (score) => {
             if (score === 10) return 1; // 1순위: 출석
             if (score === 5)  return 2; // 2순위: 지각
             if (score === 99) return 3; // 3순위: 대회
-            return 4;                   // 4순위: 미체크 (맨 아래)
+            return 4;                   // 4순위: 미체크
         };
 
         const sortedMembers = [...globalMembers].sort((a, b) => {
@@ -491,11 +513,9 @@
             const groupA = getGroupOrder(scoreA);
             const groupB = getGroupOrder(scoreB);
 
-            // 1순위: 출석/지각/대회/미체크 그룹 순서대로 정렬
             if (groupA !== groupB) {
                 return groupA - groupB;
             }
-            // 2순위: 같은 그룹 안에서는 가나다순 정렬 유지
             return nameA.localeCompare(nameB, 'ko');
         });
 
