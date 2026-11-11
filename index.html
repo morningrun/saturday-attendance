@@ -19,7 +19,7 @@
         :root {
             --primary: #0f172a;
             --accent: #2563eb;
-            --success: #059669;    /* 운동 (10점) - 녹색 */
+            --success: #059669;    /* 참석(운동) (10점) - 녹색 */
             --info: #0284c7;       /* 참석 (5점) - 파란색 */
             --warning: #d97706;    /* 대회 (10점) - 주황색 */
             --danger: #dc2626;
@@ -73,7 +73,7 @@
         .rank-card { display: flex; align-items: center; justify-content: space-between; padding: 10px 10px; margin-bottom: 7px; background: #f8fafc; border: 1.5px solid var(--border); border-radius: 10px; gap: 4px; }
         .rank-number { font-weight: 800; color: var(--accent); width: 38px; font-size: 0.82rem; white-space: nowrap; flex-shrink: 0; }
         .rank-name { font-weight: 800; width: 52px; font-size: 0.9rem; color: var(--primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
-        .rank-detail { font-size: 0.65rem; color: var(--text-sub); font-weight: 700; text-align: center; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .rank-detail { font-size: 0.62rem; color: var(--text-sub); font-weight: 700; text-align: center; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .rank-score { font-weight: 800; width: 44px; font-size: 0.95rem; color: var(--success); text-align: right; white-space: nowrap; flex-shrink: 0; }
 
         .admin-panel { background: var(--primary); color: white; padding: 14px; border-radius: 12px; margin-top: 20px; margin-bottom: 12px; }
@@ -160,10 +160,9 @@
         { name: "조성국" }, { name: "최순규" }, { name: "최잔디" }, { name: "황연성" }
     ];
 
-    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v23')) || [...DEFAULT_MEMBERS];
+    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v24')) || [...DEFAULT_MEMBERS];
     
-    // 유효한 점수 로그만 필터링 (운동: 10, 참석: 5, 대회: 99)
-    let rawLogs = JSON.parse(localStorage.getItem('todal_logs_v23')) || [];
+    let rawLogs = JSON.parse(localStorage.getItem('todal_logs_v24')) || [];
     let globalLogs = rawLogs.filter(l => [10, 5, 99].includes(Number(l.score)));
 
     let adminPassword = localStorage.getItem('todal_admin_pwd') || "1234";
@@ -348,8 +347,8 @@
     function saveLocally() {
         sortMembers();
         globalLogs = globalLogs.filter(l => [10, 5, 99].includes(Number(l.score)));
-        localStorage.setItem('todal_members_v23', JSON.stringify(globalMembers));
-        localStorage.setItem('todal_logs_v23', JSON.stringify(globalLogs));
+        localStorage.setItem('todal_members_v24', JSON.stringify(globalMembers));
+        localStorage.setItem('todal_logs_v24', JSON.stringify(globalLogs));
     }
 
     async function loadDataFromSheet() {
@@ -500,7 +499,7 @@
             }
         });
 
-        // 정렬 순서: 운동(10) -> 참석(5) -> 대회(99) -> 미체크(0)
+        // 정렬 순서: 참석(운동)(10) -> 참석(5) -> 대회(99) -> 미체크(0)
         const getGroupOrder = (score) => {
             if (score === 10) return 1;
             if (score === 5) return 2;
@@ -542,7 +541,7 @@
             
             let badgeHtml = '';
             if (isChecked) {
-                if (score === 10) badgeHtml = '<span class="badge" style="background:#059669; color:white;">🟢 운동</span>';
+                if (score === 10) badgeHtml = '<span class="badge" style="background:#059669; color:white;">🟢 참석(운동)</span>';
                 else if (score === 5) badgeHtml = '<span class="badge" style="background:#0284c7; color:white;">🔵 참석</span>';
                 else if (score === 99) badgeHtml = '<span class="badge" style="background:#d97706; color:white;">🟠 대회</span>';
             }
@@ -561,9 +560,9 @@
             buttonGroup.className = 'btn-group';
 
             if (!isChecked) {
-                // 1️⃣ 클릭 안 한 사람: 운동(+10), 참석(+5), 대회(+10) 회색 버튼 3개 표시
+                // 1️⃣ 클릭 안 한 사람: 참석(운동)(+10), 참석(+5), 대회(+10) 회색 버튼 3개 표시
                 const btn1 = document.createElement('button');
-                btn1.textContent = '운동 (+10)';
+                btn1.textContent = '참석(운동) (+10)';
                 btn1.addEventListener('click', () => handleCheckIn(name, 10));
                 
                 const btn2 = document.createElement('button');
@@ -581,7 +580,7 @@
                 // 2️⃣ 클릭한 사람: 내가 누른 항목만 색상 표시 + 수정 버튼 표시
                 const selectedBtn = document.createElement('button');
                 if (score === 10) {
-                    selectedBtn.textContent = '운동 (+10)';
+                    selectedBtn.textContent = '참석(운동) (+10)';
                     selectedBtn.className = 'selected-10';
                 } else if (score === 5) {
                     selectedBtn.textContent = '참석 (+5)';
@@ -621,7 +620,7 @@
         if (score === 0) {
             if (!confirm(`[${targetDate.replace(/^\d{4}년\s*/, '')}] [${cleanName}]님의 기록을 취소하시겠습니까?`)) return;
         } else {
-            let label = '운동(+10점)';
+            let label = '참석(운동)(+10점)';
             if (score === 5) label = '참석(+5점)';
             else if (score === 99) label = '대회(+10점)';
             if (!confirm(`[${targetDate.replace(/^\d{4}년\s*/, '')}] [${cleanName}]님을 [${label}]으로 기록하시겠습니까?`)) return;
@@ -676,7 +675,6 @@
                 statsMap[name] = { score: 0, workout: 0, attend: 0, comp: 0, monthly: {} };
             }
 
-            // 점수 부여: 운동(10점), 참석(5점), 대회(10점)
             let points = 0;
             if (score === 10) { points = 10; statsMap[name].workout += 1; }
             else if (score === 5) { points = 5; statsMap[name].attend += 1; }
@@ -736,7 +734,7 @@
             card.innerHTML = `
                 <div class="rank-number">${rankBadge}</div>
                 <div class="rank-name">${item.name}</div>
-                <div class="rank-detail">운동${item.workout}·참석${item.attend}·대회${item.comp}</div>
+                <div class="rank-detail">참석(운동)${item.workout}·참석${item.attend}·대회${item.comp}</div>
                 <div class="rank-score">${item.score}점</div>
             `;
             statsDiv.appendChild(card);
