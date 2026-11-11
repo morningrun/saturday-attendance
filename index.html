@@ -65,7 +65,7 @@
         
         button.selected-10 { background: var(--success) !important; color: white !important; border-color: var(--success) !important; font-weight: 800; }
         button.selected-comp { background: var(--warning) !important; color: white !important; border-color: var(--warning) !important; font-weight: 800; }
-        button.btn-modify { background: #fee2e2 !important; color: var(--danger) !important; border-color: #fca5a5 !important; font-weight: 800; flex: 1; }
+        button.btn-modify { background: #fee2e2 !important; color: var(--danger) !important; border-color: #fca5a5 !important; font-weight: 800; }
 
         .rank-card { display: flex; align-items: center; justify-content: space-between; padding: 10px 10px; margin-bottom: 7px; background: #f8fafc; border: 1.5px solid var(--border); border-radius: 10px; gap: 4px; }
         .rank-number { font-weight: 800; color: var(--accent); width: 38px; font-size: 0.82rem; white-space: nowrap; flex-shrink: 0; }
@@ -482,9 +482,10 @@
             globalMembers = [...DEFAULT_MEMBERS];
         }
 
+        // 🌟 현재 선택된 날짜에 기록된 로그만 정확하게 추출
         const dayAttendance = {};
         globalLogs.forEach(log => {
-            if (log.date === selectedDateStr && Number(log.score) > 0) {
+            if (String(log.date).trim() === String(selectedDateStr).trim() && Number(log.score) > 0) {
                 dayAttendance[String(log.name).trim()] = Number(log.score);
             }
         });
@@ -515,8 +516,9 @@
             const name = String(member.name || "").trim();
             if (!name) return;
             
+            // 🌟 명확하게 당일 점수가 있는 경우에만 체크된 것으로 판별
             const score = dayAttendance[name] || 0;
-            const isChecked = score > 0;
+            const isChecked = (score === 10 || score === 99);
 
             const card = document.createElement('div');
             let cardClass = 'member-card';
@@ -546,7 +548,7 @@
             buttonGroup.className = 'btn-group';
 
             if (!isChecked) {
-                // 1️⃣ 아직 체크하지 않은 사람: [출석(+10)], [대회참석(+10)] 버튼 2개만 표시
+                // 1️⃣ 체크 안 한 사람: 출석, 대회참석 버튼만 회색 기본 스타일로 표시
                 const btn1 = document.createElement('button');
                 btn1.textContent = '출석 (+10)';
                 btn1.addEventListener('click', () => handleCheckIn(name, 10));
@@ -558,7 +560,7 @@
                 buttonGroup.appendChild(btn1);
                 buttonGroup.appendChild(btn2);
             } else {
-                // 2️⃣ 이미 체크한 사람: [선택된 항목 표시], [수정] 버튼 2개만 표시
+                // 2️⃣ 체크 완료한 사람: 선택된 버튼 + 수정 버튼 표시
                 const selectedBtn = document.createElement('button');
                 selectedBtn.textContent = (score === 10) ? '출석 (+10)' : '대회참석 (+10)';
                 selectedBtn.className = (score === 10) ? 'selected-10' : 'selected-comp';
