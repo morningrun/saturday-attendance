@@ -54,11 +54,13 @@
 
         .saturday-list-box { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 10px; margin-bottom: 12px; }
         .saturday-list-title { font-size: 0.88rem; font-weight: 800; color: var(--primary); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-        .saturday-vertical-group { display: flex; flex-direction: column; gap: 5px; max-height: 160px; overflow-y: auto; }
+        .saturday-vertical-group { display: flex; flex-direction: column; gap: 5px; max-height: 220px; overflow-y: auto; }
         
-        .saturday-item-btn { padding: 9px 12px; background: #ffffff; border: 1px solid var(--border); border-radius: 8px; font-size: 0.85rem; font-weight: 700; color: var(--primary); cursor: pointer; text-align: left; display: flex; justify-content: space-between; align-items: center; }
+        .saturday-item-btn { padding: 9px 12px; background: #ffffff; border: 1px solid var(--border); border-radius: 8px; font-size: 0.8rem; font-weight: 700; color: var(--primary); cursor: pointer; text-align: left; display: flex; justify-content: space-between; align-items: center; }
         .saturday-item-btn.active { background: #eff6ff; color: var(--accent); border: 2px solid var(--accent); }
         .saturday-item-btn.disabled { background: #f1f5f9; color: #94a3b8; border-color: var(--border); cursor: not-allowed; opacity: 0.7; }
+        .saturday-stat-badge { font-size: 0.72rem; font-weight: 700; color: #64748b; background: #e2e8f0; padding: 2px 6px; border-radius: 4px; }
+        .saturday-item-btn.active .saturday-stat-badge { background: #dbeafe; color: var(--accent); }
 
         .member-card { display: flex; flex-direction: column; padding: 8px 10px; margin-bottom: 6px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; gap: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
         .member-card.checked-10 { background-color: #ecfdf5 !important; border-color: #34d399 !important; border-left: 5px solid var(--success) !important; }
@@ -301,6 +303,22 @@
             selectedDateStr = defaultDate;
         }
 
+        // 해당 날짜별 출석 인원 계산 맵 생성
+        const dateStatsMap = {};
+        globalLogs.forEach(log => {
+            const dStr = String(log.date).trim();
+            const sNum = Number(log.score);
+            if ([10, 5, 99].includes(sNum)) {
+                if (!dateStatsMap[dStr]) {
+                    dateStatsMap[dStr] = { workout: 0, attend: 0, comp: 0, total: 0 };
+                }
+                if (sNum === 10) dateStatsMap[dStr].workout += 1;
+                else if (sNum === 5) dateStatsMap[dStr].attend += 1;
+                else if (sNum === 99) dateStatsMap[dStr].comp += 1;
+                dateStatsMap[dStr].total += 1;
+            }
+        });
+
         filteredSaturdays.forEach(dStr => {
             const btn = document.createElement('button');
             const cleanDateStr = dStr.replace(/년|월/g, '-').replace(/일.*/, '').trim();
@@ -309,14 +327,17 @@
             
             const isFuture = targetDate > today;
             const isSelected = (dStr === selectedDateStr);
+            const dateStat = dateStatsMap[dStr] || { workout: 0, attend: 0, comp: 0, total: 0 };
+
+            const displayDateText = dStr.replace(/^\d{4}년\s*/, '');
 
             if (isFuture) {
                 btn.className = 'saturday-item-btn disabled';
-                btn.innerHTML = `<span>🔒 ${dStr.replace(/^\d{4}년\s*/, '')} (예정)</span>`;
+                btn.innerHTML = `<span>🔒 ${displayDateText} (예정)</span>`;
                 btn.onclick = () => alert("아직 다가오지 않은 미래 날짜는 체크할 수 없습니다!");
             } else {
                 btn.className = `saturday-item-btn ${isSelected ? 'active' : ''}`;
-                btn.innerText = dStr.replace(/^\d{4}년\s*/, '');
+                btn.innerHTML = `<span>${displayDateText}</span> <span class="saturday-stat-badge">총 ${dateStat.total}명 (참석(운동): ${dateStat.workout}, 참석: ${dateStat.attend}, 대회: ${dateStat.comp})</span>`;
                 btn.onclick = () => {
                     selectedDateStr = dStr;
                     localStorage.setItem('todal_selected_date', dStr);
@@ -646,7 +667,7 @@
             });
         }
 
-        renderCheckinList();
+        renderSaturdayVerticalList();
         renderStats();
         await saveDataToSheet();
     }
@@ -734,7 +755,7 @@
         displayList.sort((a, b) => (b.score !== a.score) ? b.score - a.score : a.name.localeCompare(b.name, 'ko'));
 
         let currentRank = 1;
-        displayList.sort((a, b) => (b.score !== a.score) ? b.score - a.score : a.name.localeCompare(b.name, 'ko')).forEach((item, index) => {
+        displayList.forEach((item, index) => {
             if (index > 0 && item.score < displayList[index - 1].score) currentRank = index + 1;
             const card = document.createElement('div');
             card.className = 'rank-card';
