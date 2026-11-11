@@ -6,15 +6,15 @@
     <title>토달 출석부</title>
     
     <!-- 카카오톡 및 웹 썸네일/아이콘 설정 -->
-    <link rel="apple-touch-icon" href="icon.png">
-    <link rel="icon" sizes="192x192" href="icon.png">
-    <link rel="icon" href="icon.png" type="image/png">
+    <link rel="apple-touch-icon" href="todal_attendance_og.jpg">
+    <link rel="icon" sizes="192x192" href="todal_attendance_og.jpg">
+    <link rel="icon" href="todal_attendance_og.jpg" type="image/jpeg">
 
     <!-- 🌟 카카오톡 공유 시 미리보기 이미지 및 제목/설정 태그 -->
     <meta property="property" content="website">
     <meta property="og:title" content="토달 출석부">
     <meta property="og:description" content="토요일 달리기 모임 출석 및 누적현황 관리 시스템">
-    <meta property="og:image" content="https://morningrun.github.io/saturday-attendance/icon.png">
+    <meta property="og:image" content="https://morningrun.github.io/saturday-attendance/todal_attendance_og.jpg">
     <meta property="og:url" content="https://morningrun.github.io/saturday-attendance/">
 
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -734,7 +734,7 @@
         displayList.sort((a, b) => (b.score !== a.score) ? b.score - a.score : a.name.localeCompare(b.name, 'ko'));
 
         let currentRank = 1;
-        displayList.forEach((item, index) => {
+        displayList.sort((a, b) => (b.score !== a.score) ? b.score - a.score : a.name.localeCompare(b.name, 'ko')).forEach((item, index) => {
             if (index > 0 && item.score < displayList[index - 1].score) currentRank = index + 1;
             const card = document.createElement('div');
             card.className = 'rank-card';
