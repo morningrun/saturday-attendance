@@ -5,9 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>토달 출석부</title>
     
+    <!-- 카카오톡 및 웹 썸네일/아이콘 설정 -->
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="icon" sizes="192x192" href="icon.png">
     <link rel="icon" href="icon.png" type="image/png">
+
+    <!-- 🌟 카카오톡 공유 시 미리보기 이미지 및 제목/설정 태그 -->
+    <meta property="property" content="website">
+    <meta property="og:title" content="토달 출석부">
+    <meta property="og:description" content="토요일 달리기 모임 출석 및 누적현황 관리 시스템">
+    <meta property="og:image" content="icon.png">
+    <meta property="og:url" content="">
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -160,9 +168,9 @@
         { name: "조성국" }, { name: "최순규" }, { name: "최잔디" }, { name: "황연성" }
     ];
 
-    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v24')) || [...DEFAULT_MEMBERS];
+    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v25')) || [...DEFAULT_MEMBERS];
     
-    let rawLogs = JSON.parse(localStorage.getItem('todal_logs_v24')) || [];
+    let rawLogs = JSON.parse(localStorage.getItem('todal_logs_v25')) || [];
     let globalLogs = rawLogs.filter(l => [10, 5, 99].includes(Number(l.score)));
 
     let adminPassword = localStorage.getItem('todal_admin_pwd') || "1234";
@@ -347,8 +355,8 @@
     function saveLocally() {
         sortMembers();
         globalLogs = globalLogs.filter(l => [10, 5, 99].includes(Number(l.score)));
-        localStorage.setItem('todal_members_v24', JSON.stringify(globalMembers));
-        localStorage.setItem('todal_logs_v24', JSON.stringify(globalLogs));
+        localStorage.setItem('todal_members_v25', JSON.stringify(globalMembers));
+        localStorage.setItem('todal_logs_v25', JSON.stringify(globalLogs));
     }
 
     async function loadDataFromSheet() {
