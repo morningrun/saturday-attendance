@@ -54,13 +54,18 @@
 
         .saturday-list-box { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 10px; margin-bottom: 12px; }
         .saturday-list-title { font-size: 0.88rem; font-weight: 800; color: var(--primary); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-        .saturday-vertical-group { display: flex; flex-direction: column; gap: 5px; max-height: 220px; overflow-y: auto; }
+        .saturday-vertical-group { display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow-y: auto; }
         
-        .saturday-item-btn { padding: 9px 12px; background: #ffffff; border: 1px solid var(--border); border-radius: 8px; font-size: 0.8rem; font-weight: 700; color: var(--primary); cursor: pointer; text-align: left; display: flex; justify-content: space-between; align-items: center; }
+        /* 모바일 최적화된 토요일 날짜 선택 버튼 */
+        .saturday-item-btn { padding: 10px 12px; background: #ffffff; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; text-align: left; display: flex; flex-direction: column; gap: 4px; transition: all 0.2s; }
         .saturday-item-btn.active { background: #eff6ff; color: var(--accent); border: 2px solid var(--accent); }
         .saturday-item-btn.disabled { background: #f1f5f9; color: #94a3b8; border-color: var(--border); cursor: not-allowed; opacity: 0.7; }
-        .saturday-stat-badge { font-size: 0.72rem; font-weight: 700; color: #64748b; background: #e2e8f0; padding: 2px 6px; border-radius: 4px; }
-        .saturday-item-btn.active .saturday-stat-badge { background: #dbeafe; color: var(--accent); }
+        
+        .saturday-date-text { font-size: 0.88rem; font-weight: 800; color: var(--primary); }
+        .saturday-item-btn.active .saturday-date-text { color: var(--accent); }
+        
+        .saturday-stat-badge { font-size: 0.75rem; font-weight: 700; color: #475569; background: #f1f5f9; padding: 3px 8px; border-radius: 5px; display: inline-block; width: fit-content; }
+        .saturday-item-btn.active .saturday-stat-badge { background: #dbeafe; color: #1e40af; }
 
         .member-card { display: flex; flex-direction: column; padding: 8px 10px; margin-bottom: 6px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; gap: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
         .member-card.checked-10 { background-color: #ecfdf5 !important; border-color: #34d399 !important; border-left: 5px solid var(--success) !important; }
@@ -303,7 +308,6 @@
             selectedDateStr = defaultDate;
         }
 
-        // 해당 날짜별 출석 인원 계산 맵 생성
         const dateStatsMap = {};
         globalLogs.forEach(log => {
             const dStr = String(log.date).trim();
@@ -333,11 +337,14 @@
 
             if (isFuture) {
                 btn.className = 'saturday-item-btn disabled';
-                btn.innerHTML = `<span>🔒 ${displayDateText} (예정)</span>`;
+                btn.innerHTML = `<span class="saturday-date-text">🔒 ${displayDateText} (예정)</span>`;
                 btn.onclick = () => alert("아직 다가오지 않은 미래 날짜는 체크할 수 없습니다!");
             } else {
                 btn.className = `saturday-item-btn ${isSelected ? 'active' : ''}`;
-                btn.innerHTML = `<span>${displayDateText}</span> <span class="saturday-stat-badge">총 ${dateStat.total}명 (참석(운동): ${dateStat.workout}, 참석: ${dateStat.attend}, 대회: ${dateStat.comp})</span>`;
+                btn.innerHTML = `
+                    <span class="saturday-date-text">${displayDateText}</span>
+                    <span class="saturday-stat-badge">총 ${dateStat.total}명 (참석(운동): ${dateStat.workout}, 참석: ${dateStat.attend}, 대회: ${dateStat.comp})</span>
+                `;
                 btn.onclick = () => {
                     selectedDateStr = dStr;
                     localStorage.setItem('todal_selected_date', dStr);
@@ -589,7 +596,6 @@
             buttonGroup.className = 'btn-group';
 
             if (!isChecked) {
-                // 1️⃣ 클릭 안 한 사람: 참석(운동)(+10), 참석(+5), 대회(+10) 회색 버튼 3개 표시
                 const btn1 = document.createElement('button');
                 btn1.textContent = '참석(운동) (+10)';
                 btn1.addEventListener('click', () => handleCheckIn(name, 10));
@@ -606,7 +612,6 @@
                 buttonGroup.appendChild(btn2);
                 buttonGroup.appendChild(btn3);
             } else {
-                // 2️⃣ 클릭한 사람: 내가 누른 항목만 색상 표시 + 수정 버튼 표시
                 const selectedBtn = document.createElement('button');
                 if (score === 10) {
                     selectedBtn.textContent = '참석(운동) (+10)';
