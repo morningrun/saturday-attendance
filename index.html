@@ -100,7 +100,7 @@
     </div>
     
     <div class="tab-group">
-        <button class="tab-btn active" id="tab-checkin-btn" onclick="switchTab('checkin')">📅 <span id="tab-month-label">11월</span> 출석체크</button>
+        <button class="tab-btn active" id="tab-checkin-btn" onclick="switchTab('checkin')">📅 출석체크</button>
         <button class="tab-btn" id="tab-stats-btn" onclick="switchTab('stats')">🏆 <span id="current-year-text">2026</span>년 누적현황</button>
     </div>
 
@@ -171,7 +171,6 @@
 
     const currentYear = new Date().getFullYear();
     document.getElementById('current-year-text').innerText = currentYear;
-    document.getElementById('tab-month-label').innerText = checkinSelectedMonth;
 
     function formatDateToString(dateObj) {
         const years = dateObj.getFullYear();
@@ -221,7 +220,6 @@
                     btn.classList.add('active');
                     checkinSelectedMonth = m;
                     localStorage.setItem('todal_selected_month', m);
-                    document.getElementById('tab-month-label').innerText = m;
                     
                     const filtered = allSaturdays.filter(dStr => {
                         const mMatch = dStr.match(/(\d+)월/);
@@ -421,7 +419,6 @@
         }
     }
 
-    // 비밀번호 변경 함수
     function changePassword() {
         const input = document.getElementById('new-admin-password');
         const newPwd = input.value.trim();
