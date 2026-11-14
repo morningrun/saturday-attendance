@@ -60,8 +60,8 @@
         .month-btn { padding: 7px 10px; font-size: 0.8rem; border: 1px solid var(--border); border-radius: 7px; background: #ffffff; cursor: pointer; font-weight: 700; color: var(--text-sub); }
         .month-btn.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 2px 6px rgba(37,99,235,0.25); }
 
-        /* 🌟 순위표와 버튼 사이에 딱 알맞게 고정된 기준일자 스타일 */
-        .stats-current-date-box { text-align: center; font-size: 0.92rem; font-weight: 800; color: var(--accent); margin-top: 4px; margin-bottom: 6px; letter-spacing: -0.3px; }
+        /* 🌟 기준일자 텍스트 간격 밀착 조정 */
+        .stats-current-date-box { text-align: center; font-size: 0.92rem; font-weight: 800; color: var(--accent); margin-top: 2px; margin-bottom: 2px; letter-spacing: -0.3px; }
 
         .saturday-list-box { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 10px; margin-bottom: 12px; }
         .saturday-list-title { font-size: 0.88rem; font-weight: 800; color: var(--primary); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
@@ -96,6 +96,8 @@
         button.btn-modify { background: #fee2e2 !important; color: var(--danger) !important; border-color: #fca5a5 !important; font-weight: 800; flex: 1; }
 
         .rank-card { display: flex; align-items: center; justify-content: space-between; padding: 10px 10px; margin-bottom: 7px; background: #f8fafc; border: 1.5px solid var(--border); border-radius: 10px; gap: 4px; }
+        .rank-card.first-rank { margin-top: 0px !important; } /* 🌟 첫 번째 순위 카드 위쪽 여백 제거 */
+        
         .rank-number { font-weight: 800; color: var(--accent); width: 38px; font-size: 0.82rem; white-space: nowrap; flex-shrink: 0; }
         .rank-name { font-weight: 800; width: 52px; font-size: 0.9rem; color: var(--primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
         .rank-detail { font-size: 0.62rem; color: var(--text-sub); font-weight: 700; text-align: center; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -148,7 +150,6 @@
             <!-- 2번 패널: 누적현황 -->
             <div class="swipe-pane" id="pane-stats">
                 <div class="month-filter" id="stats-month-buttons"></div>
-                <!-- 🌟 고정된 기준일자 영역 (HTML 상에 직접 배치하여 간격 고정) -->
                 <div class="stats-current-date-box" id="stats-current-date-text">[ 2026년 11월 14일 현재 ]</div>
                 <div id="stats-list" class="loading">누적 데이터 계산 중...</div>
             </div>
@@ -835,7 +836,8 @@
         displayList.forEach((item, index) => {
             if (index > 0 && item.score < displayList[index - 1].score) currentRank = index + 1;
             const card = document.createElement('div');
-            card.className = 'rank-card';
+            // 🌟 첫 번째 카드에만 'first-rank' 클래스를 부여하여 상단 여백을 완벽히 제거
+            card.className = `rank-card ${index === 0 ? 'first-rank' : ''}`;
             let rankBadge = (currentRank === 1 ? '🥇 1위' : (currentRank === 2 ? '🥈 2위' : (currentRank === 3 ? '🥉 3위' : `${currentRank}위`)));
             card.innerHTML = `
                 <div class="rank-number">${rankBadge}</div>
