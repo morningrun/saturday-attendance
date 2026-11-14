@@ -48,15 +48,18 @@
         .tab-btn { flex: 1; padding: 9px 4px; font-size: 0.9rem; border: none; background: transparent; color: var(--text-sub); font-weight: 700; border-radius: 8px; cursor: pointer; transition: all 0.2s; text-align: center; }
         .tab-btn.active { background: var(--card-bg); color: var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 
-        .month-filter { display: flex; flex-wrap: wrap; gap: 5px; padding-bottom: 4px; margin-bottom: 12px; justify-content: center; }
-        .month-btn { padding: 7px 10px; font-size: 0.8rem; border: 1px solid var(--border); border-radius: 7px; background: #ffffff; cursor: pointer; font-weight: 700; color: var(--text-sub); }
+        /* 🌟 월별 필터 버튼 영역 좌우 스크롤 적용 */
+        .month-filter { display: flex; flex-wrap: nowrap; gap: 6px; padding-bottom: 6px; margin-bottom: 12px; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+        .month-filter::-webkit-scrollbar { height: 4px; }
+        .month-filter::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+        .month-btn { flex: 0 0 auto; padding: 7px 14px; font-size: 0.8rem; border: 1px solid var(--border); border-radius: 7px; background: #ffffff; cursor: pointer; font-weight: 700; color: var(--text-sub); }
         .month-btn.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 2px 6px rgba(37,99,235,0.25); }
 
         .saturday-list-box { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 10px; margin-bottom: 12px; }
         .saturday-list-title { font-size: 0.88rem; font-weight: 800; color: var(--primary); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
         .saturday-vertical-group { display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow-y: auto; }
         
-        /* 모바일 최적화된 토요일 날짜 선택 버튼 */
         .saturday-item-btn { padding: 10px 12px; background: #ffffff; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; text-align: left; display: flex; flex-direction: column; gap: 4px; transition: all 0.2s; }
         .saturday-item-btn.active { background: #eff6ff; color: var(--accent); border: 2px solid var(--accent); }
         .saturday-item-btn.disabled { background: #f1f5f9; color: #94a3b8; border-color: var(--border); cursor: not-allowed; opacity: 0.7; }
@@ -77,7 +80,6 @@
         .member-index { font-size: 0.75rem; color: #64748b; font-weight: 700; }
         .badge { font-size: 0.75rem; font-weight: 800; padding: 2px 8px; border-radius: 5px; }
         
-        /* 🌟 버튼 그룹 좌우 스크롤 적용 */
         .btn-group { display: flex; gap: 6px; width: 100%; overflow-x: auto; white-space: nowrap; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
         .btn-group::-webkit-scrollbar { height: 4px; }
         .btn-group::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
