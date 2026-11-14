@@ -48,6 +48,13 @@
         .tab-btn { flex: 1; padding: 9px 4px; font-size: 0.9rem; border: none; background: transparent; color: var(--text-sub); font-weight: 700; border-radius: 8px; cursor: pointer; transition: all 0.2s; text-align: center; }
         .tab-btn.active { background: var(--card-bg); color: var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 
+        /* 🌟 좌우 스크롤 뷰포트 (align-items: flex-start를 주어 내용 길이에 맞게 컨테이너 높이가 타이트하게 조절됨) */
+        .swipe-container { display: flex; width: 100%; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; align-items: flex-start; }
+        .swipe-container::-webkit-scrollbar { display: none; }
+
+        /* 각 페이지 높이가 내용물만큼만 차지하도록 height: auto 설정 */
+        .swipe-page { flex: 0 0 100%; width: 100%; scroll-snap-align: start; box-sizing: border-box; display: flex; flex-direction: column; height: auto; }
+
         .month-filter { display: flex; flex-wrap: wrap; gap: 5px; padding-bottom: 4px; margin-bottom: 12px; justify-content: center; }
         .month-btn { padding: 7px 10px; font-size: 0.8rem; border: 1px solid var(--border); border-radius: 7px; background: #ffffff; cursor: pointer; font-weight: 700; color: var(--text-sub); }
         .month-btn.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 2px 6px rgba(37,99,235,0.25); }
@@ -118,22 +125,25 @@
         <button class="tab-btn" id="tab-stats-btn" onclick="switchTab('stats')">🏆 <span id="current-year-text">2026</span>년 누적현황</button>
     </div>
 
-    <!-- 출석체크 페이지 -->
-    <div id="page-checkin">
-        <div class="month-filter" id="checkin-month-buttons"></div>
-        
-        <div class="saturday-list-box">
-            <div class="saturday-list-title" id="saturday-list-header">📅 2026년 11월 토달 출석현황</div>
-            <div class="saturday-vertical-group" id="saturday-vertical-wrapper"></div>
+    <!-- 좌우 스크롤 가능한 페이지 컨테이너 -->
+    <div class="swipe-container" id="swipe-container" onscroll="handleScrollSync()">
+        <!-- 출석체크 페이지 -->
+        <div class="swipe-page" id="page-checkin">
+            <div class="month-filter" id="checkin-month-buttons"></div>
+            
+            <div class="saturday-list-box">
+                <div class="saturday-list-title" id="saturday-list-header">📅 2026년 11월 토달 출석현황</div>
+                <div class="saturday-vertical-group" id="saturday-vertical-wrapper"></div>
+            </div>
+
+            <div id="member-list" class="loading">데이터 로딩 중...</div>
         </div>
 
-        <div id="member-list" class="loading">데이터 로딩 중...</div>
-    </div>
-
-    <!-- 누적현황 페이지 -->
-    <div id="page-stats" class="hidden">
-        <div class="month-filter" id="stats-month-buttons"></div>
-        <div id="stats-list" class="loading">누적 데이터 계산 중...</div>
+        <!-- 누적현황 페이지 -->
+        <div class="swipe-page" id="page-stats">
+            <div class="month-filter" id="stats-month-buttons"></div>
+            <div id="stats-list" class="loading">누적 데이터 계산 중...</div>
+        </div>
     </div>
 
     <!-- 관리자 회원 관리 패널 (콘텐츠 바로 밑에 위치) -->
@@ -357,23 +367,38 @@
     }
 
     function switchTab(tabName) {
-        const pageCheckin = document.getElementById('page-checkin');
-        const pageStats = document.getElementById('page-stats');
+        const container = document.getElementById('swipe-container');
         const checkinBtn = document.getElementById('tab-checkin-btn');
         const statsBtn = document.getElementById('tab-stats-btn');
 
         if (tabName === 'checkin') {
-            pageCheckin.classList.remove('hidden');
-            pageStats.classList.add('hidden');
+            container.scrollTo({ left: 0, behavior: 'smooth' });
             checkinBtn.classList.add('active');
             statsBtn.classList.remove('active');
             renderSaturdayVerticalList();
         } else {
-            pageCheckin.classList.add('hidden');
-            pageStats.classList.remove('hidden');
+            container.scrollTo({ left: container.clientWidth, behavior: 'smooth' });
             checkinBtn.classList.remove('active');
             statsBtn.classList.add('active');
             renderStats(); 
+        }
+    }
+
+    function handleScrollSync() {
+        const container = document.getElementById('swipe-container');
+        const scrollLeft = container.scrollLeft;
+        const width = container.clientWidth;
+        
+        const checkinBtn = document.getElementById('tab-checkin-btn');
+        const statsBtn = document.getElementById('tab-stats-btn');
+
+        if (scrollLeft < width / 2) {
+            checkinBtn.classList.add('active');
+            statsBtn.classList.remove('active');
+        } else {
+            checkinBtn.classList.remove('active');
+            statsBtn.classList.add('active');
+            renderStats();
         }
     }
 
