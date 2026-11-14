@@ -28,7 +28,7 @@
             --primary: #0f172a;
             --accent: #2563eb;
             --success: #059669;    /* 참석(운동) (10점) - 녹색 */
-            --info: #0284c7;       /* 참석 (5점) - 파란색 */
+            --info: #0284c7;        /* 참석 (5점) - 파란색 */
             --warning: #d97706;    /* 대회 (10점) - 주황색 */
             --danger: #dc2626;
             --bg-color: #f1f5f9;
@@ -769,14 +769,14 @@
                 const mNum = parseInt(statsSelectedMonth.replace(/[^0-9]/g, ""), 10);
                 if (data.monthly[mNum]) {
                     targetScore = data.monthly[mNum].score;
-                    targetWorkout = data.monthly[mNum].monthly ? data.monthly[mNum].workout : data.monthly[mNum].workout;
+                    targetWorkout = data.monthly[mNum].workout;
                     targetAttend = data.monthly[mNum].attend;
                     targetComp = data.monthly[mNum].comp;
                 }
             }
 
             if (targetScore > 0) {
-                displayList.path ? displayList.push(...) : displayList.push({ name, score: targetScore, workout: targetWorkout, attend: targetAttend, comp: targetComp });
+                displayList.push({ name, score: targetScore, workout: targetWorkout, attend: targetAttend, comp: targetComp });
             }
         });
 
