@@ -50,7 +50,6 @@
         .tab-btn { flex: 1; padding: 9px 4px; font-size: 0.9rem; border: none; background: transparent; color: var(--text-sub); font-weight: 700; border-radius: 8px; cursor: pointer; transition: all 0.2s; text-align: center; }
         .tab-btn.active { background: var(--card-bg); color: var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 
-        /* 💡 좌우 스와이프 영역 (복사골 대회접수 구조 적용) */
         .swipe-wrapper { width: 100%; position: relative; overflow: hidden; min-height: 400px; box-sizing: border-box; transition: height 0.2s ease; }
         .swipe-container { display: flex; width: 200%; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); will-change: transform; align-items: flex-start; box-sizing: border-box; }
         
@@ -60,6 +59,9 @@
         .month-filter { display: flex; flex-wrap: wrap; gap: 5px; padding-bottom: 4px; margin-bottom: 12px; justify-content: center; }
         .month-btn { padding: 7px 10px; font-size: 0.8rem; border: 1px solid var(--border); border-radius: 7px; background: #ffffff; cursor: pointer; font-weight: 700; color: var(--text-sub); }
         .month-btn.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 2px 6px rgba(37,99,235,0.25); }
+
+        /* 🌟 누적현황 기준일자 안내 텍스트 스타일 */
+        .stats-current-date-box { text-align: right; font-size: 0.82rem; font-weight: 700; color: var(--text-sub); margin-bottom: 8px; padding-right: 4px; }
 
         .saturday-list-box { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 10px; margin-bottom: 12px; }
         .saturday-list-title { font-size: 0.88rem; font-weight: 800; color: var(--primary); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
@@ -108,7 +110,6 @@
         .admin-member-row { display: flex; justify-content: space-between; align-items: center; background: #1e293b; padding: 8px 12px; border-radius: 7px; margin-bottom: 6px; font-size: 0.88rem; border: 1px solid #334155; }
         .admin-member-row button { background: var(--danger); color: white; border: none; padding: 4px 8px; border-radius: 5px; cursor: pointer; font-size: 0.78rem; font-weight: 700; }
         
-        /* ⚙️ 우측 하단 구석 톱니바퀴 기호 버튼 */
         .footer-setting-box { display: flex; justify-content: flex-end; margin-top: 15px; padding-top: 10px; border-top: 1.5px solid var(--border); }
         .admin-gear-icon-btn { background: #f8fafc; border: 1.5px solid var(--border); font-size: 1.1rem; cursor: pointer; padding: 6px 10px; color: var(--text-sub); border-radius: 8px; font-weight: 800; }
         .admin-gear-icon-btn:hover { background: #f1f5f9; color: var(--accent); border-color: var(--accent); }
@@ -129,7 +130,7 @@
         <button class="tab-btn" id="tab-stats-btn">🏆 <span id="current-year-text">2026</span>년 누적현황</button>
     </div>
 
-    <!-- 💡 좌우 스와이프 영역 -->
+    <!-- 좌우 스와이프 영역 -->
     <div class="swipe-wrapper" id="swipe-wrapper">
         <div id="swipe-container" class="swipe-container">
             <!-- 1번 패널: 출석체크 -->
@@ -147,12 +148,14 @@
             <!-- 2번 패널: 누적현황 -->
             <div class="swipe-pane" id="pane-stats">
                 <div class="month-filter" id="stats-month-buttons"></div>
+                <!-- 🌟 순위표 바로 위에 표시되는 동적 현재일자 텍스트 -->
+                <div class="stats-current-date-box" id="stats-current-date-text"></div>
                 <div id="stats-list" class="loading">누적 데이터 계산 중...</div>
             </div>
         </div>
     </div>
 
-    <!-- 관리자 회원 관리 패널 (콘텐츠 바로 밑에 위치) -->
+    <!-- 관리자 회원 관리 패널 -->
     <div id="admin-panel" class="admin-panel hidden">
         <h3>🔒 관리자 설정 및 회원 관리</h3>
         
@@ -171,7 +174,7 @@
         <button onclick="toggleAdminMode()" style="width:100%; margin-top:12px; background:#475569; color:white; border:none; padding:9px; border-radius:7px; cursor:pointer; font-weight:800;">설정 닫기</button>
     </div>
 
-    <!-- ⚙️ 우측 하단 구석 톱니바퀴 기호 버튼 -->
+    <!-- 우측 하단 구석 톱니바퀴 기호 버튼 -->
     <div class="footer-setting-box">
         <button class="admin-gear-icon-btn" id="admin-open-btn" title="관리자 설정">⚙️</button>
     </div>
@@ -728,6 +731,27 @@
 
     function renderStats() {
         const statsDiv = document.getElementById('stats-list');
+        const dateTextDiv = document.getElementById('stats-current-date-text');
+        
+        // 🌟 실시간(현재 날짜 또는 선택된 월 기준) 날짜 표시 업데이트 로직
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = now.getMonth() + 1;
+        const d = now.getDate();
+        
+        if (statsSelectedMonth === "전체") {
+            dateTextDiv.innerText = `${y}년 ${m}월 ${d}일 현재`;
+        } else {
+            const mNum = parseInt(statsSelectedMonth.replace(/[^0-9]/g, ""), 10);
+            if (mNum === m) {
+                dateTextDiv.innerText = `${y}년 ${m}월 ${d}일 현재`;
+            } else {
+                // 과거 월을 선택했을 경우 해당 월의 마지막 날 혹은 말일 표현
+                const lastDay = new Date(y, mNum, 0).getDate();
+                dateTextDiv.innerText = `${y}년 ${mNum}월 ${lastDay}일 기준`;
+            }
+        }
+
         if (!statsDiv) return;
         statsDiv.innerHTML = '';
 
@@ -748,10 +772,10 @@
         uniqueLogs.forEach(log => {
             const name = String(log.name).trim();
             const score = Number(log.score);
-            let m = Number(log.month) || 0;
-            if (!m) {
+            let mVal = Number(log.month) || 0;
+            if (!mVal) {
                 const mMatch = String(log.date).match(/(\d+)월/);
-                if (mMatch) m = parseInt(mMatch[1], 10);
+                if (mMatch) mVal = parseInt(mMatch[1], 10);
             }
 
             if (!statsMap[name]) {
@@ -765,14 +789,14 @@
 
             statsMap[name].score += points;
 
-            if (m >= 1 && m <= 12) {
-                if (!statsMap[name].monthly[m]) {
-                    statsMap[name].monthly[m] = { score: 0, workout: 0, attend: 0, comp: 0 };
+            if (mVal >= 1 && mVal <= 12) {
+                if (!statsMap[name].monthly[mVal]) {
+                    statsMap[name].monthly[mVal] = { score: 0, workout: 0, attend: 0, comp: 0 };
                 }
-                statsMap[name].monthly[m].score += points;
-                if (score === 10) statsMap[name].monthly[m].workout += 1;
-                else if (score === 5) statsMap[name].monthly[m].attend += 1;
-                else if (score === 99) statsMap[name].monthly[m].comp += 1;
+                statsMap[name].monthly[mVal].score += points;
+                if (score === 10) statsMap[name].monthly[mVal].workout += 1;
+                else if (score === 5) statsMap[name].monthly[mVal].attend += 1;
+                else if (score === 99) statsMap[name].monthly[mVal].comp += 1;
             }
         });
 
@@ -835,7 +859,6 @@
             updateSwipeWrapperHeight();
         });
 
-        // 💡 좌우 스와이프 제스처 핸들링
         const swipeContainer = document.getElementById('swipe-container');
         let startX = 0;
         let startY = 0;
