@@ -56,12 +56,12 @@
         .swipe-pane { width: 50%; flex-shrink: 0; box-sizing: border-box; opacity: 0; transition: opacity 0.2s ease; pointer-events: none; visibility: hidden; padding: 0 2px; }
         .swipe-pane.active-pane { opacity: 1; pointer-events: auto; visibility: visible; height: auto; }
 
-        .month-filter { display: flex; flex-wrap: wrap; gap: 5px; padding-bottom: 4px; margin-bottom: 6px; justify-content: center; }
+        .month-filter { display: flex; flex-wrap: wrap; gap: 5px; padding-bottom: 2px; margin-bottom: 4px; justify-content: center; }
         .month-btn { padding: 7px 10px; font-size: 0.8rem; border: 1px solid var(--border); border-radius: 7px; background: #ffffff; cursor: pointer; font-weight: 700; color: var(--text-sub); }
         .month-btn.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 2px 6px rgba(37,99,235,0.25); }
 
-        /* 🌟 순위표와 딱 붙도록 마진을 바짝 줄인 스타일 */
-        .stats-current-date-box { text-align: center; font-size: 0.92rem; font-weight: 800; color: var(--accent); margin-bottom: 4px; letter-spacing: -0.3px; }
+        /* 🌟 위아래 여백을 바짝 좁혀 순위표와 밀착시킨 기준일자 스타일 */
+        .stats-current-date-box { text-align: center; font-size: 0.92rem; font-weight: 800; color: var(--accent); margin-top: 2px; margin-bottom: 6px; letter-spacing: -0.3px; }
 
         .saturday-list-box { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 10px; margin-bottom: 12px; }
         .saturday-list-title { font-size: 0.88rem; font-weight: 800; color: var(--primary); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
@@ -148,7 +148,7 @@
             <!-- 2번 패널: 누적현황 -->
             <div class="swipe-pane" id="pane-stats">
                 <div class="month-filter" id="stats-month-buttons"></div>
-                <!-- 🌟 순위표와 밀착된 기준일자 텍스트 영역 -->
+                <!-- 🌟 간격이 바짝 좁혀진 기준일자 영역 -->
                 <div class="stats-current-date-box" id="stats-current-date-text"></div>
                 <div id="stats-list" class="loading">누적 데이터 계산 중...</div>
             </div>
