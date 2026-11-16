@@ -39,98 +39,98 @@
         }
 
         html { width: 100%; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg-color); margin: 0; padding: 4px; color: var(--text-main); -webkit-tap-highlight-color: transparent; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg-color); margin: 0; padding: 6px; color: var(--text-main); -webkit-tap-highlight-color: transparent; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
         
-        .container { max-width: 600px; width: 100%; box-sizing: border-box; margin: 0 auto; background: var(--card-bg); padding: 8px; border-radius: 12px; box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08); }
+        .container { max-width: 600px; width: 100%; box-sizing: border-box; margin: 0 auto; background: var(--card-bg); padding: 10px; border-radius: 12px; box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08); }
         
-        .main-title-box { text-align: center; margin: 2px 0 6px 0; }
-        .main-title { font-size: 1.4rem; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
+        .main-title-box { text-align: center; margin: 4px 0 8px 0; }
+        .main-title { font-size: 1.5rem; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
         
-        .tab-group { display: flex; gap: 6px; margin-bottom: 8px; background: #cbd5e1; padding: 3px; border-radius: 10px; position: sticky; top: 4px; z-index: 10; backdrop-filter: blur(8px); }
-        .tab-btn { flex: 1; padding: 7px 4px; font-size: 0.85rem; border: none; background: transparent; color: var(--text-sub); font-weight: 700; border-radius: 8px; cursor: pointer; transition: all 0.2s; text-align: center; }
+        .tab-group { display: flex; gap: 6px; margin-bottom: 10px; background: #cbd5e1; padding: 3px; border-radius: 10px; position: sticky; top: 4px; z-index: 10; backdrop-filter: blur(8px); }
+        .tab-btn { flex: 1; padding: 8px 4px; font-size: 0.88rem; border: none; background: transparent; color: var(--text-sub); font-weight: 700; border-radius: 8px; cursor: pointer; transition: all 0.2s; text-align: center; }
         .tab-btn.active { background: var(--card-bg); color: var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 
         .swipe-wrapper { width: 100%; position: relative; overflow: hidden; min-height: 400px; box-sizing: border-box; transition: height 0.2s ease; }
         .swipe-container { display: flex; width: 200%; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); will-change: transform; align-items: flex-start; box-sizing: border-box; }
         
-        .swipe-pane { width: 50%; flex-shrink: 0; box-sizing: border-box; opacity: 0; transition: opacity 0.2s ease; pointer-events: none; visibility: hidden; padding: 0 1px; }
+        .swipe-pane { width: 50%; flex-shrink: 0; box-sizing: border-box; opacity: 0; transition: opacity 0.2s ease; pointer-events: none; visibility: hidden; padding: 0 2px; }
         .swipe-pane.active-pane { opacity: 1; pointer-events: auto; visibility: visible; height: auto; }
 
-        .month-filter { display: flex; flex-wrap: wrap; gap: 2.5px; padding-bottom: 2px; margin-bottom: 4px; justify-content: center; }
-        .month-btn { padding: 4px 6px; font-size: 0.74rem; border: 1px solid var(--border); border-radius: 6px; background: #ffffff; cursor: pointer; font-weight: 700; color: var(--text-sub); }
+        .month-filter { display: flex; flex-wrap: wrap; gap: 3px; padding-bottom: 2px; margin-bottom: 6px; justify-content: center; }
+        .month-btn { padding: 5px 6.5px; font-size: 0.76rem; border: 1px solid var(--border); border-radius: 6px; background: #ffffff; cursor: pointer; font-weight: 700; color: var(--text-sub); }
         .month-btn.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 2px 6px rgba(37,99,235,0.25); }
 
-        .search-box-container { margin-bottom: 6px; width: 100%; box-sizing: border-box; padding: 0; }
-        .search-input { width: 100%; padding: 7px 10px; box-sizing: border-box; border: 1.5px solid var(--border); border-radius: 7px; font-size: 0.85rem; outline: none; transition: border-color 0.2s; background: #f8fafc; }
+        .search-box-container { margin-bottom: 8px; width: 100%; box-sizing: border-box; padding: 0; }
+        .search-input { width: 100%; padding: 8px 10px; box-sizing: border-box; border: 1.5px solid var(--border); border-radius: 7px; font-size: 0.88rem; outline: none; transition: border-color 0.2s; background: #f8fafc; }
         .search-input:focus { border-color: var(--accent); background: #ffffff; }
 
-        .stats-current-date-box { text-align: center; font-size: 0.88rem; font-weight: 800; color: var(--accent); margin-top: 6px; margin-bottom: 6px; letter-spacing: -0.3px; }
+        .stats-current-date-box { text-align: center; font-size: 0.9rem; font-weight: 800; color: var(--accent); margin-top: 8px; margin-bottom: 8px; letter-spacing: -0.3px; }
 
-        .saturday-list-box { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 6px; margin-bottom: 6px; }
-        .saturday-list-title { font-size: 0.82rem; font-weight: 800; color: var(--primary); margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
-        .saturday-vertical-group { display: flex; flex-direction: column; gap: 4px; max-height: 180px; overflow-y: auto; }
+        .saturday-list-box { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 8px; margin-bottom: 8px; }
+        .saturday-list-title { font-size: 0.85rem; font-weight: 800; color: var(--primary); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        .saturday-vertical-group { display: flex; flex-direction: column; gap: 5px; max-height: 200px; overflow-y: auto; }
         
-        .saturday-item-btn { padding: 6px 8px; background: #ffffff; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; text-align: left; display: flex; flex-direction: column; gap: 2px; transition: all 0.2s; }
+        .saturday-item-btn { padding: 8px 10px; background: #ffffff; border: 1px solid var(--border); border-radius: 7px; cursor: pointer; text-align: left; display: flex; flex-direction: column; gap: 3px; transition: all 0.2s; }
         .saturday-item-btn.active { background: #eff6ff; color: var(--accent); border: 2px solid var(--accent); }
         .saturday-item-btn.disabled { background: #f1f5f9; color: #94a3b8; border-color: var(--border); cursor: not-allowed; opacity: 0.7; }
         
-        .saturday-date-text { font-size: 0.82rem; font-weight: 800; color: var(--primary); }
+        .saturday-date-text { font-size: 0.85rem; font-weight: 800; color: var(--primary); }
         .saturday-item-btn.active .saturday-date-text { color: var(--accent); }
         
-        .saturday-stat-badge { font-size: 0.7rem; font-weight: 700; color: #475569; background: #f1f5f9; padding: 1px 5px; border-radius: 4px; display: inline-block; width: fit-content; }
+        .saturday-stat-badge { font-size: 0.73rem; font-weight: 700; color: #475569; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; display: inline-block; width: fit-content; }
         .saturday-item-btn.active .saturday-stat-badge { background: #dbeafe; color: #1e40af; }
 
-        /* 🌟 가로 3분할 출석현황 요약 박스 (컨테이너 패딩 최소화로 폭을 최대한 넓게 확장) */
-        .checkin-triple-container { display: flex; gap: 4px; margin-bottom: 8px; width: 100%; box-sizing: border-box; padding: 0; align-items: stretch; }
-        .checkin-column-box { flex: 1; border: 1.5px solid var(--border); border-radius: 8px; padding: 5px 2px; display: flex; flex-direction: column; min-width: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.02); box-sizing: border-box; }
+        /* 🌟 일요운동 출석부와 동일하게 꽉 차는 가로 3분할 요약 박스 컨테이너 */
+        .checkin-triple-container { display: flex; gap: 6px; margin-bottom: 10px; width: 100%; box-sizing: border-box; padding: 0; align-items: stretch; }
+        .checkin-column-box { flex: 1; border: 1.5px solid var(--border); border-radius: 8px; padding: 6px 4px; display: flex; flex-direction: column; min-width: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.02); box-sizing: border-box; }
         
         .col-workout { background-color: #f0fdf4; border-color: #bbf7d0; }
         .col-attend { background-color: #f0f9ff; border-color: #bae6fd; }
         .col-comp { background-color: #fffbeb; border-color: #fde68a; }
 
-        .checkin-column-title { font-size: 0.8rem; font-weight: 800; text-align: center; margin-bottom: 4px; padding-bottom: 3px; border-bottom: 1.5px solid rgba(0,0,0,0.06); white-space: nowrap; line-height: 1.2; }
-        .checkin-column-sub { font-size: 0.65rem; font-weight: 700; opacity: 0.85; display: block; margin-top: 1px; }
+        .checkin-column-title { font-size: 0.82rem; font-weight: 800; text-align: center; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1.5px solid rgba(0,0,0,0.06); white-space: nowrap; line-height: 1.2; }
+        .checkin-column-sub { font-size: 0.68rem; font-weight: 700; opacity: 0.85; display: block; margin-top: 1px; }
         
-        .checkin-column-names { display: flex; flex-direction: column; gap: 1px; font-size: 0.78rem; font-weight: 600; color: var(--text-main); text-align: left; padding: 0 1px; }
+        .checkin-column-names { display: flex; flex-direction: column; gap: 2px; font-size: 0.8rem; font-weight: 600; color: var(--text-main); text-align: left; padding: 0 2px; }
         
-        .checkin-name-item { background: transparent; padding: 2px 2px; border-radius: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; transition: background 0.15s; display: flex; gap: 3px; border: none; box-shadow: none; }
+        .checkin-name-item { background: transparent; padding: 3px 2px; border-radius: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; transition: background 0.15s; display: flex; gap: 4px; border: none; box-shadow: none; }
         .checkin-name-item:hover { background: rgba(0,0,0,0.05); color: var(--accent); }
-        .checkin-item-num { color: #64748b; font-size: 0.7rem; font-weight: 700; min-width: 14px; text-align: right; flex-shrink: 0; }
+        .checkin-item-num { color: #64748b; font-size: 0.72rem; font-weight: 700; min-width: 16px; text-align: right; flex-shrink: 0; }
 
-        /* 🌟 미참석 회원 카드: 이름과 버튼들을 가로(나란히) 배치하고 세로 폭을 대폭 축소 */
-        .member-card { display: flex; align-items: center; justify-content: space-between; padding: 4px 6px; margin-bottom: 4px; background: var(--card-bg); border: 1.2px solid var(--border); border-radius: 6px; gap: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); width: 100%; box-sizing: border-box; }
-        .member-info { display: flex; align-items: center; gap: 4px; flex-shrink: 0; min-width: 78px; }
-        .member-name { font-weight: 700; font-size: 0.85rem; color: var(--primary); display: flex; align-items: center; gap: 3px; white-space: nowrap; }
-        .member-index { font-size: 0.68rem; color: #64748b; font-weight: 700; width: 16px; text-align: right; }
+        /* 미참석 회원 카드 스타일 (이름과 버튼 나란히 배치) */
+        .member-card { display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; margin-bottom: 5px; background: var(--card-bg); border: 1.5px solid var(--border); border-radius: 7px; gap: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); width: 100%; box-sizing: border-box; }
+        .member-info { display: flex; align-items: center; gap: 6px; flex-shrink: 0; min-width: 95px; }
+        .member-name { font-weight: 700; font-size: 0.9rem; color: var(--primary); display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+        .member-index { font-size: 0.72rem; color: #64748b; font-weight: 700; width: 20px; text-align: right; }
         
         .btn-group { display: flex; gap: 3px; flex: 1; justify-content: flex-end; }
-        .btn-group button { flex: 1; padding: 4px 2px; font-size: 0.7rem; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; font-weight: 700; background: #f8fafc; color: var(--text-sub); text-align: center; white-space: nowrap; }
+        .btn-group button { flex: 1; padding: 6px 2px; font-size: 0.72rem; border: 1px solid var(--border); border-radius: 5px; cursor: pointer; font-weight: 700; background: #f8fafc; color: var(--text-sub); text-align: center; white-space: nowrap; }
 
         /* 누적현황 순위 리스트 슬림화 */
-        .rank-card { display: flex; align-items: center; justify-content: space-between; padding: 5px 7px; margin-bottom: 4px; background: #f8fafc; border: 1.2px solid var(--border); border-radius: 6px; gap: 3px; }
-        .rank-number { font-weight: 800; color: var(--accent); width: 32px; font-size: 0.74rem; white-space: nowrap; flex-shrink: 0; }
-        .rank-name { font-weight: 800; width: 44px; font-size: 0.82rem; color: var(--primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
-        .rank-detail { font-size: 0.65rem; color: var(--text-sub); font-weight: 700; text-align: center; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; justify-content: center; gap: 2px; }
+        .rank-card { display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; margin-bottom: 5px; background: #f8fafc; border: 1.5px solid var(--border); border-radius: 7px; gap: 3px; }
+        .rank-number { font-weight: 800; color: var(--accent); width: 34px; font-size: 0.76rem; white-space: nowrap; flex-shrink: 0; }
+        .rank-name { font-weight: 800; width: 46px; font-size: 0.85rem; color: var(--primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+        .rank-detail { font-size: 0.67rem; color: var(--text-sub); font-weight: 700; text-align: center; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; justify-content: center; gap: 3px; }
         .rank-detail .d-workout { color: #059669; font-weight: 800; }
         .rank-detail .d-attend { color: #0284c7; font-weight: 800; }
         .rank-detail .d-comp { color: #d97706; font-weight: 800; }
-        .rank-score { font-weight: 900; width: 40px; font-size: 0.88rem; color: var(--accent); text-align: right; white-space: nowrap; flex-shrink: 0; }
+        .rank-score { font-weight: 900; width: 44px; font-size: 0.92rem; color: var(--accent); text-align: right; white-space: nowrap; flex-shrink: 0; }
 
-        .admin-panel { background: var(--primary); color: white; padding: 10px; border-radius: 10px; margin-top: 10px; margin-bottom: 8px; }
-        .admin-panel h3 { margin: 0 0 6px 0; font-size: 0.9rem; color: #38bdf8; }
-        .admin-input-group { display: flex; gap: 6px; margin-bottom: 6px; }
-        .admin-input-group input { flex: 1; padding: 7px 10px; border-radius: 6px; border: none; font-size: 0.85rem; outline: none; }
-        .admin-input-group button { background: var(--accent); color: white; border: none; padding: 7px 10px; border-radius: 6px; font-weight: 800; cursor: pointer; }
+        .admin-panel { background: var(--primary); color: white; padding: 12px; border-radius: 10px; margin-top: 12px; margin-bottom: 10px; }
+        .admin-panel h3 { margin: 0 0 8px 0; font-size: 0.95rem; color: #38bdf8; }
+        .admin-input-group { display: flex; gap: 6px; margin-bottom: 8px; }
+        .admin-input-group input { flex: 1; padding: 8px 10px; border-radius: 6px; border: none; font-size: 0.88rem; outline: none; }
+        .admin-input-group button { background: var(--accent); color: white; border: none; padding: 8px 12px; border-radius: 6px; font-weight: 800; cursor: pointer; }
         
-        .admin-member-row { display: flex; justify-content: space-between; align-items: center; background: #1e293b; padding: 5px 8px; border-radius: 6px; margin-bottom: 4px; font-size: 0.82rem; border: 1px solid #334155; }
-        .admin-member-row button { background: var(--danger); color: white; border: none; padding: 3px 5px; border-radius: 4px; cursor: pointer; font-size: 0.72rem; font-weight: 700; }
+        .admin-member-row { display: flex; justify-content: space-between; align-items: center; background: #1e293b; padding: 6px 10px; border-radius: 6px; margin-bottom: 5px; font-size: 0.85rem; border: 1px solid #334155; }
+        .admin-member-row button { background: var(--danger); color: white; border: none; padding: 3px 6px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: 700; }
         
-        .footer-setting-box { display: flex; justify-content: flex-end; margin-top: 10px; padding-top: 6px; border-top: 1.5px solid var(--border); }
-        .admin-gear-icon-btn { background: #f8fafc; border: 1.5px solid var(--border); font-size: 0.95rem; cursor: pointer; padding: 4px 7px; color: var(--text-sub); border-radius: 6px; font-weight: 800; }
+        .footer-setting-box { display: flex; justify-content: flex-end; margin-top: 12px; padding-top: 8px; border-top: 1.5px solid var(--border); }
+        .admin-gear-icon-btn { background: #f8fafc; border: 1.5px solid var(--border); font-size: 1rem; cursor: pointer; padding: 5px 8px; color: var(--text-sub); border-radius: 7px; font-weight: 800; }
         .admin-gear-icon-btn:hover { background: #f1f5f9; color: var(--accent); border-color: var(--accent); }
 
         .hidden { display: none !important; }
-        .loading { text-align: center; color: var(--text-sub); padding: 15px; font-weight: 700; }
+        .loading { text-align: center; color: var(--text-sub); padding: 20px; font-weight: 700; }
     </style>
 </head>
 <body>
@@ -183,13 +183,13 @@
             <button onclick="changePassword()" style="background:#059669;">비밀번호 변경</button>
         </div>
 
-        <h3 style="margin-top:10px;">👥 회원 추가/삭제</h3>
+        <h3 style="margin-top:12px;">👥 회원 추가/삭제</h3>
         <div class="admin-input-group">
             <input type="text" id="new-member-name" placeholder="추가할 회원 이름 입력">
             <button onclick="addMember()">회원 추가</button>
         </div>
         <div id="admin-member-list"></div>
-        <button onclick="toggleAdminMode()" style="width:100%; margin-top:8px; background:#475569; color:white; border:none; padding:7px; border-radius:6px; cursor:pointer; font-weight:800;">설정 닫기</button>
+        <button onclick="toggleAdminMode()" style="width:100%; margin-top:10px; background:#475569; color:white; border:none; padding:8px; border-radius:6px; cursor:pointer; font-weight:800;">설정 닫기</button>
     </div>
 
     <div class="footer-setting-box">
@@ -646,7 +646,7 @@
         const totalCheckCount = workoutList.length + attendList.length + compList.length;
 
         const checkTitleDiv = document.createElement('div');
-        checkTitleDiv.style.cssText = "font-size:0.82rem; font-weight:800; color:var(--text-main); margin:2px 0 4px 0;";
+        checkTitleDiv.style.cssText = "font-size:0.85rem; font-weight:800; color:var(--text-main); margin:4px 0 6px 0;";
         checkTitleDiv.textContent = `✅ 참석회원 (${totalCheckCount}명)`;
         listDiv.appendChild(checkTitleDiv);
 
@@ -664,7 +664,7 @@
 
         if (uncheckList.length > 0) {
             const uncheckTitleDiv = document.createElement('div');
-            uncheckTitleDiv.style.cssText = "font-size:0.82rem; font-weight:800; color:var(--text-sub); margin:10px 0 4px 0;";
+            uncheckTitleDiv.style.cssText = "font-size:0.85rem; font-weight:800; color:var(--text-sub); margin:14px 0 6px 0;";
             uncheckTitleDiv.textContent = `📋 미참석회원 (${uncheckList.length}명)`;
             listDiv.appendChild(uncheckTitleDiv);
 
@@ -690,7 +690,7 @@
         namesWrapper.className = 'checkin-column-names';
 
         if (listData.length === 0) {
-            namesWrapper.innerHTML = `<div style="color:#94a3b8; font-size:0.72rem; padding:6px 0; text-align:center;">없음</div>`;
+            namesWrapper.innerHTML = `<div style="color:#94a3b8; font-size:0.75rem; padding:8px 0; text-align:center;">없음</div>`;
         } else {
             listData.forEach((m, idx) => {
                 const nameItem = document.createElement('div');
