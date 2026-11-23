@@ -201,7 +201,7 @@
         </div>
         <div id="admin-event-list" style="margin-bottom:10px;"></div>
         
-        <h3 style="margin-top:10px;">🔑 관리자 비밀번호 변경</h3>
+        <h3 style="margin-top:10px;">🔑 관리자 비밀번호 변경 (PC·휴대폰 공용)</h3>
         <div class="admin-input-group">
             <input type="password" id="new-admin-password" placeholder="새 비밀번호 입력">
             <button type="button" onclick="changePassword()" style="background:#059669;">비밀번호 변경</button>
@@ -223,7 +223,7 @@
 </div>
 
 <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzYbnj8Ctwrq3MKDJdU-bS1oLTWtG5HZjBfP9YurHfUZ9mJ-VTs0PhuhtbBJJGGxLAwUg/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyBuaCjALaahnDGD20jCDrfwiqTb02tGf2ZtpTS2-W6aZaFtEedvSsjvLLSjG0g6eXJnw/exec";
 
     const DEFAULT_MEMBERS = [
         { name: "곽병우" }, { name: "김경기" }, { name: "김미향" }, { name: "김은성" }, 
@@ -592,6 +592,7 @@
         safeStorageSet('todal_members_v26', JSON.stringify(globalMembers));
         safeStorageSet('todal_logs_v26', JSON.stringify(globalLogs));
         safeStorageSet('todal_events_v26', JSON.stringify(dateEvents));
+        safeStorageSet('todal_admin_pwd', adminPassword);
     }
 
     function applyServerPayload(resData) {
@@ -616,6 +617,9 @@
                 }
             });
             dateEvents = cleanedEvents;
+        }
+        if (payload.adminPassword && String(payload.adminPassword).trim()) {
+            adminPassword = String(payload.adminPassword).trim();
         }
         saveLocally();
         return true;
@@ -658,7 +662,8 @@
                     action: "saveData",
                     members: globalMembers,
                     logs: globalLogs,
-                    events: dateEvents
+                    events: dateEvents,
+                    adminPassword: adminPassword
                 })
             });
             const text = await res.text();
@@ -673,8 +678,11 @@
                     }
                 });
                 dateEvents = serverEvents;
-                saveLocally();
             }
+            if (resData && resData.adminPassword && String(resData.adminPassword).trim()) {
+                adminPassword = String(resData.adminPassword).trim();
+            }
+            saveLocally();
             setSyncBanner('ok', `✅ 시트 저장 완료 (출석 기록 ${globalLogs.length}건)`);
         } catch (e) {
             setSyncBanner('warn', `⚠️ 시트 저장 실패 (로컬에 임시 저장됨)`);
@@ -811,7 +819,7 @@
         updateSwipeWrapperHeight();
     }
 
-    function changePassword() {
+    async function changePassword() {
         if (!isAdminLoggedIn) return;
         const input = document.getElementById('new-admin-password');
         const newPwd = input.value.trim();
@@ -819,11 +827,12 @@
             alert("새 비밀번호를 입력해주세요.");
             return;
         }
-        if (confirm("관리자 비밀번호를 정말 변경하시겠습니까?")) {
+        if (confirm("관리자 비밀번호를 정말 변경하시겠습니까? (PC와 휴대폰 모두 동일하게 적용됩니다)")) {
             adminPassword = newPwd;
             safeStorageSet('todal_admin_pwd', newPwd);
             input.value = '';
-            alert("관리자 비밀번호가 성공적으로 변경되었습니다.");
+            await saveDataToSheet();
+            alert("관리자 비밀번호가 변경되어 시트에 저장되었습니다.");
         }
     }
 
