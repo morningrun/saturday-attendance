@@ -218,7 +218,7 @@
 </div>
 
 <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzB4vPV7OhV7gdrkstTlYW0lu949DsfJHENxwZnDFwnZD_E_pn31UgEeAZHx2fh8_YWsQ/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx_xpHbDpCo48vkoZOJbvPv6wbZDBhR5-o8oC6k0fsSJfkZpcmvWZ7ZCwlkSTy_WeflUA/exec";
 
     const DEFAULT_MEMBERS = [
         { name: "곽병우" }, { name: "김경기" }, { name: "김미향" }, { name: "김은성" }, 
@@ -275,15 +275,25 @@
         return s;
     }
 
+    function normalizeScoreValue(raw) {
+        const s = String(raw ?? "").trim();
+        if (s === "10" || s.includes("참석(운동)") || s.includes("운동")) return 10;
+        if (s === "5" || s === "참석") return 5;
+        if (s === "99" || s.includes("대회")) return 99;
+        const num = Number(s);
+        return [10, 5, 99].includes(num) ? num : 0;
+    }
+
     function normalizeLogsList(logsArr) {
         if (!Array.isArray(logsArr)) return [];
         const uniqueMap = new Map();
         logsArr.forEach(l => {
-            const name = String(l.name || "").trim();
-            const date = normalizeKoreanFullDate(l.date);
-            const score = Number(l.score);
+            if (!l || typeof l !== "object") return;
+            const name = String(l.name ?? l.Name ?? l.회원명 ?? l.이름 ?? "").trim();
+            const date = normalizeKoreanFullDate(l.date ?? l.Date ?? l.날짜 ?? "");
+            const score = normalizeScoreValue(l.score ?? l.Score ?? l.점수 ?? "");
             if (name && date && [10, 5, 99].includes(score)) {
-                let month = Number(l.month) || 0;
+                let month = Number(l.month ?? l.Month ?? l.월) || 0;
                 if (!month) {
                     const mMatch = date.match(/(\d+)월/);
                     if (mMatch) month = parseInt(mMatch[1], 10);
@@ -572,40 +582,59 @@
         safeStorageSet('todal_events_v25', JSON.stringify(dateEvents));
     }
 
+    function applyServerPayload(resData) {
+        if (!resData || typeof resData !== "object") return false;
+        const payload = resData.data && typeof resData.data === "object" ? resData.data : resData;
+
+        if (Array.isArray(payload.members) && payload.members.length > 0) {
+            globalMembers = payload.members.map(m => (typeof m === "string" ? { name: m } : m));
+        }
+        if (Array.isArray(payload.logs)) {
+            const serverLogs = normalizeLogsList(payload.logs);
+            if (serverLogs.length > 0 || globalLogs.length === 0) {
+                globalLogs = serverLogs;
+            }
+        } else if (Array.isArray(payload)) {
+            const serverLogs = normalizeLogsList(payload);
+            if (serverLogs.length > 0 || globalLogs.length === 0) {
+                globalLogs = serverLogs;
+            }
+        }
+        if (payload.events && typeof payload.events === "object") {
+            const cleanedEvents = {};
+            Object.entries(payload.events).forEach(([k, v]) => {
+                const normKey = normalizeKoreanFullDate(k);
+                const title = String(v || "").trim();
+                if (normKey && title) {
+                    cleanedEvents[normKey] = title;
+                }
+            });
+            if (Object.keys(cleanedEvents).length > 0 || Object.keys(dateEvents).length === 0) {
+                dateEvents = cleanedEvents;
+            }
+        }
+        saveLocally();
+        return true;
+    }
+
     async function loadDataFromSheet() {
         try {
             const res = await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
                 body: JSON.stringify({ action: "getData" })
             });
-            const resData = await res.json();
-            if (resData.status === "success") {
-                if (resData.members && Array.isArray(resData.members) && resData.members.length > 0) {
-                    globalMembers = resData.members;
-                }
-                if (resData.logs && Array.isArray(resData.logs)) {
-                    const serverLogs = normalizeLogsList(resData.logs);
-                    if (serverLogs.length > 0 || globalLogs.length === 0) {
-                        globalLogs = serverLogs;
-                    }
-                }
-                if (resData.events && typeof resData.events === "object") {
-                    const cleanedEvents = {};
-                    Object.entries(resData.events).forEach(([k, v]) => {
-                        const normKey = normalizeKoreanFullDate(k);
-                        const title = String(v || "").trim();
-                        if (normKey && title) {
-                            cleanedEvents[normKey] = title;
-                        }
-                    });
-                    if (Object.keys(cleanedEvents).length > 0 || Object.keys(dateEvents).length === 0) {
-                        dateEvents = cleanedEvents;
-                    }
-                }
-                saveLocally();
-            }
+            const text = await res.text();
+            const resData = JSON.parse(text);
+            applyServerPayload(resData);
         } catch (e) {
-            console.error("구글 시트 로드 실패, 로컬 데이터 유지", e);
+            try {
+                const getRes = await fetch(GOOGLE_SCRIPT_URL);
+                const getText = await getRes.text();
+                const getData = JSON.parse(getText);
+                applyServerPayload(getData);
+            } catch (e2) {
+                console.error("구글 시트 로드 실패, 로컬 데이터 유지", e, e2);
+            }
         }
         sortMembers();
     }
@@ -625,7 +654,8 @@
                     events: dateEvents
                 })
             });
-            const resData = await res.json();
+            const text = await res.text();
+            const resData = JSON.parse(text);
             if (resData && resData.events && typeof resData.events === "object") {
                 const serverEvents = {};
                 Object.entries(resData.events).forEach(([k, v]) => {
