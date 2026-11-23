@@ -69,7 +69,7 @@
 
         .event-banner { background: #fff7ed; border: 1.5px solid #fdba74; color: #9a3412; border-radius: 8px; padding: 10px; margin-bottom: 10px; font-size: 0.85rem; font-weight: 800; text-align: center; }
 
-        .stats-current-date-box { text-align: center; font-size: 0.9rem; font-weight: 800; color: var(--accent); margin-top: 8px; margin-bottom: 8px; letter-spacing: -0.3px; }
+        .stats-current-date-box { text-align: center; font-size: 0.9rem; font-weight: 800; color: var(--accent); margin-top: 6px; margin-bottom: 8px; letter-spacing: -0.3px; }
 
         .saturday-list-box { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 8px; margin-bottom: 8px; }
         .saturday-list-title { font-size: 0.85rem; font-weight: 800; color: var(--primary); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
@@ -116,15 +116,23 @@
         .btn-group button { flex: 1; padding: 6px 2px; font-size: 0.72rem; border: 1px solid var(--border); border-radius: 5px; cursor: pointer; font-weight: 700; background: #f8fafc; color: var(--text-sub); text-align: center; white-space: nowrap; }
         .btn-group button:hover { background: #eff6ff; border-color: var(--accent); color: var(--accent); }
 
-        /* 누적현황 순위 리스트 */
-        .rank-card { display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; margin-bottom: 5px; background: #f8fafc; border: 1.5px solid var(--border); border-radius: 7px; gap: 3px; }
-        .rank-number { font-weight: 800; color: var(--accent); width: 34px; font-size: 0.76rem; white-space: nowrap; flex-shrink: 0; }
-        .rank-name { font-weight: 800; width: 46px; font-size: 0.85rem; color: var(--primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
-        .rank-detail { font-size: 0.67rem; color: var(--text-sub); font-weight: 700; text-align: center; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; justify-content: center; gap: 3px; }
-        .rank-detail .d-workout { color: #059669; font-weight: 800; }
-        .rank-detail .d-attend { color: #0284c7; font-weight: 800; }
-        .rank-detail .d-comp { color: #d97706; font-weight: 800; }
-        .rank-score { font-weight: 900; width: 44px; font-size: 0.92rem; color: var(--accent); text-align: right; white-space: nowrap; flex-shrink: 0; }
+        /* 누적현황 엑셀 시트형 테이블 */
+        .excel-sheet-wrap { width: 100%; overflow-x: auto; border: 1.5px solid #94a3b8; border-radius: 8px; background: #ffffff; box-sizing: border-box; }
+        .stats-excel-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 0.76rem; color: var(--text-main); }
+        .stats-excel-table thead th { background: #1e293b; color: #ffffff; font-weight: 800; padding: 7px 3px; border: 1px solid #334155; text-align: center; white-space: nowrap; }
+        .stats-excel-table tbody td { padding: 6px 3px; border: 1px solid #cbd5e1; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 700; }
+        .stats-excel-table tbody tr:nth-child(even) { background: #f8fafc; }
+        .stats-excel-table tbody tr.top-1 { background: #fef9c3; }
+        .stats-excel-table tbody tr.top-2 { background: #f1f5f9; }
+        .stats-excel-table tbody tr.top-3 { background: #ffedd5; }
+
+        .col-rank { width: 15%; color: var(--accent); font-weight: 800; }
+        .col-name { width: 19%; color: var(--primary); font-weight: 800; }
+        .col-w { width: 17%; color: #059669; }
+        .col-a { width: 15%; color: #0284c7; }
+        .col-c { width: 15%; color: #d97706; }
+        .col-pts { width: 19%; background: #eff6ff; color: #1d4ed8; font-weight: 900; }
+        .stats-excel-table tbody tr.top-1 .col-pts { background: #fde047; color: #0f172a; }
 
         .admin-panel { background: var(--primary); color: white; padding: 12px; border-radius: 10px; margin-top: 12px; margin-bottom: 10px; }
         .admin-panel h3 { margin: 0 0 8px 0; font-size: 0.95rem; color: #38bdf8; }
@@ -808,13 +816,11 @@
         tripleContainer.appendChild(colComp);
         listDiv.appendChild(tripleContainer);
 
-        // 일반 회원에게는 미참석 명단 및 체크 버튼을 전혀 표시하지 않음
         if (!isAdminLoggedIn) {
             updateSwipeWrapperHeight();
             return;
         }
 
-        // 관리자 로그인 상태에서만 검색창 및 출석체크 대상 목록 표시
         const searchBox = document.createElement('div');
         searchBox.className = 'search-box-container';
         const searchInput = document.createElement('input');
@@ -1087,24 +1093,66 @@
 
         displayList.sort((a, b) => (b.score !== a.score) ? b.score - a.score : a.name.localeCompare(b.name, 'ko'));
 
+        const sheetWrap = document.createElement('div');
+        sheetWrap.className = 'excel-sheet-wrap';
+
+        const table = document.createElement('table');
+        table.className = 'stats-excel-table';
+        table.innerHTML = `
+            <thead>
+                <tr>
+                    <th style="width:15%;">순위</th>
+                    <th style="width:19%;">이름</th>
+                    <th style="width:17%;">운동(+10)</th>
+                    <th style="width:15%;">참석(+5)</th>
+                    <th style="width:15%;">대회(+10)</th>
+                    <th style="width:19%;">점수</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        `;
+
+        const tbody = table.querySelector('tbody');
         let currentRank = 1;
+        let totalWorkout = 0, totalAttend = 0, totalComp = 0, totalScore = 0;
+
         displayList.forEach((item, index) => {
             if (index > 0 && item.score < displayList[index - 1].score) currentRank = index + 1;
-            const card = document.createElement('div');
-            card.className = 'rank-card';
-            let rankBadge = (currentRank === 1 ? '🥇 1위' : (currentRank === 2 ? '🥈 2위' : (currentRank === 3 ? '🥉 3위' : `${currentRank}위`)));
-            card.innerHTML = `
-                <div class="rank-number">${rankBadge}</div>
-                <div class="rank-name">${item.name}</div>
-                <div class="rank-detail">
-                    <span class="d-workout">참석(운동)${item.workout}</span>·
-                    <span class="d-attend">참석${item.attend}</span>·
-                    <span class="d-comp">대회${item.comp}</span>
-                </div>
-                <div class="rank-score">${item.score}점</div>
+            totalWorkout += item.workout;
+            totalAttend += item.attend;
+            totalComp += item.comp;
+            totalScore += item.score;
+
+            const rankText = currentRank === 1 ? '🥇 1' : (currentRank === 2 ? '🥈 2' : (currentRank === 3 ? '🥉 3' : `${currentRank}`));
+            const rowClass = currentRank === 1 ? 'top-1' : (currentRank === 2 ? 'top-2' : (currentRank === 3 ? 'top-3' : ''));
+
+            const tr = document.createElement('tr');
+            if (rowClass) tr.className = rowClass;
+            tr.innerHTML = `
+                <td class="col-rank">${rankText}</td>
+                <td class="col-name">${item.name}</td>
+                <td class="col-w">${item.workout}</td>
+                <td class="col-a">${item.attend}</td>
+                <td class="col-c">${item.comp}</td>
+                <td class="col-pts">${item.score}점</td>
             `;
-            statsDiv.appendChild(card);
+            tbody.appendChild(tr);
         });
+
+        const sumTr = document.createElement('tr');
+        sumTr.style.cssText = "background:#e2e8f0; border-top:2px solid #64748b;";
+        sumTr.innerHTML = `
+            <td class="col-rank" style="color:#0f172a;">합계</td>
+            <td class="col-name" style="color:#0f172a;">${displayList.length}명</td>
+            <td class="col-w" style="color:#0f172a;">${totalWorkout}</td>
+            <td class="col-a" style="color:#0f172a;">${totalAttend}</td>
+            <td class="col-c" style="color:#0f172a;">${totalComp}</td>
+            <td class="col-pts" style="background:#cbd5e1; color:#0f172a;">${totalScore}점</td>
+        `;
+        tbody.appendChild(sumTr);
+
+        sheetWrap.appendChild(table);
+        statsDiv.appendChild(sheetWrap);
         updateSwipeWrapperHeight();
     }
 
