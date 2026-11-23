@@ -241,17 +241,33 @@
         { name: "조성국" }, { name: "최순규" }, { name: "최잔디" }, { name: "황연성" }
     ];
 
-    let globalMembers = JSON.parse(localStorage.getItem('todal_members_v25')) || [...DEFAULT_MEMBERS];
-    let rawLogs = JSON.parse(localStorage.getItem('todal_logs_v25')) || [];
-    let globalLogs = rawLogs.filter(l => [10, 5, 99].includes(Number(l.score)));
-    let dateEvents = JSON.parse(localStorage.getItem('todal_events_v25')) || {};
+    function safeStorageGet(key) {
+        try {
+            return window.localStorage.getItem(key);
+        } catch (e) {
+            return null;
+        }
+    }
 
-    let adminPassword = localStorage.getItem('todal_admin_pwd') || "1234";
+    function safeStorageSet(key, val) {
+        try {
+            window.localStorage.setItem(key, val);
+        } catch (e) {
+            console.warn("localStorage 저장 제한 환경:", key);
+        }
+    }
+
+    let globalMembers = JSON.parse(safeStorageGet('todal_members_v25')) || [...DEFAULT_MEMBERS];
+    let rawLogs = JSON.parse(safeStorageGet('todal_logs_v25')) || [];
+    let globalLogs = rawLogs.filter(l => [10, 5, 99].includes(Number(l.score)));
+    let dateEvents = JSON.parse(safeStorageGet('todal_events_v25')) || {};
+
+    let adminPassword = safeStorageGet('todal_admin_pwd') || "1234";
     let isAdminLoggedIn = sessionStorage.getItem('todal_admin_logged_in') === 'true';
     let adminSearchKeyword = "";
 
-    let selectedDateStr = localStorage.getItem('todal_selected_date') || "";
-    let checkinSelectedMonth = localStorage.getItem('todal_selected_month') || (String(new Date().getMonth() + 1) + "월");
+    let selectedDateStr = safeStorageGet('todal_selected_date') || "";
+    let checkinSelectedMonth = safeStorageGet('todal_selected_month') || (String(new Date().getMonth() + 1) + "월");
     let statsSelectedMonth = "전체";
     let activePaneIndex = 0;
 
@@ -286,6 +302,21 @@
         return `${years}년 ${months}월 ${days}일 ${weekDays[dateObj.getDay()]}`;
     }
 
+    function normalizeEventDateKey(val) {
+        const s = String(val || "").trim();
+        if (!s) return "";
+        const korMatch = s.match(/(\d{4})\s*년\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일/);
+        if (korMatch) {
+            const dt = new Date(Number(korMatch[1]), Number(korMatch[2]) - 1, Number(korMatch[3]));
+            if (!isNaN(dt.getTime())) return formatDateToString(dt);
+        }
+        const parsed = new Date(s);
+        if (!isNaN(parsed.getTime())) {
+            return formatDateToString(parsed);
+        }
+        return s;
+    }
+
     function getAllSaturdaysOfCurrentYear() {
         const saturdays = [];
         let d = new Date(currentYear, 0, 1);
@@ -300,7 +331,15 @@
     const allSaturdays = getAllSaturdaysOfCurrentYear();
 
     function getEventForDate(dStr) {
-        return dateEvents[String(dStr).trim()] || "";
+        const targetKey = normalizeEventDateKey(dStr);
+        if (!targetKey) return "";
+        if (dateEvents[targetKey]) return dateEvents[targetKey];
+        for (const [k, v] of Object.entries(dateEvents || {})) {
+            if (normalizeEventDateKey(k) === targetKey && String(v || "").trim()) {
+                return String(v).trim();
+            }
+        }
+        return "";
     }
 
     function syncAdminUIState() {
@@ -346,7 +385,7 @@
                     });
                     btn.classList.add('active');
                     checkinSelectedMonth = m;
-                    localStorage.setItem('todal_selected_month', m);
+                    safeStorageSet('todal_selected_month', m);
                     
                     const filtered = allSaturdays.filter(dStr => {
                         const mMatch = dStr.match(/(\d+)월/);
@@ -361,7 +400,7 @@
                             return tDate <= today;
                         });
                         selectedDateStr = validFiltered.length > 0 ? validFiltered[validFiltered.length - 1] : filtered[0];
-                        localStorage.setItem('todal_selected_date', selectedDateStr);
+                        safeStorageSet('todal_selected_date', selectedDateStr);
                     }
                     renderSaturdayVerticalList();
                 };
@@ -458,7 +497,7 @@
                 `;
                 btn.onclick = () => {
                     selectedDateStr = dStr;
-                    localStorage.setItem('todal_selected_date', dStr);
+                    safeStorageSet('todal_selected_date', dStr);
                     renderSaturdayVerticalList();
                 };
             } else {
@@ -469,7 +508,7 @@
                 `;
                 btn.onclick = () => {
                     selectedDateStr = dStr;
-                    localStorage.setItem('todal_selected_date', dStr);
+                    safeStorageSet('todal_selected_date', dStr);
                     renderSaturdayVerticalList();
                 };
             }
@@ -514,9 +553,9 @@
     function saveLocally() {
         sortMembers();
         globalLogs = globalLogs.filter(l => [10, 5, 99].includes(Number(l.score)));
-        localStorage.setItem('todal_members_v25', JSON.stringify(globalMembers));
-        localStorage.setItem('todal_logs_v25', JSON.stringify(globalLogs));
-        localStorage.setItem('todal_events_v25', JSON.stringify(dateEvents));
+        safeStorageSet('todal_members_v25', JSON.stringify(globalMembers));
+        safeStorageSet('todal_logs_v25', JSON.stringify(globalLogs));
+        safeStorageSet('todal_events_v25', JSON.stringify(dateEvents));
     }
 
     async function loadDataFromSheet() {
@@ -541,10 +580,23 @@
                     });
                     globalLogs = Array.from(uniqueMap.values());
                 }
+                if (resData.events && typeof resData.events === "object") {
+                    const cleanedEvents = {};
+                    Object.entries(resData.events).forEach(([k, v]) => {
+                        const normKey = normalizeEventDateKey(k);
+                        const title = String(v || "").trim();
+                        if (normKey && title) {
+                            cleanedEvents[normKey] = title;
+                        }
+                    });
+                    if (Object.keys(cleanedEvents).length > 0 || Object.keys(dateEvents).length === 0) {
+                        dateEvents = cleanedEvents;
+                    }
+                }
                 saveLocally();
             }
         } catch (e) {
-            console.error("구글 시트 로드 실패, 로컬 데이터 유지");
+            console.error("구글 시트 로드 실패, 로컬 데이터 유지", e);
         }
         sortMembers();
     }
@@ -563,16 +615,30 @@
         saveLocally();
 
         try {
-            await fetch(GOOGLE_SCRIPT_URL, {
+            const res = await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
                 body: JSON.stringify({
                     action: "saveData",
                     members: globalMembers,
-                    logs: globalLogs
+                    logs: globalLogs,
+                    events: dateEvents
                 })
             });
+            const resData = await res.json();
+            if (resData && resData.events && typeof resData.events === "object") {
+                const serverEvents = {};
+                Object.entries(resData.events).forEach(([k, v]) => {
+                    const normKey = normalizeEventDateKey(k);
+                    const title = String(v || "").trim();
+                    if (normKey && title) {
+                        serverEvents[normKey] = title;
+                    }
+                });
+                dateEvents = serverEvents;
+                saveLocally();
+            }
         } catch (e) {
-            console.error("구글 시트 저장 실패");
+            console.error("구글 시트 저장 실패", e);
         }
     }
 
@@ -595,29 +661,34 @@
         const listDiv = document.getElementById('admin-event-list');
         if (!listDiv) return;
         listDiv.innerHTML = '';
-        const entries = Object.entries(dateEvents).filter(([, title]) => title && title.trim());
+        const entries = Object.entries(dateEvents).filter(([, title]) => title && String(title).trim());
         if (entries.length === 0) {
             listDiv.innerHTML = `<div style="font-size:0.78rem; color:#94a3b8;">등록된 공식대회·행사가 없습니다.</div>`;
             return;
         }
         entries.forEach(([dStr, title]) => {
+            const displayKey = normalizeEventDateKey(dStr).replace(/^\d{4}년\s*/, '');
             const row = document.createElement('div');
             row.className = 'admin-member-row';
             row.innerHTML = `
-                <span>${dStr.replace(/^\d{4}년\s*/, '')} — <strong>${title}</strong></span>
-                <button type="button" onclick="removeDateEvent('${dStr.replace(/'/g, "\\'")}')">해제</button>
+                <span>${displayKey} — <strong>${title}</strong></span>
+                <button type="button" onclick="removeDateEvent('${String(dStr).replace(/'/g, "\\'")}')">해제</button>
             `;
             listDiv.appendChild(row);
         });
     }
 
-    function saveDateEvent() {
+    async function saveDateEvent() {
         if (!isAdminLoggedIn) return;
         const select = document.getElementById('event-date-select');
         const input = document.getElementById('event-title-input');
         if (!select || !input) return;
-        const dStr = select.value;
+        const dStr = normalizeEventDateKey(select.value);
         const title = input.value.trim();
+        if (!dStr) {
+            alert("날짜를 선택해주세요.");
+            return;
+        }
         if (!title) {
             alert("행사명이나 공식일정 텍스트를 입력해주세요. (예: 1/4분기 공식대회, 야유회)");
             return;
@@ -628,16 +699,29 @@
         renderAdminEventList();
         renderSaturdayVerticalList();
         updateSwipeWrapperHeight();
+        await saveDataToSheet();
+        renderAdminEventList();
+        renderSaturdayVerticalList();
         alert(`[${dStr.replace(/^\d{4}년\s*/, '')}]에 [${title}] 일정이 등록되었습니다.`);
     }
 
-    function removeDateEvent(dStr) {
+    async function removeDateEvent(dStr) {
         if (!isAdminLoggedIn) return;
+        const targetKey = normalizeEventDateKey(dStr);
         delete dateEvents[dStr];
+        delete dateEvents[targetKey];
+        for (const k of Object.keys(dateEvents)) {
+            if (normalizeEventDateKey(k) === targetKey) {
+                delete dateEvents[k];
+            }
+        }
         saveLocally();
         renderAdminEventList();
         renderSaturdayVerticalList();
         updateSwipeWrapperHeight();
+        await saveDataToSheet();
+        renderAdminEventList();
+        renderSaturdayVerticalList();
     }
 
     function toggleAdminMode() {
@@ -697,7 +781,7 @@
         }
         if (confirm("관리자 비밀번호를 정말 변경하시겠습니까?")) {
             adminPassword = newPwd;
-            localStorage.setItem('todal_admin_pwd', newPwd);
+            safeStorageSet('todal_admin_pwd', newPwd);
             input.value = '';
             alert("관리자 비밀번호가 성공적으로 변경되었습니다.");
         }
@@ -1196,6 +1280,10 @@
         await loadDataFromSheet();
         renderSaturdayVerticalList();
         renderStats();
+        if (isAdminLoggedIn) {
+            populateEventDateSelect();
+            renderAdminEventList();
+        }
     }
 
     if (document.readyState === 'loading') {
