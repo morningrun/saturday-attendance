@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>토달 출석부</title>
     
-    <!-- 카카오톡 및 웹 썸네일/아이콘 설정 -->
     <link rel="apple-touch-icon" href="todal_attendance_og.jpg">
     <link rel="icon" sizes="192x192" href="todal_attendance_og.jpg">
     <link rel="icon" href="todal_attendance_og.jpg" type="image/jpeg">
 
-    <!-- 🌟 카카오톡 공유 시 미리보기 이미지 및 제목/설정 태그 -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="토달 출석부">
     <meta property="og:description" content="토요일 달리기 모임 출석 및 누적현황 관리 시스템">
@@ -73,7 +71,7 @@
 
         .saturday-list-box { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 8px; margin-bottom: 8px; }
         .saturday-list-title { font-size: 0.85rem; font-weight: 800; color: var(--primary); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
-        .saturday-vertical-group { display: flex; flex-direction: column; gap: 5px; max-height: 200px; overflow-y: auto; }
+        .saturday-vertical-group { display: flex; flex-direction: column; gap: 5px; }
         
         .saturday-item-btn { padding: 8px 10px; background: #ffffff; border: 1px solid var(--border); border-radius: 7px; cursor: pointer; text-align: left; display: flex; flex-direction: column; gap: 3px; transition: all 0.2s; }
         .saturday-item-btn.active { background: #eff6ff; color: var(--accent); border: 2px solid var(--accent); }
@@ -88,7 +86,6 @@
         .saturday-item-btn.active .saturday-stat-badge { background: #dbeafe; color: #1e40af; }
         .saturday-event-badge { font-size: 0.73rem; font-weight: 800; color: #9a3412; background: #ffedd5; padding: 2px 6px; border-radius: 4px; display: inline-block; width: fit-content; }
 
-        /* 가로 3분할 요약 박스 */
         .checkin-triple-container { display: flex; gap: 6px; margin-bottom: 10px; width: 100%; box-sizing: border-box; padding: 0; align-items: stretch; }
         .checkin-column-box { flex: 1; border: 1.5px solid var(--border); border-radius: 8px; padding: 6px 4px; display: flex; flex-direction: column; min-width: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.02); box-sizing: border-box; }
         
@@ -103,10 +100,9 @@
         
         .checkin-name-item { background: transparent; padding: 3px 2px; border-radius: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; gap: 4px; border: none; box-shadow: none; }
         .checkin-name-item.admin-clickable { cursor: pointer; transition: background 0.15s; }
-        .checkin-name-item.admin-clickable:hover { background: rgba(0,0,0,0.06); color: var(--accent); }
+        .checkin-name-item.admin-clickable:hover { background: rgba(0,0,0,0.05); color: var(--accent); }
         .checkin-item-num { color: #64748b; font-size: 0.72rem; font-weight: 700; min-width: 16px; text-align: right; flex-shrink: 0; }
 
-        /* 관리자 전용 회원 체크 카드 스타일 */
         .member-card { display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; margin-bottom: 5px; background: var(--card-bg); border: 1.5px solid var(--border); border-radius: 7px; gap: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); width: 100%; box-sizing: border-box; }
         .member-info { display: flex; align-items: center; gap: 6px; flex-shrink: 0; min-width: 95px; }
         .member-name { font-weight: 700; font-size: 0.9rem; color: var(--primary); display: flex; align-items: center; gap: 4px; white-space: nowrap; }
@@ -116,7 +112,6 @@
         .btn-group button { flex: 1; padding: 6px 2px; font-size: 0.72rem; border: 1px solid var(--border); border-radius: 5px; cursor: pointer; font-weight: 700; background: #f8fafc; color: var(--text-sub); text-align: center; white-space: nowrap; }
         .btn-group button:hover { background: #eff6ff; border-color: var(--accent); color: var(--accent); }
 
-        /* 누적현황 엑셀 시트형 테이블 */
         .excel-sheet-wrap { width: 100%; overflow-x: auto; border: 1.5px solid #94a3b8; border-radius: 8px; background: #ffffff; box-sizing: border-box; }
         .stats-excel-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 0.76rem; color: var(--text-main); }
         .stats-excel-table thead th { background: #1e293b; color: #ffffff; font-weight: 800; padding: 7px 3px; border: 1px solid #334155; text-align: center; white-space: nowrap; }
@@ -159,7 +154,6 @@
         <div class="main-title">🏃‍♂️ 토달 출석부</div>
     </div>
 
-    <!-- 관리자 로그인 시에만 표시되는 상단 상태 바 -->
     <div id="admin-status-bar" class="admin-status-bar hidden">
         <span>🔐 관리자 모드 (출석체크·일정관리 활성)</span>
         <button type="button" class="admin-logout-btn" onclick="logoutAdminMode()">로그아웃</button>
@@ -172,7 +166,6 @@
 
     <div class="swipe-wrapper" id="swipe-wrapper">
         <div id="swipe-container" class="swipe-container">
-            <!-- 1번 패널: 출석현황 / 관리자 체크 -->
             <div class="swipe-pane active-pane" id="pane-checkin">
                 <div class="month-filter" id="checkin-month-buttons"></div>
                 
@@ -181,11 +174,9 @@
                     <div class="saturday-vertical-group" id="saturday-vertical-wrapper"></div>
                 </div>
 
-                <!-- 출석현황 및 관리자 출석체크 영역 -->
                 <div id="member-list" class="loading">데이터 로딩 중...</div>
             </div>
 
-            <!-- 2번 패널: 누적현황 -->
             <div class="swipe-pane" id="pane-stats">
                 <div class="month-filter" id="stats-month-buttons"></div>
                 <div class="stats-current-date-box" id="stats-current-date-text">[ 2026년 11월 23일 현재 ]</div>
@@ -194,7 +185,6 @@
         </div>
     </div>
 
-    <!-- 관리자 설정 및 회원 관리 패널 -->
     <div id="admin-panel" class="admin-panel hidden">
         <h3>🔒 관리자 설정 및 회원 관리</h3>
 
@@ -228,7 +218,7 @@
 </div>
 
 <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxPXWM6bKfUYZgRL5hC947VmRQgtB8RBrylaTtOO0Yb2zBVuRwIBUQtcqgNgiU9FEfuaA/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx-8cSNktdMbengM1l0ppJxlqBa9YnbWLdJuykb3wCO6-vnD1Mq75jRhtl0pj_uRn4-8g/exec";
 
     const DEFAULT_MEMBERS = [
         { name: "곽병우" }, { name: "김경기" }, { name: "김미향" }, { name: "김은성" }, 
@@ -257,16 +247,63 @@
         }
     }
 
+    function formatDateToString(dateObj) {
+        const years = dateObj.getFullYear();
+        const months = dateObj.getMonth() + 1;
+        const days = dateObj.getDate();
+        const weekDays = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+        return `${years}년 ${months}월 ${days}일 ${weekDays[dateObj.getDay()]}`;
+    }
+
+    function normalizeKoreanFullDate(val) {
+        const s = String(val || "").trim();
+        if (!s) return "";
+        const korMatch = s.match(/(\d{4})\s*년\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일/);
+        if (korMatch) {
+            const dt = new Date(Number(korMatch[1]), Number(korMatch[2]) - 1, Number(korMatch[3]));
+            if (!isNaN(dt.getTime())) return formatDateToString(dt);
+        }
+        const isoMatch = s.match(/^(\d{4})[-./](\d{1,2})[-./](\d{1,2})/);
+        if (isoMatch) {
+            const dt = new Date(Number(isoMatch[1]), Number(isoMatch[2]) - 1, Number(isoMatch[3]));
+            if (!isNaN(dt.getTime())) return formatDateToString(dt);
+        }
+        const parsed = new Date(s);
+        if (!isNaN(parsed.getTime())) {
+            return formatDateToString(parsed);
+        }
+        return s;
+    }
+
+    function normalizeLogsList(logsArr) {
+        if (!Array.isArray(logsArr)) return [];
+        const uniqueMap = new Map();
+        logsArr.forEach(l => {
+            const name = String(l.name || "").trim();
+            const date = normalizeKoreanFullDate(l.date);
+            const score = Number(l.score);
+            if (name && date && [10, 5, 99].includes(score)) {
+                let month = Number(l.month) || 0;
+                if (!month) {
+                    const mMatch = date.match(/(\d+)월/);
+                    if (mMatch) month = parseInt(mMatch[1], 10);
+                }
+                uniqueMap.set(date + "_" + name, { name, date, score, month });
+            }
+        });
+        return Array.from(uniqueMap.values());
+    }
+
     let globalMembers = JSON.parse(safeStorageGet('todal_members_v25')) || [...DEFAULT_MEMBERS];
     let rawLogs = JSON.parse(safeStorageGet('todal_logs_v25')) || [];
-    let globalLogs = rawLogs.filter(l => [10, 5, 99].includes(Number(l.score)));
+    let globalLogs = normalizeLogsList(rawLogs);
     let dateEvents = JSON.parse(safeStorageGet('todal_events_v25')) || {};
 
     let adminPassword = safeStorageGet('todal_admin_pwd') || "1234";
     let isAdminLoggedIn = sessionStorage.getItem('todal_admin_logged_in') === 'true';
     let adminSearchKeyword = "";
 
-    let selectedDateStr = safeStorageGet('todal_selected_date') || "";
+    let selectedDateStr = normalizeKoreanFullDate(safeStorageGet('todal_selected_date')) || "";
     let checkinSelectedMonth = safeStorageGet('todal_selected_month') || (String(new Date().getMonth() + 1) + "월");
     let statsSelectedMonth = "전체";
     let activePaneIndex = 0;
@@ -294,29 +331,6 @@
         setTimeout(calculate, 200);
     }
 
-    function formatDateToString(dateObj) {
-        const years = dateObj.getFullYear();
-        const months = dateObj.getMonth() + 1;
-        const days = dateObj.getDate();
-        const weekDays = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
-        return `${years}년 ${months}월 ${days}일 ${weekDays[dateObj.getDay()]}`;
-    }
-
-    function normalizeEventDateKey(val) {
-        const s = String(val || "").trim();
-        if (!s) return "";
-        const korMatch = s.match(/(\d{4})\s*년\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일/);
-        if (korMatch) {
-            const dt = new Date(Number(korMatch[1]), Number(korMatch[2]) - 1, Number(korMatch[3]));
-            if (!isNaN(dt.getTime())) return formatDateToString(dt);
-        }
-        const parsed = new Date(s);
-        if (!isNaN(parsed.getTime())) {
-            return formatDateToString(parsed);
-        }
-        return s;
-    }
-
     function getAllSaturdaysOfCurrentYear() {
         const saturdays = [];
         let d = new Date(currentYear, 0, 1);
@@ -331,11 +345,11 @@
     const allSaturdays = getAllSaturdaysOfCurrentYear();
 
     function getEventForDate(dStr) {
-        const targetKey = normalizeEventDateKey(dStr);
+        const targetKey = normalizeKoreanFullDate(dStr);
         if (!targetKey) return "";
         if (dateEvents[targetKey]) return dateEvents[targetKey];
         for (const [k, v] of Object.entries(dateEvents || {})) {
-            if (normalizeEventDateKey(k) === targetKey && String(v || "").trim()) {
+            if (normalizeKoreanFullDate(k) === targetKey && String(v || "").trim()) {
                 return String(v).trim();
             }
         }
@@ -375,7 +389,7 @@
                 btn.style.borderColor = '#cbd5e1';
                 btn.style.cursor = 'not-allowed';
                 btn.innerText = m + " 🔒";
-                btn.onclick = () => alert("아직 다가오지 않은 미래 월은 조회할 수 없습니다!");
+                btn.onclick = () => alert("아직 다가오지 않은 미래 월은 조회 및 체크할 수 없습니다!");
             } else {
                 btn.className = `month-btn ${m === checkinSelectedMonth ? 'active' : ''}`;
                 btn.innerText = m;
@@ -460,7 +474,7 @@
 
         const dateStatsMap = {};
         globalLogs.forEach(log => {
-            const dStr = String(log.date).trim();
+            const dStr = normalizeKoreanFullDate(log.date);
             const sNum = Number(log.score);
             if ([10, 5, 99].includes(sNum)) {
                 if (!dateStatsMap[dStr]) {
@@ -488,7 +502,7 @@
             if (isFuture) {
                 btn.className = 'saturday-item-btn disabled';
                 btn.innerHTML = `<span class="saturday-date-text">🔒 ${displayDateText} (예정)</span>`;
-                btn.onclick = () => alert("아직 다가오지 않은 미래 날짜는 조회할 수 없습니다!");
+                btn.onclick = () => alert("아직 다가오지 않은 미래 날짜는 체크할 수 없습니다!");
             } else if (eventTitle) {
                 btn.className = `saturday-item-btn event-locked ${isSelected ? 'active' : ''}`;
                 btn.innerHTML = `
@@ -552,7 +566,7 @@
 
     function saveLocally() {
         sortMembers();
-        globalLogs = globalLogs.filter(l => [10, 5, 99].includes(Number(l.score)));
+        globalLogs = normalizeLogsList(globalLogs);
         safeStorageSet('todal_members_v25', JSON.stringify(globalMembers));
         safeStorageSet('todal_logs_v25', JSON.stringify(globalLogs));
         safeStorageSet('todal_events_v25', JSON.stringify(dateEvents));
@@ -570,20 +584,15 @@
                     globalMembers = resData.members;
                 }
                 if (resData.logs && Array.isArray(resData.logs)) {
-                    const uniqueMap = new Map();
-                    resData.logs.forEach(l => {
-                        const sNum = Number(l.score);
-                        if (l.name && l.date && [10, 5, 99].includes(sNum)) {
-                            const key = String(l.date).trim() + "_" + String(l.name).trim();
-                            uniqueMap.set(key, { name: String(l.name).trim(), date: String(l.date).trim(), score: sNum, month: l.month });
-                        }
-                    });
-                    globalLogs = Array.from(uniqueMap.values());
+                    const serverLogs = normalizeLogsList(resData.logs);
+                    if (serverLogs.length > 0 || globalLogs.length === 0) {
+                        globalLogs = serverLogs;
+                    }
                 }
                 if (resData.events && typeof resData.events === "object") {
                     const cleanedEvents = {};
                     Object.entries(resData.events).forEach(([k, v]) => {
-                        const normKey = normalizeEventDateKey(k);
+                        const normKey = normalizeKoreanFullDate(k);
                         const title = String(v || "").trim();
                         if (normKey && title) {
                             cleanedEvents[normKey] = title;
@@ -603,15 +612,7 @@
 
     async function saveDataToSheet() {
         sortMembers();
-        const uniqueMap = new Map();
-        globalLogs.forEach(l => {
-            const sNum = Number(l.score);
-            if (l.name && l.date && [10, 5, 99].includes(sNum)) {
-                const key = String(l.date).trim() + "_" + String(l.name).trim();
-                uniqueMap.set(key, { name: String(l.name).trim(), date: String(l.date).trim(), score: sNum, month: l.month });
-            }
-        });
-        globalLogs = Array.from(uniqueMap.values());
+        globalLogs = normalizeLogsList(globalLogs);
         saveLocally();
 
         try {
@@ -628,7 +629,7 @@
             if (resData && resData.events && typeof resData.events === "object") {
                 const serverEvents = {};
                 Object.entries(resData.events).forEach(([k, v]) => {
-                    const normKey = normalizeEventDateKey(k);
+                    const normKey = normalizeKoreanFullDate(k);
                     const title = String(v || "").trim();
                     if (normKey && title) {
                         serverEvents[normKey] = title;
@@ -667,7 +668,7 @@
             return;
         }
         entries.forEach(([dStr, title]) => {
-            const displayKey = normalizeEventDateKey(dStr).replace(/^\d{4}년\s*/, '');
+            const displayKey = normalizeKoreanFullDate(dStr).replace(/^\d{4}년\s*/, '');
             const row = document.createElement('div');
             row.className = 'admin-member-row';
             row.innerHTML = `
@@ -683,7 +684,7 @@
         const select = document.getElementById('event-date-select');
         const input = document.getElementById('event-title-input');
         if (!select || !input) return;
-        const dStr = normalizeEventDateKey(select.value);
+        const dStr = normalizeKoreanFullDate(select.value);
         const title = input.value.trim();
         if (!dStr) {
             alert("날짜를 선택해주세요.");
@@ -707,11 +708,11 @@
 
     async function removeDateEvent(dStr) {
         if (!isAdminLoggedIn) return;
-        const targetKey = normalizeEventDateKey(dStr);
+        const targetKey = normalizeKoreanFullDate(dStr);
         delete dateEvents[dStr];
         delete dateEvents[targetKey];
         for (const k of Object.keys(dateEvents)) {
-            if (normalizeEventDateKey(k) === targetKey) {
+            if (normalizeKoreanFullDate(k) === targetKey) {
                 delete dateEvents[k];
             }
         }
@@ -853,9 +854,10 @@
         }
 
         const dayAttendance = {};
+        const targetNormDate = normalizeKoreanFullDate(selectedDateStr);
         globalLogs.forEach(log => {
             const sNum = Number(log.score);
-            if (String(log.date).trim() === String(selectedDateStr).trim() && [10, 5, 99].includes(sNum)) {
+            if (normalizeKoreanFullDate(log.date) === targetNormDate && [10, 5, 99].includes(sNum)) {
                 dayAttendance[String(log.name).trim()] = sNum;
             }
         });
@@ -1036,7 +1038,7 @@
         }
 
         const cleanName = String(name).trim();
-        const targetDate = selectedDateStr;
+        const targetDate = normalizeKoreanFullDate(selectedDateStr);
 
         if (!targetDate || targetDate === "" || targetDate === "undefined") {
             alert("날짜가 올바르지 않습니다. 다시 선택해주세요.");
@@ -1058,7 +1060,7 @@
             if (!confirm(`[${targetDate.replace(/^\d{4}년\s*/, '')}] [${cleanName}]님을 [${label}]으로 기록하시겠습니까?`)) return;
         }
 
-        globalLogs = globalLogs.filter(log => !(String(log.name).trim() === cleanName && String(log.date).trim() === targetDate));
+        globalLogs = globalLogs.filter(log => !(String(log.name).trim() === cleanName && normalizeKoreanFullDate(log.date) === targetDate));
         
         if ([10, 5, 99].includes(score)) {
             let mMatch = targetDate.match(/(\d+)월/);
@@ -1107,9 +1109,10 @@
         const uniqueLogs = new Map();
         globalLogs.forEach(log => {
             const sNum = Number(log.score);
-            if (log.name && log.date && [10, 5, 99].includes(sNum)) {
-                const key = String(log.date).trim() + "_" + String(log.name).trim();
-                uniqueLogs.set(key, { name: String(log.name).trim(), date: String(log.date).trim(), score: sNum, month: log.month });
+            const normDate = normalizeKoreanFullDate(log.date);
+            if (log.name && normDate && [10, 5, 99].includes(sNum)) {
+                const key = normDate + "_" + String(log.name).trim();
+                uniqueLogs.set(key, { name: String(log.name).trim(), date: normDate, score: sNum, month: log.month });
             }
         });
 
