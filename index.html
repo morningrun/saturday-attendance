@@ -1114,14 +1114,9 @@
 
         const tbody = table.querySelector('tbody');
         let currentRank = 1;
-        let totalWorkout = 0, totalAttend = 0, totalComp = 0, totalScore = 0;
 
         displayList.forEach((item, index) => {
             if (index > 0 && item.score < displayList[index - 1].score) currentRank = index + 1;
-            totalWorkout += item.workout;
-            totalAttend += item.attend;
-            totalComp += item.comp;
-            totalScore += item.score;
 
             const rankText = currentRank === 1 ? '🥇 1' : (currentRank === 2 ? '🥈 2' : (currentRank === 3 ? '🥉 3' : `${currentRank}`));
             const rowClass = currentRank === 1 ? 'top-1' : (currentRank === 2 ? 'top-2' : (currentRank === 3 ? 'top-3' : ''));
@@ -1138,18 +1133,6 @@
             `;
             tbody.appendChild(tr);
         });
-
-        const sumTr = document.createElement('tr');
-        sumTr.style.cssText = "background:#e2e8f0; border-top:2px solid #64748b;";
-        sumTr.innerHTML = `
-            <td class="col-rank" style="color:#0f172a;">합계</td>
-            <td class="col-name" style="color:#0f172a;">${displayList.length}명</td>
-            <td class="col-w" style="color:#0f172a;">${totalWorkout}</td>
-            <td class="col-a" style="color:#0f172a;">${totalAttend}</td>
-            <td class="col-c" style="color:#0f172a;">${totalComp}</td>
-            <td class="col-pts" style="background:#cbd5e1; color:#0f172a;">${totalScore}점</td>
-        `;
-        tbody.appendChild(sumTr);
 
         sheetWrap.appendChild(table);
         statsDiv.appendChild(sheetWrap);
