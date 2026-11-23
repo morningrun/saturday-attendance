@@ -41,8 +41,12 @@
         
         .container { max-width: 600px; width: 100%; box-sizing: border-box; margin: 0 auto; background: var(--card-bg); padding: 10px; border-radius: 12px; box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08); }
         
-        .main-title-box { text-align: center; margin: 4px 0 8px 0; }
+        .main-title-box { text-align: center; margin: 4px 0 6px 0; }
         .main-title { font-size: 1.5rem; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
+
+        .sync-status-banner { text-align: center; font-size: 0.75rem; font-weight: 700; padding: 5px 8px; border-radius: 7px; margin-bottom: 8px; background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+        .sync-status-banner.ok { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
+        .sync-status-banner.warn { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
 
         .admin-status-bar { display: flex; justify-content: space-between; align-items: center; background: #eff6ff; border: 1.5px solid #93c5fd; color: #1e40af; padding: 6px 10px; border-radius: 8px; margin-bottom: 8px; font-size: 0.78rem; font-weight: 800; }
         .admin-logout-btn { background: #1e40af; color: #ffffff; border: none; border-radius: 5px; padding: 4px 8px; font-size: 0.72rem; font-weight: 800; cursor: pointer; }
@@ -153,6 +157,7 @@
     <div class="main-title-box">
         <div class="main-title">🏃‍♂️ 토달 출석부</div>
     </div>
+    <div id="sync-status-banner" class="sync-status-banner">🔄 구글 시트 연결 중...</div>
 
     <div id="admin-status-bar" class="admin-status-bar hidden">
         <span>🔐 관리자 모드 (출석체크·일정관리 활성)</span>
@@ -231,6 +236,13 @@
         { name: "조성국" }, { name: "최순규" }, { name: "최잔디" }, { name: "황연성" }
     ];
 
+    function setSyncBanner(type, text) {
+        const el = document.getElementById('sync-status-banner');
+        if (!el) return;
+        el.className = `sync-status-banner ${type || ''}`;
+        el.textContent = text;
+    }
+
     function safeStorageGet(key) {
         try {
             return window.localStorage.getItem(key);
@@ -304,10 +316,10 @@
         return Array.from(uniqueMap.values());
     }
 
-    let globalMembers = JSON.parse(safeStorageGet('todal_members_v25')) || [...DEFAULT_MEMBERS];
-    let rawLogs = JSON.parse(safeStorageGet('todal_logs_v25')) || [];
+    let globalMembers = JSON.parse(safeStorageGet('todal_members_v26')) || [...DEFAULT_MEMBERS];
+    let rawLogs = JSON.parse(safeStorageGet('todal_logs_v26')) || [];
     let globalLogs = normalizeLogsList(rawLogs);
-    let dateEvents = JSON.parse(safeStorageGet('todal_events_v25')) || {};
+    let dateEvents = JSON.parse(safeStorageGet('todal_events_v26')) || {};
 
     let adminPassword = safeStorageGet('todal_admin_pwd') || "1234";
     let isAdminLoggedIn = sessionStorage.getItem('todal_admin_logged_in') === 'true';
@@ -577,9 +589,9 @@
     function saveLocally() {
         sortMembers();
         globalLogs = normalizeLogsList(globalLogs);
-        safeStorageSet('todal_members_v25', JSON.stringify(globalMembers));
-        safeStorageSet('todal_logs_v25', JSON.stringify(globalLogs));
-        safeStorageSet('todal_events_v25', JSON.stringify(dateEvents));
+        safeStorageSet('todal_members_v26', JSON.stringify(globalMembers));
+        safeStorageSet('todal_logs_v26', JSON.stringify(globalLogs));
+        safeStorageSet('todal_events_v26', JSON.stringify(dateEvents));
     }
 
     function applyServerPayload(resData) {
@@ -590,15 +602,9 @@
             globalMembers = payload.members.map(m => (typeof m === "string" ? { name: m } : m));
         }
         if (Array.isArray(payload.logs)) {
-            const serverLogs = normalizeLogsList(payload.logs);
-            if (serverLogs.length > 0 || globalLogs.length === 0) {
-                globalLogs = serverLogs;
-            }
+            globalLogs = normalizeLogsList(payload.logs);
         } else if (Array.isArray(payload)) {
-            const serverLogs = normalizeLogsList(payload);
-            if (serverLogs.length > 0 || globalLogs.length === 0) {
-                globalLogs = serverLogs;
-            }
+            globalLogs = normalizeLogsList(payload);
         }
         if (payload.events && typeof payload.events === "object") {
             const cleanedEvents = {};
@@ -609,9 +615,7 @@
                     cleanedEvents[normKey] = title;
                 }
             });
-            if (Object.keys(cleanedEvents).length > 0 || Object.keys(dateEvents).length === 0) {
-                dateEvents = cleanedEvents;
-            }
+            dateEvents = cleanedEvents;
         }
         saveLocally();
         return true;
@@ -626,14 +630,17 @@
             const text = await res.text();
             const resData = JSON.parse(text);
             applyServerPayload(resData);
+            setSyncBanner('ok', `✅ 시트 동기화 완료 (출석 기록 ${globalLogs.length}건)`);
         } catch (e) {
             try {
                 const getRes = await fetch(GOOGLE_SCRIPT_URL);
                 const getText = await getRes.text();
                 const getData = JSON.parse(getText);
                 applyServerPayload(getData);
+                setSyncBanner('ok', `✅ 시트 동기화 완료 (출석 기록 ${globalLogs.length}건)`);
             } catch (e2) {
-                console.error("구글 시트 로드 실패, 로컬 데이터 유지", e, e2);
+                setSyncBanner('warn', `⚠️ 구글 시트 연결 실패 (로컬 기록 ${globalLogs.length}건 표시)`);
+                console.error("구글 시트 로드 실패", e, e2);
             }
         }
         sortMembers();
@@ -668,7 +675,9 @@
                 dateEvents = serverEvents;
                 saveLocally();
             }
+            setSyncBanner('ok', `✅ 시트 저장 완료 (출석 기록 ${globalLogs.length}건)`);
         } catch (e) {
+            setSyncBanner('warn', `⚠️ 시트 저장 실패 (로컬에 임시 저장됨)`);
             console.error("구글 시트 저장 실패", e);
         }
     }
