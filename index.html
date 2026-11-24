@@ -73,18 +73,19 @@
         .saturday-list-title { font-size: 0.85rem; font-weight: 800; color: var(--primary); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
         .saturday-vertical-group { display: flex; flex-direction: column; gap: 5px; }
         
-        .saturday-item-btn { padding: 8px 10px; background: #ffffff; border: 1px solid var(--border); border-radius: 7px; cursor: pointer; text-align: left; display: flex; flex-direction: column; gap: 3px; transition: all 0.2s; }
+        .saturday-item-btn { padding: 8px 10px; background: #ffffff; border: 1px solid var(--border); border-radius: 7px; cursor: pointer; text-align: left; display: flex; flex-direction: column; gap: 4px; transition: all 0.2s; }
         .saturday-item-btn.active { background: #eff6ff; color: var(--accent); border: 2px solid var(--accent); }
         .saturday-item-btn.disabled { background: #f1f5f9; color: #94a3b8; border-color: var(--border); cursor: not-allowed; opacity: 0.7; }
         .saturday-item-btn.event-locked { background: #fff7ed; border-color: #fdba74; color: #9a3412; }
         
-        .saturday-date-text { font-size: 0.85rem; font-weight: 800; color: var(--primary); }
+        .saturday-date-text { font-size: 0.85rem; font-weight: 800; color: var(--primary); line-height: 1.3; }
         .saturday-item-btn.active .saturday-date-text { color: var(--accent); }
         .saturday-item-btn.event-locked .saturday-date-text { color: #9a3412; }
+
+        .saturday-event-note { font-size: 0.82rem; font-weight: 800; color: #9a3412; line-height: 1.35; word-break: keep-all; overflow-wrap: break-word; }
         
         .saturday-stat-badge { font-size: 0.73rem; font-weight: 700; color: #475569; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; display: inline-block; width: fit-content; }
         .saturday-item-btn.active .saturday-stat-badge { background: #dbeafe; color: #1e40af; }
-        .saturday-event-badge { font-size: 0.73rem; font-weight: 800; color: #9a3412; background: #ffedd5; padding: 2px 6px; border-radius: 4px; display: inline-block; width: fit-content; }
 
         .checkin-triple-container { display: flex; gap: 6px; margin-bottom: 10px; width: 100%; box-sizing: border-box; padding: 0; align-items: stretch; }
         .checkin-column-box { flex: 1; border: 1.5px solid var(--border); border-radius: 8px; padding: 6px 4px; display: flex; flex-direction: column; min-width: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.02); box-sizing: border-box; }
@@ -179,7 +180,7 @@
 
             <div class="swipe-pane" id="pane-stats">
                 <div class="month-filter" id="stats-month-buttons"></div>
-                <div class="stats-current-date-box" id="stats-current-date-text">[ 2026년 11월 23일 현재 ]</div>
+                <div class="stats-current-date-box" id="stats-current-date-text">[ 2026년 11월 24일 현재 ]</div>
                 <div id="stats-list" class="loading">누적 데이터 계산 중...</div>
             </div>
         </div>
@@ -516,8 +517,8 @@
             } else if (eventTitle) {
                 btn.className = `saturday-item-btn event-locked ${isSelected ? 'active' : ''}`;
                 btn.innerHTML = `
-                    <span class="saturday-date-text">🔒 ${displayDateText} · ${eventTitle}</span>
-                    <span class="saturday-event-badge">행사/공식일정으로 출석체크 제한</span>
+                    <span class="saturday-date-text">🔒 ${displayDateText}</span>
+                    <span class="saturday-event-note">${eventTitle}</span>
                 `;
                 btn.onclick = () => {
                     selectedDateStr = dStr;
@@ -721,7 +722,7 @@
             return;
         }
         if (!title) {
-            alert("행사명이나 공식일정 텍스트를 입력해주세요. (예: 1/4분기 공식대회, 야유회)");
+            alert("행사명이나 기타사항 텍스트를 입력해주세요. (예: 1/4분기 공식대회, 야유회)");
             return;
         }
         dateEvents[dStr] = title;
@@ -878,7 +879,7 @@
         if (eventTitle) {
             const banner = document.createElement('div');
             banner.className = 'event-banner';
-            banner.textContent = `📌 ${selectedDateStr.replace(/^\d{4}년\s*/, '')} — [${eventTitle}] 일정으로 출석체크가 제한되었습니다.`;
+            banner.innerHTML = `📌 ${selectedDateStr.replace(/^\d{4}년\s*/, '')}<br>${eventTitle}`;
             listDiv.appendChild(banner);
             updateSwipeWrapperHeight();
             return;
